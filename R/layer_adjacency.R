@@ -15,7 +15,7 @@
 #' @export
 #' @return A sparse Matrix \code{M}, where \code{M[i,j]} is equal to 1 if cell \code{from[i]} is adjacent to \code{to[j]}, and is 0 otherwise.
 layer_adjacency <- function (layer,
-                             from=which(values(!is.na(layer))),
+                             from=which(raster::values(!is.na(layer))),
                              to=from,
                              directions=4,
                              normalize=FALSE

@@ -11,12 +11,12 @@
 #' @return A list of vectors of indices in \code{mask} so that if the output is \code{out},
 #'         then \code{mask[out[[k]]]} is a vector of the indices of all cells in \code{layer} whose centers are closer than \code{dist}
 #'         to \code{locations[k]}.
-get.neighborhoods <- function ( layer, dist, locations, mask ) {
+neighborhoods <- function ( layer, dist, locations, mask ) {
     if ( class(locations)=="SpatialPoints" ) { locations <- sp::coordinates(locations) }  # this is the first thing distanceFromPoints does anyhow
     if (is.null(dim(locations))) { locations <- matrix(locations,ncol=2) }
     neighborhoods <- lapply( 1:NROW(locations) , function (k) {
             dvec <- raster::distanceFromPoints( layer, locations[k,] ) 
-            out <- Which( dvec <= max(dist,minValue(dvec)), cells=TRUE, na.rm=TRUE )
+            out <- raster::Which( dvec <= max(dist,raster::minValue(dvec)), cells=TRUE, na.rm=TRUE )
             if (!missing(mask)) { out <- match( out, mask ) }
             out[!is.na(out)]
         } )
