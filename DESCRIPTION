@@ -6,3 +6,5 @@ Description: Run forwards-time simulations of populations on landscapes derived 
 Depends: R (>= 3.2.2)
 License: CC0
 LazyData: true
+Depends: Matrix
+Imports: raster
