@@ -1,0 +1,8 @@
+Package: landsim
+Title: Simulate Populations on Landscapes
+Version: 0.0.0.1
+Authors@R: person("Peter", "Ralph", email = "petrel.harp@gmail.com", role = c("aut", "cre"))
+Description: Run forwards-time simulations of populations on landscapes derived from GIS layers.
+Depends: R (>= 3.2.2)
+License: CC0
+LazyData: true
