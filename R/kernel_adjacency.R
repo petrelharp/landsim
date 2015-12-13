@@ -28,7 +28,7 @@ kernel_adjacency <- function (layer,
     if (is.character(fun)) {
         fun <- switch( fun,
                 gaussian=function (x) {
-                        exp(-x^2) / (2*pi)
+                        exp(-x^2/2) / (2*pi)
                     },
                 cauchy=function (x) {
                         1/(2*pi^2*x*(1+x^2))

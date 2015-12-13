@@ -13,7 +13,7 @@ seed_production <- function (
                          seeders,
                          pollen,
                          mating,
-                         ...
+                         fecundity=1
                      ) {
     total.pollen <- sum(pollen)
     out <- do.call( brick, list(total.pollen)[rep(1,dim(mating)[3])] )
@@ -28,6 +28,6 @@ seed_production <- function (
             }
         }
     }
-    return(out)
+    names(out) <- dimnames(mating)[[3]]
+    return(out*fecundity)
 }
-
