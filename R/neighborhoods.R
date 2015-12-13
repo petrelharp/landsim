@@ -23,5 +23,5 @@ neighborhoods <- function ( layer, dist, locations, mask ) {
     return(neighborhoods)
 }
 
-
+## TO-DO: rewrite this using raster::extract()
 

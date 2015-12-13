@@ -4,11 +4,15 @@ Version: 0.0.0.1
 Authors@R: person("Peter", "Ralph", email = "petrel.harp@gmail.com", role = c("aut", "cre"))
 Description: Run forwards-time simulations of populations on landscapes derived
     from GIS layers.
-Depends:
-    Matrix
-License: CC0
+License: GPL-2
 LazyData: true
-Imports:
+Imports: 
+    Matrix,
     raster,
     sp
 RoxygenNote: 5.0.1.9000
+Suggests: 
+    knitr,
+    rmarkdown,
+    testthat
+VignetteBuilder: knitr

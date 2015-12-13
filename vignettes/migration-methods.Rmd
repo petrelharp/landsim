@@ -1,0 +1,66 @@
+---
+title: "Migration methos"
+author: "Peter Ralph"
+date: "`r Sys.Date()`"
+output: rmarkdown::html_vignette
+vignette: >
+  %\VignetteIndexEntry{Vignette Title}
+  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteEncoding{UTF-8}
+---
+
+
+Here's a simple habitat we'll work with.
+Note that spatial units are in meters; the values are carrying capacities.
+```{r setup_layer, fig.cap="The (random) habitat.", fig.width=fig.dim}
+habitat <- raster(xmn=-1000, xmx=1000, ymn=-1000, ymx=1000, 
+      resolution=100,
+      crs="+proj=utm +zone=11 +ellps=GRS80 +towgs84=0,0,0,0,0,0,0 +units=m +no_defs")
+values(habitat) <- sample( 100*c(1,2,5,NA), length(habitat), replace=TRUE )
+plot(habitat)
+```
+
+
+Migration operations
+====================
+
+We can do migration in two ways:
+either by matrix multiplication,
+or by doing smoothing operations directly on the layers.
+
+
+Matrices
+--------
+
+The easiest migration matrix to create is a nearest-neighbor migration:
+```{r nn_mig}
+nn.mig <- layer_adjacency(habitat)
+image(nn.mig)
+```
+
+Alternatively, consider a Gaussian kernel:
+```{r gaus_mig}
+gauss.mig <- kernel_adjacency(habitat,sigma=100,radius=500,fun="gaussian")
+image(gauss.mig)
+```
+
+Or, a two-dimensional, symmetric Cauchy kernel:
+```{r cauchy_mig}
+cauchy.mig <- kernel_adjacency(habitat,sigma=100,radius=800,fun="cauchy")
+image(cauchy.mig)
+```
+
+
+Smoothing operations
+--------------------
+
+The `raster` package does smoothing operations directly, with `raster::focal`.
+For instance, we can assign random values to the non-NA values in the layer
+and then smooth them with a Gaussian kernel:
+```{r gauss_smooth}
+N <- habitat
+values(N)[!is.na(values(N))] <- rpois(sum(!is.na(values(N))),values(habitat)[!is.na(values(N))])
+plot(N)
+gauss.N <- kernel_migrate(N,radius=500,sigma=100)
+plot(gauss.N)
+```
