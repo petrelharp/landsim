@@ -4,11 +4,11 @@
 #'
 #' @param layer The Raster* object to apply the migration operation to.
 #' @param migration The \code{migration} object containing the relevant parameters, which may alternatively be passed in individually.
-#' @param kernel Weighting kernel applied to distances.
+#' @param kern Weighting kernel applied to distances.
 #' @param sigma Distance scaling for kernel.
 #' @param radius Maximum distance away to truncate the kernel.
 #' @param normalize Normalize the kernel so that the total sum of weights is equal to this; pass NULL to do no normalization.
-#' @param ... Other parameters passed to \code{kernel}.
+#' @param ... Other parameters passed to \code{kern}.
 #' @keywords layers
 #' @export
 #' @return A Raster* of the same form as the input.
@@ -22,28 +22,28 @@
 #' at any raster cells nearby to boundary or NA cells.
 migrate <- function (   layer,
                         migration=list(sigma=1,normalize=1),
-                        kernel=migration$kernel,
+                        kern=migration$kern,
                         sigma=migration$sigma,
                         radius=migration$radius,
                         normalize=migration$normalize,
                         ...
                  ) {
-    if (is.character(kernel)) {
-        kernel <- switch( kernel,
+    if (is.character(kern)) {
+        kern <- switch( kern,
                 gaussian=function (x) {
                         exp(-x^2/2) / (2*pi)
                     },
                 cauchy=function (x) {
                         1/(2*pi^2*x*(1+x^2))
                     },
-                get(kernel,mode="function") 
+                get(kern,mode="function") 
             )
     }
     area <- prod(raster::res(layer))
     cell.radius <- ceiling(radius/raster::res(layer))
     w <- matrix(nrow=2*cell.radius[1]+1,ncol=2*cell.radius[2]+1)
     cc <- cell.radius+1
-    w[] <- kernel( sqrt( (xres(layer)*(row(w)-cc[1]))^2 + (yres(layer)*(col(w)-cc[2]))^2 )/sigma ) * area/sigma^2
+    w[] <- kern( sqrt( (xres(layer)*(row(w)-cc[1]))^2 + (yres(layer)*(col(w)-cc[2]))^2 )/sigma ) * area/sigma^2
     if (!is.null(normalize)) { w <- (normalize/sum(w))*w }
     out <- focal( layer, w=w, na.rm=TRUE, pad=TRUE, pad.value=0 )
     out[is.na(layer)] <- NA

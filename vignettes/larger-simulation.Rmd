@@ -1,0 +1,98 @@
+---
+title: "Simulations on large rasters."
+author: "Peter Ralph"
+date: "`r Sys.Date()`"
+output: 
+    rmarkdown::html_vignette
+vignette: >
+  %\VignetteIndexEntry{Vignette Title}
+  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteEncoding{UTF-8}
+---
+
+
+```{r doc_setup, include=FALSE}
+fig.dim <- 3
+knitr::opts_chunk$set(fig.width=3*fig.dim,fig.height=fig.dim,fig.align='center')
+library(Matrix)
+library(raster)
+devtools::load_all("..")
+set.seed(42)
+this.plot <- function (x,nr=1,zlim=c(0,max(values(x),na.rm=TRUE)),...) {
+    plot(x,nr=nr,zlim=zlim,...)
+}
+```
+
+**How well do the simulation methods work with larger rasters?**
+
+Here are the demographic parameters:
+```{r fancy_setup}
+germination.args <- list( 
+             r0 = 0.01,
+             competition = migration(
+                                     kern="gaussian",
+                                     sigma=100,
+                                     radius=300,
+                                     normalize=1
+                                 )
+         )
+germination_fun <- function (N) {
+    germination.args$r0 / ( 1 + migrate(N,germination.args$competition)/carrying.capacity )
+}
+
+this.demography <- demography(
+        prob.seed = 0.2,
+        fecundity = 200,
+        prob.germination = germination_fun,
+        prob.survival = 0.9,
+        pollen.migration = migration(
+                            kern = function (x) { exp(-sqrt(x)) },
+                            sigma = 100,
+                            radius = 1000,
+                            normalize = NULL
+                     ),
+        seed.migration = migration(
+                            kern = "gaussian",
+                            sigma = 20,
+                            radius = 400,
+                            normalize = 1
+                     ),
+        genotypes = c("aa","aA","AA"),
+        mating = mating_tensor( c("aa","aA","AA") ),
+        germination.ags = germination.args,
+        carrying.capacity=habitat
+    )
+```
+
+Raster sizes
+============
+
+We will time a generation on rasters of different sizes.
+Here is a function to create a $k$-kilometer square random raster.
+(But note that the base units of the raster are in meters.)
+```{r habitat_setup}
+make_habitat <- function (k) {
+    habitat <- raster(xmn=-k*1000/2, xmx=k*1000/2, ymn=-k*1000/2, ymx=k*1000/2, 
+          resolution=100,
+          crs="+proj=utm +zone=11 +ellps=GRS80 +towgs84=0,0,0,0,0,0,0 +units=m +no_defs")
+    values(habitat) <- sample( 100*c(1,2,5,NA), length(habitat), replace=TRUE )
+    migrate(habitat,kern="gaussian",sigma=200,radius=1000)
+}
+```
+
+Here's timing for one generation on rasters of various sizes:
+```{r init_new_pop}
+sizes <- 4^(0:3)
+results <- lapply( sizes, function (k) {
+                  habitat <- make_habitat(k)
+                  N <- do.call( brick, list(habitat)[rep(1,length(this.demography$genotypes))] )
+                  names(N) <- genotypes
+                  gen.time <- system.time( NN <- generation(N,this.demography) )
+                  return( list( time=gen.time, N=N, NN=NN ) )
+          } )
+```
+
+Now, looking at the results:
+```{r show_timing_results}
+rbind( size=sizes, sapply( results, "[[", "time" ) )
+```

@@ -12,17 +12,18 @@ vignette: >
 
 
 ```{r doc_setup, include=FALSE}
-fig.dim <- 4
-knitr::opts_chunk$set(fig.width=2*fig.dim,fig.height=fig.dim,fig.align='center')
+fig.dim <- 3
+knitr::opts_chunk$set(fig.width=3*fig.dim,fig.height=fig.dim,fig.align='center')
 library(Matrix)
 library(raster)
+library(jsonlite)
 devtools::load_all("..")
 set.seed(42)
 ```
 
 Here's a simple layer we'll work with.
 Note that units are in meters.
-```{r setup_layer, fig.cap="The (random) habitat."}
+```{r setup_layer, fig.cap="The (random) habitat.", fig.height=4, fig.width=4}
 habitat <- raster(xmn=-1000, xmx=1000, ymn=-1000, ymx=1000, 
       resolution=100,
       crs="+proj=utm +zone=11 +ellps=GRS80 +towgs84=0,0,0,0,0,0,0 +units=m +no_defs")
@@ -110,7 +111,7 @@ this.plot(M)
 2. **Find the mean pollen flux:**
 
 ```{r pollen}
-P <- migrate(N,kernel=pollen.kernel,sigma=pollen.sigma,radius=max.pollen.dist)
+P <- migrate(N,kern=pollen.kernel,sigma=pollen.sigma,radius=max.pollen.dist)
 this.plot(P)
 ```
 
@@ -125,15 +126,15 @@ this.plot(S)
 4. **Disperse seeds:**
 
 ```{r disperse_seeds}
-SD <- migrate(S,kernel=seed.kernel,sigma=seed.sigma,radius=max.seed.dist,
+SD <- migrate(S,kern=seed.kernel,sigma=seed.sigma,radius=max.seed.dist,
                      normalize=TRUE)
 this.plot(SD)
 ```
 5. **Find competition kernel:**
     according to $r_0/(1+f(x)/M(x))$:
 
-```{r get_competition}
-K <- migrate(sum(N),kernel=competition.kernel,sigma=competition.sigma,
+```{r get_competition, fig.width=fig.dim}
+K <- migrate(sum(N),kern=competition.kernel,sigma=competition.sigma,
                     radius=max.competition.dist,normalize=TRUE)
 K <- prob.germination/(1+K/carrying.capacity)
 this.plot(K)
@@ -164,13 +165,13 @@ for this we need to know:
 
 Class **migration**:
 
-`kernel`
+`kern`
 
 : function that gives weights for neighboring cells as a function of Euclidean distance
 
 `sigma`
 
-: scaling factor on distance before being passed to `kernel`
+: scaling factor on distance before being passed to `kern`
 
 `radius`
 
@@ -229,20 +230,22 @@ Demography set-up
 -----------------
 
 Now, let's use tools from the package to set up the simulation we ran above.
+The function that determines current germination probabilities is left *unspecified*,
+to be passed in at runtime, because it is a raster,
+and we want to demographic setup to be independent of the raster being used.
 
 ```{r fancy_setup}
 germination.args <- list( 
              r0 = 0.01,
              competition = migration(
-                                     kernel="gaussian",
+                                     kern="gaussian",
                                      sigma=100,
                                      radius=300,
                                      normalize=1
-                                 ),
-             carrying.capacity = habitat
+                                 )
          )
-germination_fun <- function (N) {
-    germination.args$r0 / ( 1 + migrate(N,germination.args$competition)/germination.args$carrying.capacity )
+germination_fun <- function (N, carrying.capacity, ...) {
+    germination.args$r0 / ( 1 + migrate(N,germination.args$competition)/carrying.capacity )
 }
 
 this.demography <- demography(
@@ -251,13 +254,13 @@ this.demography <- demography(
         prob.germination = germination_fun,
         prob.survival = 0.9,
         pollen.migration = migration(
-                            kernel = function (x) { exp(-sqrt(x)) },
+                            kern = function (x) { exp(-sqrt(x)) },
                             sigma = 100,
                             radius = 1000,
                             normalize = NULL
                      ),
         seed.migration = migration(
-                            kernel = "gaussian",
+                            kern = "gaussian",
                             sigma = 20,
                             radius = 400,
                             normalize = 1
@@ -266,21 +269,19 @@ this.demography <- demography(
         mating = mating_tensor( c("aa","aA","AA") ),
         germination.ags = germination.args
     )
-
 ```
 
 Demography application
 ----------------------
 
-Now, doing the above simulation step is just a matter of calling `generation()`:
-```{r init_new_pop, fig.height=2*fig.dim/3}
+Now, doing the above simulation step is just a matter of calling `generation()`.
+**Importantly**, note that we pass in `carrying.capacity`, since it was left unspecified in the function `germination_fun` above.
+```{r init_new_pop}
 N <- rpois_raster( brick( habitat, habitat, habitat )/3 )
 names(N) <- c("aa","aA","AA")
 this.plot(N)
 for (k in 1:5) {
-    NN <- generation(N,this.demography)
+    NN <- generation(N,this.demography,carrying.capacity=habitat)
     this.plot(NN)
 }
 ```
-
-

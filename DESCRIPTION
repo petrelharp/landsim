@@ -9,7 +9,8 @@ LazyData: true
 Imports: 
     Matrix,
     raster,
-    sp
+    sp,
+    jsonlite
 RoxygenNote: 5.0.1.9000
 Suggests: 
     knitr,
