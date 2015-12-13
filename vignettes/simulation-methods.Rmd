@@ -1,0 +1,254 @@
+---
+title: "Raster-based landscape genomics simulations."
+author: "Peter Ralph"
+date: "`r Sys.Date()`"
+output: 
+    rmarkdown::html_vignette
+vignette: >
+  %\VignetteIndexEntry{Vignette Title}
+  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteEncoding{UTF-8}
+---
+
+
+```{r doc_setup, include=FALSE}
+fig.dim <- 4
+knitr::opts_chunk$set(fig.width=2*fig.dim,fig.height=fig.dim,fig.align='center')
+library(Matrix)
+library(raster)
+devtools::load_all("..")
+```
+
+Here's a simple layer we'll work with.
+Note that units are in meters.
+```{r setup_layer, fig.cap="The (random) habitat."}
+habitat <- raster(xmn=-1000, xmx=1000, ymn=-1000, ymx=1000, 
+      resolution=100,
+      crs="+proj=utm +zone=11 +ellps=GRS80 +towgs84=0,0,0,0,0,0,0 +units=m +no_defs")
+values(habitat) <- sample( 100*c(1,2,5,NA), length(habitat), replace=TRUE )
+plot(habitat,asp=1)
+```
+
+
+
+A simulation step
+=================
+
+```{r plot_setup}
+# plotting function for typical layers below
+this.plot <- function (x,nr=1,zlim=c(0,max(values(x),na.rm=TRUE)),...) {
+    plot(x,nr=nr,zlim=zlim,...)
+}
+```
+
+Beginning with a population:
+```{r init_pop, fig.cap="Abundances of genotypes."}
+N <- rpois_raster( brick( habitat, habitat, habitat )/3 )
+genotypes <- names(N) <- c("aa","aA","AA")
+this.plot(N)
+```
+
+Here are the population parameters.
+To maintain population densities,
+we'll make the germination rate depend on the local population density.
+Concretely, let's use something motivated by the Beverton-Holt model,
+which without age structure has $n' = r_0/(1/n+1/M)$,
+and carrying capacity $(r_0-1)M$:
+if $f(x)$ is the nearby population density (possibly smoothed somehow),
+then the germination rate is $r_0/(1+f(x)/M(x))$.
+```{r init_params}
+# probability of seeding in a given year
+prob.seed <- 0.2
+# pollen dispersal kernel
+pollen.kernel <- function (x) { exp(-sqrt(x)) }
+pollen.sigma <- 100
+max.pollen.dist <- 1000
+# seed dispersal kernel
+seed.kernel <- "gaussian"
+seed.sigma <- 20
+max.seed.dist <- 400
+# number of seeds per individual
+seed.fecundity <- 200
+# genotype offspring tensor: 
+#  [i,j,k] is the probability that genotypes i and j combine to make offspring genotype k
+mating.tensor <- array( c(
+        # aa offspring
+        1,   1/2,   0, # aa
+        1/2, 1/4,   0, # aA
+        0,     0,   0, # AA
+        # aA offspring
+        0,   1/2,   1, # aa
+        1/2, 1/2, 1/2, # aA
+        1,   1/2,   0, # AA
+        # AA offspring
+        0,     0,   0, # aa
+        0,   1/4, 1/2, # aA
+        0,   1/2,   1  # AA
+        ), dim=c(3,3,3) )
+dimnames(mating.tensor) <- list( genotypes, genotypes, genotypes )
+# raw germination rate
+prob.germination <- 0.01
+# competition kernel for germination
+competition.kernel <- "gaussian"
+competition.sigma <- 100
+max.competition.dist <- 300
+# sort of carrying capacity
+carrying.capacity <- habitat
+# probability of survival
+prob.survival <- 0.9
+```
+
+
+1. **Sample the number of seed-producing individuals:**
+
+```{r seeds}
+M <- rbinom_raster(N,prob.seed)
+this.plot(M)
+```
+
+2. **Find the mean pollen flux:**
+
+```{r pollen}
+P <- kernel_migrate(N,fun=pollen.kernel,sigma=pollen.sigma,radius=max.pollen.dist)
+this.plot(P)
+```
+
+3. **Find the mean seed production field:**
+
+```{r mean_seed}
+S <- seed_production(seeders=M,pollen=P,mating=mating.tensor,
+                     fecundity=seed.fecundity)
+this.plot(S)
+```
+
+4. **Disperse seeds:**
+
+```{r disperse_seeds}
+SD <- kernel_migrate(S,fun=seed.kernel,sigma=seed.sigma,radius=max.seed.dist,
+                     normalize=TRUE)
+this.plot(SD)
+```
+5. **Find competition kernel:**
+    according to $r_0/(1+f(x)/M(x))$:
+
+```{r get_competition}
+K <- kernel_migrate(sum(N),fun=competition.kernel,sigma=competition.sigma,
+                    radius=max.competition.dist,normalize=TRUE)
+K <- prob.germination/(1+K/carrying.capacity)
+this.plot(K)
+```
+
+6. **Sample new individuals:**
+
+```{r new_inds}
+G <- rpois_raster(SD*K)
+this.plot(G)
+```
+
+7. **Kill off old individuals and add in new ones:**
+
+```{r next_gen}
+NN <- rbinom_raster(N,prob.survival) + G
+this.plot(NN)
+```
+
+
+Abstracting the simulation step
+===============================
+
+Now let's wrap those parameters up into an object.
+One structure we use several times
+is the setup for smoothing (with `kernel_migrate`);
+for this we need to know:
+
+Class **migration**:
+
+`kernel`
+
+: function that gives weights for neighboring cells as a function of Euclidean distance
+
+`sigma`
+
+: scaling factor on distance before being passed to `kernel`
+
+`radius`
+
+: maximum range of the smoother
+
+`normalize`
+
+: normalization factor applied to the smoother
+
+
+Several of the base demographic parameters we might want to specify
+(as a fixed number or a layer),
+or compute (as a function of the current population state).
+Such **parameters** can be either something numeric
+or else a function that is applied to `N` to get the result.
+
+Then, to do a single generation we need to know:
+
+Class **demography**:
+
+`prob.seed`
+
+: `parameter` object for  probability of seeding per individual per year
+
+`fecundity`
+
+: `parameter` object for mean number of seeds per seeding individual per year
+
+`prob.germination`
+
+: `parameter` object for probability of germination
+
+`prob.survival`
+
+: `parameter` object for probability of survival of already existing individuals
+
+`pollen.migration`
+
+: `migration` object for pollen dispersal (normalized to total pollen production)
+
+`seed.migration`
+
+: `migration` object for seed dispersal (normalized to 1)
+
+`genotypes`
+
+: vector of names of the genotypes represented by the layers
+
+`mating`
+
+: genotype x genotype x genotype tensor, with entry
+    `[i,j,k]` the probability that genotypes `i` and `j` combine to make offspring genotype `k`
+
+
+Demography set-up
+-----------------
+
+Now, let's use tools from the package to set up the simulation we ran above.
+
+```{r fancy_setup}
+simdem <- demography(
+        prob.seed = 0.2,
+        fecundity = 200,
+        prob.germination = ,
+        prob.survival = 0.9,
+        pollen.migration = migration(
+                            kernel = function (x) { exp(-sqrt(x)) },
+                            sigma = 100,
+                            radius = 1000,
+                            normalize = NULL
+                     ),
+        seed.migration = migration(
+                            kernel = "gaussian",
+                            sigma = 20,
+                            radius = 400,
+                            normalize = 1
+                     ),
+        genotypes = c("aa","aA","AA"),
+        mating = mating_tensor( c("aa","aA","AA") )
+    )
+
+```
