@@ -2,6 +2,9 @@
 #'
 #' This puts together the parameters necessary to specify a \code{demography} object,
 #' specifying pollen and seed production and dispersal, and mortality.
+#' The parameters \code{prob.seed}, \code{fecundity}, \code{prob.germination}, 
+#' and \code{prob.survival} can be either Raster* objects, numbers, 
+#' or functions of the current population state (a Raster* object).
 #'
 #' @param prob.seed Probability of producing seed, per individual.
 #' @param fecundity Mean number of seeds produced, per individual, if seeds are produced.

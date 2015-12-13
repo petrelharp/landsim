@@ -17,6 +17,7 @@ knitr::opts_chunk$set(fig.width=2*fig.dim,fig.height=fig.dim,fig.align='center')
 library(Matrix)
 library(raster)
 devtools::load_all("..")
+set.seed(42)
 ```
 
 Here's a simple layer we'll work with.
@@ -109,7 +110,7 @@ this.plot(M)
 2. **Find the mean pollen flux:**
 
 ```{r pollen}
-P <- kernel_migrate(N,fun=pollen.kernel,sigma=pollen.sigma,radius=max.pollen.dist)
+P <- migrate(N,kernel=pollen.kernel,sigma=pollen.sigma,radius=max.pollen.dist)
 this.plot(P)
 ```
 
@@ -124,7 +125,7 @@ this.plot(S)
 4. **Disperse seeds:**
 
 ```{r disperse_seeds}
-SD <- kernel_migrate(S,fun=seed.kernel,sigma=seed.sigma,radius=max.seed.dist,
+SD <- migrate(S,kernel=seed.kernel,sigma=seed.sigma,radius=max.seed.dist,
                      normalize=TRUE)
 this.plot(SD)
 ```
@@ -132,7 +133,7 @@ this.plot(SD)
     according to $r_0/(1+f(x)/M(x))$:
 
 ```{r get_competition}
-K <- kernel_migrate(sum(N),fun=competition.kernel,sigma=competition.sigma,
+K <- migrate(sum(N),kernel=competition.kernel,sigma=competition.sigma,
                     radius=max.competition.dist,normalize=TRUE)
 K <- prob.germination/(1+K/carrying.capacity)
 this.plot(K)
@@ -158,7 +159,7 @@ Abstracting the simulation step
 
 Now let's wrap those parameters up into an object.
 One structure we use several times
-is the setup for smoothing (with `kernel_migrate`);
+is the setup for smoothing (with `migrate`);
 for this we need to know:
 
 Class **migration**:
@@ -230,10 +231,24 @@ Demography set-up
 Now, let's use tools from the package to set up the simulation we ran above.
 
 ```{r fancy_setup}
-simdem <- demography(
+germination.args <- list( 
+             r0 = 0.01,
+             competition = migration(
+                                     kernel="gaussian",
+                                     sigma=100,
+                                     radius=300,
+                                     normalize=1
+                                 ),
+             carrying.capacity = habitat
+         )
+germination_fun <- function (N) {
+    germination.args$r0 / ( 1 + migrate(N,germination.args$competition)/germination.args$carrying.capacity )
+}
+
+this.demography <- demography(
         prob.seed = 0.2,
         fecundity = 200,
-        prob.germination = ,
+        prob.germination = germination_fun,
         prob.survival = 0.9,
         pollen.migration = migration(
                             kernel = function (x) { exp(-sqrt(x)) },
@@ -248,7 +263,24 @@ simdem <- demography(
                             normalize = 1
                      ),
         genotypes = c("aa","aA","AA"),
-        mating = mating_tensor( c("aa","aA","AA") )
+        mating = mating_tensor( c("aa","aA","AA") ),
+        germination.ags = germination.args
     )
 
 ```
+
+Demography application
+----------------------
+
+Now, doing the above simulation step is just a matter of calling `generation()`:
+```{r init_new_pop, fig.height=2*fig.dim/3}
+N <- rpois_raster( brick( habitat, habitat, habitat )/3 )
+names(N) <- c("aa","aA","AA")
+this.plot(N)
+for (k in 1:5) {
+    NN <- generation(N,this.demography)
+    this.plot(NN)
+}
+```
+
+
