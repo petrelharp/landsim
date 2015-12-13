@@ -36,7 +36,7 @@ germination.args <- list(
                                      normalize=1
                                  )
          )
-germination_fun <- function (N) {
+germination_fun <- function (N,carrying.capacity,...) {
     germination.args$r0 / ( 1 + migrate(N,germination.args$competition)/carrying.capacity )
 }
 
@@ -59,21 +59,20 @@ this.demography <- demography(
                      ),
         genotypes = c("aa","aA","AA"),
         mating = mating_tensor( c("aa","aA","AA") ),
-        germination.ags = germination.args,
-        carrying.capacity=habitat
+        germination.ags = germination.args
     )
 ```
 
-Raster sizes
-============
+Raster extent
+=============
 
 We will time a generation on rasters of different sizes.
 Here is a function to create a $k$-kilometer square random raster.
 (But note that the base units of the raster are in meters.)
 ```{r habitat_setup}
-make_habitat <- function (k) {
+habitat_size <- function (k) {
     habitat <- raster(xmn=-k*1000/2, xmx=k*1000/2, ymn=-k*1000/2, ymx=k*1000/2, 
-          resolution=100,
+          resolution=100, #fixed resolution
           crs="+proj=utm +zone=11 +ellps=GRS80 +towgs84=0,0,0,0,0,0,0 +units=m +no_defs")
     values(habitat) <- sample( 100*c(1,2,5,NA), length(habitat), replace=TRUE )
     migrate(habitat,kern="gaussian",sigma=200,radius=1000)
@@ -82,17 +81,77 @@ make_habitat <- function (k) {
 
 Here's timing for one generation on rasters of various sizes:
 ```{r init_new_pop}
-sizes <- 4^(0:3)
-results <- lapply( sizes, function (k) {
-                  habitat <- make_habitat(k)
-                  N <- do.call( brick, list(habitat)[rep(1,length(this.demography$genotypes))] )
-                  names(N) <- genotypes
-                  gen.time <- system.time( NN <- generation(N,this.demography) )
+sizes <- 2^(0:6)
+size.results <- lapply( sizes, function (k) {
+                  habitat <- habitat_size(k)
+                  N <- rpois_raster( do.call( brick, list(habitat)[rep(1,length(this.demography$genotypes))] ) )
+                  names(N) <- this.demography$genotypes
+                  gen.time <- system.time( NN <- generation(N,this.demography,carrying.capacity=habitat) )
                   return( list( time=gen.time, N=N, NN=NN ) )
           } )
 ```
 
-Now, looking at the results:
-```{r show_timing_results}
-rbind( size=sizes, sapply( results, "[[", "time" ) )
+Here's the results:
+```{r show_timing_results, fig.width=2*fig.dim}
+size.tab <- data.frame( area=sizes^2, ncell=sapply(lapply(size.results,"[[","N"),ncell), t(sapply( size.results, "[[", "time" )) )
+size.tab
+layout(t(1:2))
+with(size.tab, {
+     plot(area, user.self, log='xy', xlab='total area', ylab='computation time (sec)') 
+     plot(ncell, user.self, log='xy', xlab='number of raster cells', ylab='computation time (sec)') 
+     } )
 ```
+
+The computation time will depend critically on the number of cells within the radii
+of the `migration` operations;
+but at these settings, adding
+`r round( 1/coef(with( subset(size.tab,ncell>5e3), lm(user.self ~ ncell) ))[2], 0 )`
+cells increases the run time by a second.
+
+
+Raster resolution
+=================
+
+Changing the resolution at a fixesd size also changes the number of cells,
+but affects the running time quite differently.
+Here is a function to create a 10-kilometer square random raster, with different resolutions.
+(But note that the base units of the raster are in meters.)
+```{r habitat_setup_res}
+habitat_res <- function (resolution) {
+    habitat <- raster(xmn=-10*1000/2, xmx=10*1000/2, ymn=-10*1000/2, ymx=10*1000/2, 
+          resolution=resolution,
+          crs="+proj=utm +zone=11 +ellps=GRS80 +towgs84=0,0,0,0,0,0,0 +units=m +no_defs")
+    values(habitat) <- sample( 100*c(1,2,5,NA), length(habitat), replace=TRUE )
+    migrate(habitat,kern="gaussian",sigma=200,radius=1000)
+}
+```
+
+Here's timing for one generation on rasters of various sizes:
+```{r run_res}
+resolutions <- 100*2^(-2:2)
+res.results <- lapply( resolutions, function (resolution) {
+                  habitat <- habitat_res(resolution)
+                  N <- rpois_raster( do.call( brick, list(habitat)[rep(1,length(this.demography$genotypes))] ) )
+                  names(N) <- genotypes
+                  gen.time <- system.time( NN <- generation(N,this.demography,carrying.capacity=habitat) )
+                  return( list( time=gen.time, N=N, NN=NN ) )
+          } )
+```
+
+Here's the results:
+```{r show_res_results, fig.width=2*fig.dim}
+res.tab <- data.frame( resolution=resolutions, ncell=sapply(lapply(res.results,"[[","N"),ncell), t(sapply( res.results, "[[", "time" )) )
+res.tab
+layout(t(1:2))
+with(res.tab, {
+     plot(resolution, user.self, log='xy', xlab='total area', ylab='computation time (sec)') 
+     plot(ncell, user.self, log='xy', xlab='number of raster cells', ylab='computation time (sec)') 
+     } )
+```
+
+The computation time will depend critically on the number of cells within the radii
+of the `migration` operations;
+but at these settings, adding
+`r round( 1/coef(with( subset(res.tab,ncell>5e3), lm(user.self ~ ncell) ))[2], 0 )`
+cells increases the run time by a second.
+

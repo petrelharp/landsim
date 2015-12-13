@@ -2,7 +2,7 @@
 #'
 #' Returns a Raster* object whose values are random, Binomial(N,prob.seed).
 #'
-#' @param size Number, or Raster* object of sample sizes.
+#' @param size Number, or Raster* object of sample sizes (must be integers).
 #' @param prob Number, or Raster* object of probabilities.
 #' @export
 #' @return A Raster* object of the same form as the input.
@@ -22,6 +22,9 @@ rbinom_raster <- function (size, prob) {
         prob <- rep_len(prob,length(out))
     }
     nonzero <- ( !is.na(prob) ) & ( !is.na(size) ) & ( prob>0 ) & ( size>0 )
-    raster::values(out)[nonzero] <- rbinom(sum(nonzero),size=size[nonzero],prob=prob[nonzero])
+    if (any(nonzero)) {
+        raster::values(out)[nonzero] <- rbinom(sum(nonzero),size=size[nonzero],prob=prob[nonzero])
+        # if (any(is.na(raster::values(out)[nonzero]))) { browser() }
+    }
     return(out)
 }
