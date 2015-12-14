@@ -25,7 +25,7 @@ layer_adjacency <- function (layer,
     # note columns are (to,from)
     adj <- Matrix::sparseMatrix( i=match(ij[,2],from), j=match(ij[,1],to), x=1.0 )
     if (normalize) {
-        adj <- sweep(adj,1,rowSums(adj),"/")
+        adj <- sweep(adj,1,Matrix::rowSums(adj),"/")
     }
     return(adj)
 }

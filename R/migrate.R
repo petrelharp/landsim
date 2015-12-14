@@ -25,20 +25,9 @@ migrate <- function (   layer,
                         kern=migration$kern,
                         sigma=migration$sigma,
                         radius=migration$radius,
-                        normalize=migration$normalize,
-                        ...
+                        normalize=migration$normalize
                  ) {
-    if (is.character(kern)) {
-        kern <- switch( kern,
-                gaussian=function (x) {
-                        exp(-x^2/2) / (2*pi)
-                    },
-                cauchy=function (x) {
-                        1/(2*pi^2*x*(1+x^2))
-                    },
-                get(kern,mode="function") 
-            )
-    }
+    kern <- get_kernel(kern)
     area <- prod(raster::res(layer))
     cell.radius <- ceiling(radius/raster::res(layer))
     w <- matrix(nrow=2*cell.radius[1]+1,ncol=2*cell.radius[2]+1)
@@ -51,6 +40,20 @@ migrate <- function (   layer,
     return(out)
 }
 
+# helper function used elsewhere as well
+get_kernel <- function (kern) {
+    if (is.character(kern)) {
+        kern <- switch( kern,
+                gaussian=function (x) {
+                        exp(-x^2/2) / (2*pi)
+                    },
+                cauchy=function (x) {
+                        1/(2*pi^2*x*(1+x^2))
+                    },
+                get(kern,mode="function") 
+            )
+    } else { kern }
+}
 
 ##
 # Extend \code{focal} to work on Raster* objects.
