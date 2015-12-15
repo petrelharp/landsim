@@ -40,13 +40,13 @@ image(nn.mig)
 
 Alternatively, consider a Gaussian kernel:
 ```{r gaus_mig}
-gauss.mig <- kernel_adjacency(habitat,sigma=100,radius=500,fun="gaussian")
+gauss.mig <- migration_matrix(habitat,sigma=100,radius=500,fun="gaussian")
 image(gauss.mig)
 ```
 
 Or, a two-dimensional, symmetric Cauchy kernel:
 ```{r cauchy_mig}
-cauchy.mig <- kernel_adjacency(habitat,sigma=100,radius=800,fun="cauchy")
+cauchy.mig <- migration_matrix(habitat,sigma=100,radius=800,fun="cauchy")
 image(cauchy.mig)
 ```
 

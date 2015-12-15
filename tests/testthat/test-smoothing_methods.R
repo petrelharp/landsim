@@ -1,4 +1,4 @@
-context("Agreement between kernel_adjacency and migrate.")
+testthat::context("Agreement between migration_matrix and migrate.")
 
 # setup
 
@@ -16,7 +16,7 @@ values(habitat) <- sample( 100*c(1,2,5,10), length(habitat), replace=TRUE )
 
 migrate.habitat <- migrate(habitat,this.migration )
 
-M <- kernel_adjacency( habitat, this.migration )
+M <- migration_matrix( habitat, this.migration )
 M.habitat <- habitat
 nonzeros <- !is.na(values(M.habitat))
 values(M.habitat)[nonzeros] <- ( M %*% values(M.habitat)[nonzeros] )@x

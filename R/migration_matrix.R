@@ -17,7 +17,7 @@
 #' if this is greater than \code{min.prob}, and is 0 otherwise.
 #'
 #' Approximates the area of each cell to be constant.
-kernel_adjacency <- function (layer,
+migration_matrix <- function (layer,
                               migration=list(sigma=1,normalize=1),
                               kern=migration$kern,
                               sigma=migration$sigma,
