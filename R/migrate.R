@@ -34,7 +34,7 @@ migrate <- function (   layer,
     cc <- cell.radius+1
     w[] <- kern( sqrt( (xres(layer)*(row(w)-cc[1]))^2 + (yres(layer)*(col(w)-cc[2]))^2 )/sigma ) * area/sigma^2
     if (!is.null(normalize)) { w <- (normalize/sum(w))*w }
-    out <- focal( layer, w=w, na.rm=TRUE, pad=TRUE, pad.value=0 )
+    out <- focal( layer, w=w, na.rm=TRUE, pad=TRUE, padValue=0 )
     out[is.na(layer)] <- NA
     names(out) <- names(layer)
     return(out)

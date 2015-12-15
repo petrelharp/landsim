@@ -112,7 +112,7 @@ cells increases the run time by a second.
 Raster resolution
 =================
 
-Changing the resolution at a fixesd size also changes the number of cells,
+Changing the resolution at a fixed size also changes the number of cells,
 but affects the running time quite differently.
 Here is a function to create a 10-kilometer square random raster, with different resolutions.
 (But note that the base units of the raster are in meters.)

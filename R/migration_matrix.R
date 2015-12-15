@@ -40,6 +40,7 @@ migration_matrix <- function (layer,
     jj <- match(ij[,2],to)
     adj <- Matrix::sparseMatrix( i=ii, j=jj,
             x=kern(raster::pointDistance(from.pos[ii,],to.pos[jj,],lonlat=FALSE,allpairs=FALSE)/sigma)*area/sigma^2 )
+    diag(adj) <- kern(0)*area/sigma^2
     if (!is.null(normalize)) {
         # adj <- (normalize/Matrix::rowSums(adj)) * adj
         # this is twice as quick:
@@ -50,3 +51,29 @@ migration_matrix <- function (layer,
 
 # helper function to find column indices of dgCMatrix objects
 p.to.j <- function (p) { rep( seq.int( length(p)-1 ), diff(p) ) }
+
+#' Subset a Migration Matrix to Match a Smaller Raster
+#'
+#' This converts a migration matrix computed for one raster
+#' into a migration matrix for another raster that must be a subset of the first.
+#' This does not do any renormalization.
+#'
+#' @param M The migration matrix.
+#' @param old The original Raster* the migration matrix was computed for.
+#' @param new The new Raster* migraiton matrix.
+#' @export
+#' @return A migration matrix.  See \code{migrate}.
+subset_migration <- function (M, old, new, 
+                              from.old=which(!is.na(values(old))), to.old=from.old, 
+                              from.new=which(!is.na(values(new))), to.new=from.new
+                         ) {
+    if (any(res(old)!=res(new))) { stop("Resolutions must be the same for the two layers to subset a migration matrix.") }
+    if ( xmin(new)<xmin(old) || xmax(new)>xmax(old) || ymin(new)<ymin(old) || ymax(new)>ymax(old) ) {
+        stop("New layer must be contained in the old layer to subset a migration matrix.")
+    }
+    from.locs <- raster::xyFromCell(new,from.new)
+    from.inds <- match( raster::cellFromXY(old,from.locs), from.old )
+    to.locs <- raster::xyFromCell(new,to.new)
+    to.inds <- match( raster::cellFromXY(old,to.locs), to.old )
+    return(M[from.inds,to.inds])
+}
