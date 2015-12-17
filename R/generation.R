@@ -29,7 +29,8 @@ generation <- function (
         if (mode(f)=="function") { f(population,...) } else { f }
     }
     # sample number of seed-producing individuals:
-    M <- rbinom_raster( size=population, prob=fun_or_number(prob.seed) )
+    # M <- rbinom_raster( size=population, prob=fun_or_number(prob.seed) )
+    M <- rbinom( size=population$N, prob=fun_or_number(prob.seed) )
     # find mean pollen flux
     P <- migrate(population,pollen.migration)
     # mean seed production
@@ -37,8 +38,10 @@ generation <- function (
     # seed dispersal
     SD <- migrate(S,seed.migration)
     # new individuals
-    G <- rpois_raster( SD * fun_or_number(prob.germination) )
+    # G <- rpois_raster( SD * fun_or_number(prob.germination) )
+    G <- rpois( SD * fun_or_number(prob.germination) )
     # deaths
-    V <- rbinom_raster( size=population, prob=fun_or_number(prob.survival) )
+    # V <- rbinom_raster( size=population, prob=fun_or_number(prob.survival) )
+    V <- rbinom( size=population, prob=fun_or_number(prob.survival) )
     return(V+G)
 }

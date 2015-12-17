@@ -74,7 +74,12 @@ but need to keep them around in some form to distinguish temporarily empty cells
 from inhospitable ones.
 
 
-Absorbing internal and external boundaries
+Summary and usage
+-----------------
+
+
+
+**Guts:** Absorbing internal and external boundaries
 ------------------------------------------
 
 First, suppose we want migrants to exit at all boundaries.
@@ -124,7 +129,7 @@ expect_equal( hmf, matrix(M%*%as.numeric(hmat),nrow=nrow(hmf)) )
 expect_equal( hmf.NA, matrix(M%*%na_to_zero(as.numeric(hmat.NA)),nrow=nrow(hmf)) )
 ```
 
-Absorbing external, not internal, boundaries
+**Guts:** Absorbing external, not internal, boundaries
 --------------------------------------------
 
 Now, suppose we want migrants to exit at the external boundaries,
@@ -171,7 +176,7 @@ expect_equal( values(hf2.NA)[!is.na(values(habitat.NA))], as.numeric(M.NA%*%(val
 
 
 
-Reflecting internal and external boundaries (non-boundaries)
+**Guts:** Reflecting internal and external boundaries (non-boundaries)
 -----------------------------------------------------------
 
 Now, suppose we want migration to be conservative everywhere.
@@ -195,7 +200,6 @@ expect_equal( values(hf3), as.numeric(M%*%values(habitat)) )
 M.NA <- migration_matrix( habitat.NA, kern=function(x) { ifelse(x>0,1/16,1/2) }, sigma=1, radius=1, normalize=1 )
 expect_equal( values(hf3.NA)[!is.na(values(habitat.NA))], as.numeric(M.NA%*%(values(habitat.NA)[!is.na(values(habitat.NA))])) )
 ```
-
 
 
 

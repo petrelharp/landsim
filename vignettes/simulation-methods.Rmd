@@ -313,8 +313,13 @@ Demography application
 Now, doing the above simulation step is just a matter of calling `generation()`.
 **Importantly**, note that we pass in `carrying.capacity`, since it was left unspecified in the function `germination_fun` above.
 ```{r init_new_pop}
-N <- rpois_raster( brick( habitat, habitat, habitat )/3 )
-names(N) <- c("aa","aA","AA")
+pop <- population( 
+                  habitat = habitat,
+                  genotypes = c("aa","aA","AA"),
+                  N = cbind( aa=rpois(values(habitat)[!is.na(habitat)]/4),
+                             aA=rpois(values(habitat)[!is.na(habitat)]/2),
+                             AA=rpois(values(habitat)[!is.na(habitat)]/4) )
+             )
 this.plot(N)
 for (k in 1:5) {
     NN <- generation(N,this.demography,carrying.capacity=habitat)
