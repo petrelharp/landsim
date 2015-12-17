@@ -58,6 +58,8 @@ get_kernel <- function (kern) {
 ##
 # Extend \code{focal} to work on Raster* objects.
 
+require(raster)
+
 methods::setMethod("focal", signature("RasterStack"), function(x,...) {
           x.names <- names(x)
           for (k in seq_len(raster::nlayers(x))) {

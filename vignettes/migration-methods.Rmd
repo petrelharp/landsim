@@ -100,7 +100,6 @@ hmat.NA.pad <- rbind( 0, cbind( 0, hmat.NA, 0 ), 0 )
 hmf.NA <- hmf <- 0*hmat
 for (dx in c(-1,0,1)) { 
     for (dy in c(-1,0,1)) {
-        cat(sprintf("dx=%f, dy=%f, w=%f\n",dx,dy,w[2+dx,2+dy]))
         hmf <- hmf + hmat.pad[dx+1+(1:nrow(hmf)),dy+1+(1:ncol(hmf))]*w[2+dx,2+dy]
         add.these <- hmat.NA.pad[dx+1+(1:nrow(hmf)),dy+1+(1:ncol(hmf))]
         hmf.NA <- hmf.NA + ifelse(is.na(add.these),0,add.these)*w[2+dx,2+dy]
@@ -125,13 +124,13 @@ expect_equal( hmf, matrix(M%*%as.numeric(hmat),nrow=nrow(hmf)) )
 expect_equal( hmf.NA, matrix(M%*%na_to_zero(as.numeric(hmat.NA)),nrow=nrow(hmf)) )
 ```
 
-
 Absorbing external, not internal, boundaries
 --------------------------------------------
 
-First, suppose we want migrants to exit at the external boundaries,
+Now, suppose we want migrants to exit at the external boundaries,
 but not internal ones.
-In `focal()` we need to pad the matrix with zeros,
+To make the internal boundaries reflecting,
+in `focal()` we need to pad the matrix with zeros,
 and use `fun=weighted.mean` instead of `fun=sum`, with `na.rm=TRUE`.
 (This will be less efficient than with the default, `fun=sum`.)
 Note that `focal` returns locally `fun(w*x)`, 
@@ -172,6 +171,33 @@ expect_equal( values(hf2.NA)[!is.na(values(habitat.NA))], as.numeric(M.NA%*%(val
 
 
 
+Reflecting internal and external boundaries (non-boundaries)
+-----------------------------------------------------------
+
+Now, suppose we want migration to be conservative everywhere.
+Now, in `focal()` we need to pad the matrix with `NA`s,
+and use `fun=weighted.mean` instead of `fun=sum`, with `na.rm=TRUE`.
+```{r internal_focal}
+wm.fun <- function (x, na.rm) { weighted.mean(x,w=w,na.rm=na.rm) }
+hf3 <- focal( habitat, w=(w>0), pad=TRUE, fun=wm.fun, na.rm=TRUE, padValue=NA )
+hf3.NA <- focal( habitat.NA, w=(w>0), pad=TRUE, fun=wm.fun, na.rm=TRUE, padValue=NA )
+layout(t(1:2))
+plot(hf3,main="habitat",zlim=c(0,2))
+plot(hf3.NA,main="habitat, with missings",zlim=c(0,2))
+```
+
+Doing this with `migration_matrix` is as easy as setting `normalize=1`.
+```{r internal_migmat}
+M <- migration_matrix( habitat, kern=function(x) { ifelse(x>0,1/16,1/2) }, sigma=1, radius=1, normalize=1 )
+matrix(M[3,],nrow=nrow(habitat))
+expect_equal( values(hf3), as.numeric(M%*%values(habitat)) )
+
+M.NA <- migration_matrix( habitat.NA, kern=function(x) { ifelse(x>0,1/16,1/2) }, sigma=1, radius=1, normalize=1 )
+expect_equal( values(hf3.NA)[!is.na(values(habitat.NA))], as.numeric(M.NA%*%(values(habitat.NA)[!is.na(values(habitat.NA))])) )
+```
+
+
+
 
 Less simple example
 ===================
@@ -179,11 +205,11 @@ Less simple example
 Here's a simple habitat we'll work with.
 Note that spatial units are in meters; the values are carrying capacities.
 ```{r setup_layer, fig.cap="The (random) habitat.", fig.width=fig.dim}
-habitat <- raster(xmn=-1000, xmx=1000, ymn=-1000, ymx=1000, 
+big.habitat <- raster(xmn=-1000, xmx=1000, ymn=-1000, ymx=1000, 
       resolution=100,
       crs="+proj=utm +zone=11 +ellps=GRS80 +towgs84=0,0,0,0,0,0,0 +units=m +no_defs")
-values(habitat) <- sample( 100*c(1,2,5,NA), length(habitat), replace=TRUE )
-plot(habitat)
+values(big.habitat) <- sample( 100*c(1,2,5,NA), length(big.habitat), replace=TRUE )
+plot(big.habitat)
 ```
 
 
@@ -200,19 +226,19 @@ Matrices
 
 The easiest migration matrix to create is a nearest-neighbor migration:
 ```{r nn_mig}
-nn.mig <- layer_adjacency(habitat)
+nn.mig <- layer_adjacency(big.habitat)
 image(nn.mig)
 ```
 
 Alternatively, consider a Gaussian kernel:
 ```{r gaus_mig}
-gauss.mig <- migration_matrix(habitat,sigma=100,radius=500,kern="gaussian")
+gauss.mig <- migration_matrix(big.habitat,sigma=100,radius=500,kern="gaussian")
 image(gauss.mig)
 ```
 
 Or, a two-dimensional, symmetric Cauchy kernel:
 ```{r cauchy_mig}
-cauchy.mig <- migration_matrix(habitat,sigma=100,radius=800,kern="cauchy")
+cauchy.mig <- migration_matrix(big.habitat,sigma=100,radius=800,kern="cauchy")
 image(cauchy.mig)
 ```
 
@@ -224,8 +250,8 @@ The `raster` package does smoothing operations directly, with `raster::focal`.
 For instance, we can assign random values to the non-NA values in the layer
 and then smooth them with a Gaussian kernel:
 ```{r gauss_smooth}
-N <- habitat
-values(N)[!is.na(values(N))] <- rpois(sum(!is.na(values(N))),values(habitat)[!is.na(values(N))])
+N <- big.habitat
+values(N)[!is.na(values(N))] <- rpois(sum(!is.na(values(N))),values(big.habitat)[!is.na(values(N))])
 plot(N)
 gauss.N <- migration_matrix(N,radius=500,sigma=100,kern="gaussian")
 plot(gauss.N)

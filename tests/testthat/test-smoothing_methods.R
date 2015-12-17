@@ -21,35 +21,34 @@ hf1.NA <- focal( habitat.NA, w=w, pad=TRUE, na.rm=TRUE, padValue=0 )
 
 hmat <- matrix(values(habitat),nrow=nrow(habitat),ncol=ncol(habitat))
 hmat.NA <- matrix(values(habitat.NA),nrow=nrow(habitat),ncol=ncol(habitat))
-expect_equivalent(as.numeric(hmat),values(habitat))
-expect_equivalent(as.numeric(hmat.NA),values(habitat.NA))
+testthat::expect_equivalent(as.numeric(hmat),values(habitat))
+testthat::expect_equivalent(as.numeric(hmat.NA),values(habitat.NA))
 
 hmat.pad <- rbind( 0, cbind( 0, hmat, 0 ), 0 )
 hmat.NA.pad <- rbind( 0, cbind( 0, hmat.NA, 0 ), 0 )
 hmf.NA <- hmf <- 0*hmat
 for (dx in c(-1,0,1)) { 
     for (dy in c(-1,0,1)) {
-        cat(sprintf("dx=%f, dy=%f, w=%f\n",dx,dy,w[2+dx,2+dy]))
         hmf <- hmf + hmat.pad[dx+1+(1:nrow(hmf)),dy+1+(1:ncol(hmf))]*w[2+dx,2+dy]
         add.these <- hmat.NA.pad[dx+1+(1:nrow(hmf)),dy+1+(1:ncol(hmf))]
         hmf.NA <- hmf.NA + ifelse(is.na(add.these),0,add.these)*w[2+dx,2+dy]
     }
 }
 
-expect_equivalent(as.numeric(hmf),values(hf1))
-expect_equivalent(as.numeric(hmf.NA),values(hf1.NA))
+testthat::expect_equivalent(as.numeric(hmf),values(hf1))
+testthat::expect_equivalent(as.numeric(hmf.NA),values(hf1.NA))
 
 
 # check simple smoothing matrix construction
 
 M <- migration_matrix( habitat, kern=function(x) { ifelse(x>0,1/16,1/2) }, sigma=1, radius=1, normalize=NULL )
 matrix(M[3,],nrow=5)
-expect_equal( hmf, matrix(M%*%as.numeric(hmat),nrow=nrow(hmf)) )
-expect_equal( hmf.NA, matrix(M%*%na_to_zero(as.numeric(hmat.NA)),nrow=nrow(hmf)) )
+testthat::expect_equal( hmf, matrix(M%*%as.numeric(hmat),nrow=nrow(hmf)) )
+testthat::expect_equal( hmf.NA, matrix(M%*%na_to_zero(as.numeric(hmat.NA)),nrow=nrow(hmf)) )
 
 
 ########
-context("Absorbing external, not internal, boundaries"
+testthat::context("Absorbing external, not internal, boundaries")
 
 wm.fun <- function (x, na.rm) { weighted.mean(x,w=w,na.rm=na.rm) }
 hf2 <- focal( habitat, w=(w>0), pad=TRUE, fun=wm.fun, na.rm=TRUE, padValue=0 )
@@ -61,38 +60,27 @@ M <- migration_matrix( pad.habitat, kern=function(x) { ifelse(x>0,1/16,1/2) }, s
 M <- subset_migration( M, old=pad.habitat, new=habitat )
 matrix(M[3,],nrow=nrow(habitat))
 
-expect_equal( values(hf2), as.numeric(M%*%values(habitat)) )
+testthat::expect_equal( values(hf2), as.numeric(M%*%values(habitat)) )
 
 pad.habitat.NA <- extend(habitat.NA,pad.extent,value=0)
 M.NA <- migration_matrix( pad.habitat.NA, kern=function(x) { ifelse(x>0,1/16,1/2) }, sigma=1, radius=1, normalize=1 )
 M.NA <- subset_migration( M.NA, old=pad.habitat.NA, new=habitat.NA  )
 
-expect_equal( values(hf2.NA)[!is.na(values(habitat.NA))], as.numeric(M.NA%*%(values(habitat.NA)[!is.na(values(habitat.NA))])) )
+testthat::expect_equal( values(hf2.NA)[!is.na(values(habitat.NA))], as.numeric(M.NA%*%(values(habitat.NA)[!is.na(values(habitat.NA))])) )
+
+########
+testthat::context("Non-boundaries")
 
 
-###################
-# check with a more complex raster
+wm.fun <- function (x, na.rm) { weighted.mean(x,w=w,na.rm=na.rm) }
+hf3 <- focal( habitat, w=(w>0), pad=TRUE, fun=wm.fun, na.rm=TRUE, padValue=NA )
+hf3.NA <- focal( habitat.NA, w=(w>0), pad=TRUE, fun=wm.fun, na.rm=TRUE, padValue=NA )
 
-this.migration <- migration(
-                    kern = "gaussian",
-                    sigma = 100,
-                    radius = 400,
-                    normalize = NULL
-             )
+M <- migration_matrix( habitat, kern=function(x) { ifelse(x>0,1/16,1/2) }, sigma=1, radius=1, normalize=1 )
+matrix(M[3,],nrow=nrow(habitat))
+testthat::expect_equal( values(hf3), as.numeric(M%*%values(habitat)) )
 
-habitat <- raster(xmn=-1000/2, xmx=1000/2, ymn=-1000/2, ymx=1000/2,
-      resolution=100, # m
-      crs="+proj=utm +zone=11 +ellps=GRS80 +towgs84=0,0,0,0,0,0,0 +units=m +no_defs")
-values(habitat) <- sample( 100*c(1,2,5,10), length(habitat), replace=TRUE )
+M.NA <- migration_matrix( habitat.NA, kern=function(x) { ifelse(x>0,1/16,1/2) }, sigma=1, radius=1, normalize=1 )
+testthat::expect_equal( values(hf3.NA)[!is.na(values(habitat.NA))], as.numeric(M.NA%*%(values(habitat.NA)[!is.na(values(habitat.NA))])) )
 
-migrate.habitat <- migrate(habitat,this.migration )
 
-M <- migration_matrix( habitat, this.migration )
-M.habitat <- habitat
-nonzeros <- !is.na(values(M.habitat))
-values(M.habitat)[nonzeros] <- ( M %*% values(M.habitat)[nonzeros] )@x
-
-## we DO NOT expect these to be the same at because normalization 
-## and treatment of the boundary is different.
-
-# ( M.habitat-migrate.habitat )
