@@ -144,6 +144,7 @@ this.plot(K)
 
 ```{r new_inds}
 G <- rpois_raster(SD*K)
+names(G) <- names(SD) # multiplication removes names
 this.plot(G)
 ```
 
@@ -158,7 +159,39 @@ this.plot(NN)
 Abstracting the simulation step
 ===============================
 
-Now let's wrap those parameters up into an object.
+Now let's wrap everything up into objects.
+First, we need the idea of a population:
+
+`population`
+----------
+
+Class **population**:
+
+`habitat`
+
+: a Raster with values that can be used in other computations.
+
+`accessible`
+
+: vector of indices of cells in `habitat` that migrants will attempt to go to
+
+`habitable`
+
+: vector of indices of cells in `habitat` that may have positive population
+
+`genotypes`
+
+: character vector of the genotypes
+
+`N`
+
+: matrix indexed by (habitable cells) x (genotypes) giving the number of each genotype in each habitable cell
+
+
+
+`migration`
+---------
+
 One structure we use several times
 is the setup for smoothing (with `migrate`);
 for this we need to know:
@@ -182,13 +215,16 @@ Class **migration**:
 : normalization factor applied to the smoother
 
 
+`demography`
+----------
+
 Several of the base demographic parameters we might want to specify
 (as a fixed number or a layer),
 or compute (as a function of the current population state).
 Such **parameters** can be either something numeric
 or else a function that is applied to `N` to get the result.
 
-Then, to do a single generation we need to know:
+To do a single generation we need to know:
 
 Class **demography**:
 
