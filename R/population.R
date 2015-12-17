@@ -19,7 +19,7 @@ population <- function (
                         genotypes=colNames(N),
                         N=matrix(1,nrow=sum(habitable),ncol=length(genotypes)),
                        ...)  {
-    if ( (ncol(N) != length(genotypes)) || (nrow(genotypes)!=sum(habitable)) ) {
+    if ( (NCOL(N) != length(genotypes)) || (NROW(N)!=sum(habitable)) ) {
         stop("N must be (number of habitable cells) x (number of genotypes)")
     }
     colnames(N) <- genotypes
@@ -28,7 +28,7 @@ population <- function (
                 accessible=accessible,
                 habitable=habitable,
                 genotypes=genotypes,
-                N=N,
+                N=N
             ), list(...) )
     class(out) <- "population"
     return(out)
@@ -44,14 +44,16 @@ population <- function (
 pop_to_raster <- function (population,x=population$N) {
     out <- stack( pop['habitat'][rep(1,NCOL(x))] )
     names(out) <- pop$genotypes
-    values(out)[pop$habitable] <- x
+    values(out)[pop$habitable] <- as.numeric(x)
     return(out)
 }
 
-require(raster)
-setAs(from="population",to="Raster",def=pop_to_raster)
+# this only works for S4 methods
+# require(raster)
+# setAs(from="population",to="Raster",def=function(from)pop_to_raster(population=from))
 
-plot.population <- function (pop,...) { plot(as(pop,"Raster"),...) }
+plot.population <- function (pop,...) { plot(pop_to_raster(pop),...) }
+values.ppulation <- function (pop) { pop$N }
 
 #' Number of Habitable Cells in a Population.
 #'

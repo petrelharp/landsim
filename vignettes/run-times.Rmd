@@ -16,6 +16,7 @@ fig.dim <- 3
 knitr::opts_chunk$set(fig.width=3*fig.dim,fig.height=fig.dim,fig.align='center')
 library(Matrix)
 library(raster)
+library(microbenchmark)
 devtools::load_all("..")
 set.seed(42)
 this.plot <- function (x,nr=1,zlim=c(0,max(values(x),na.rm=TRUE)),...) {
@@ -37,7 +38,7 @@ germination.args <- list(
                                  )
          )
 germination_fun <- function (N,carrying.capacity,...) {
-    germination.args$r0 / ( 1 + migrate(N,germination.args$competition)/carrying.capacity )
+    germination.args$r0 / ( 1 + migrate_raster(N,germination.args$competition)/carrying.capacity )
 }
 
 this.demography <- demography(
@@ -58,8 +59,7 @@ this.demography <- demography(
                             normalize = 1
                      ),
         genotypes = c("aa","aA","AA"),
-        mating = mating_tensor( c("aa","aA","AA") ),
-        germination.ags = germination.args
+        mating = mating_tensor( c("aa","aA","AA") )
     )
 ```
 
@@ -75,7 +75,7 @@ habitat_size <- function (k) {
           resolution=100, #fixed resolution
           crs="+proj=utm +zone=11 +ellps=GRS80 +towgs84=0,0,0,0,0,0,0 +units=m +no_defs")
     values(habitat) <- sample( 100*c(1,2,5,NA), length(habitat), replace=TRUE )
-    migrate(habitat,kern="gaussian",sigma=200,radius=1000)
+    migrate_raster(habitat,kern="gaussian",sigma=200,radius=1000)
 }
 ```
 
@@ -86,7 +86,7 @@ size.results <- lapply( sizes, function (k) {
                   habitat <- habitat_size(k)
                   N <- rpois_raster( do.call( brick, list(habitat)[rep(1,length(this.demography$genotypes))] ) )
                   names(N) <- this.demography$genotypes
-                  gen.time <- system.time( NN <- generation(N,this.demography,carrying.capacity=habitat) )
+                  gen.time <- system.time( NN <- generation_raster(N,this.demography,carrying.capacity=habitat) )
                   return( list( time=gen.time, N=N, NN=NN ) )
           } )
 ```
@@ -122,7 +122,7 @@ habitat_res <- function (resolution) {
           resolution=resolution,
           crs="+proj=utm +zone=11 +ellps=GRS80 +towgs84=0,0,0,0,0,0,0 +units=m +no_defs")
     values(habitat) <- sample( 100*c(1,2,5,NA), length(habitat), replace=TRUE )
-    migrate(habitat,kern="gaussian",sigma=200,radius=1000)
+    migrate_raster(habitat,kern="gaussian",sigma=200,radius=1000)
 }
 ```
 
@@ -132,8 +132,8 @@ resolutions <- 100*2^(-2:2)
 res.results <- lapply( resolutions, function (resolution) {
                   habitat <- habitat_res(resolution)
                   N <- rpois_raster( do.call( brick, list(habitat)[rep(1,length(this.demography$genotypes))] ) )
-                  names(N) <- genotypes
-                  gen.time <- system.time( NN <- generation(N,this.demography,carrying.capacity=habitat) )
+                  names(N) <- this.demography$genotypes
+                  gen.time <- system.time( NN <- generation_raster(N,this.demography,carrying.capacity=habitat) )
                   return( list( time=gen.time, N=N, NN=NN ) )
           } )
 ```
@@ -155,3 +155,37 @@ but at these settings, adding
 `r round( 1/coef(with( subset(res.tab,ncell>5e3), lm(user.self ~ ncell) ))[2], 0 )`
 cells increases the run time by a second.
 
+
+Two implementations
+===================
+
+Based on the above, we have two implementations of the method,
+one that works with `Raster` objects (so can take advantage of methods for those that work on layers too big to fit in memory);
+and one that precomputes a migration matrix and works directly with numeric matrices.
+
+Let's compare the speeds.
+```{r compare_methods}
+habitat <- habitat_size(6)
+N <- rpois_raster( do.call( brick, list(habitat)[rep(1,length(this.demography$genotypes))] ) )
+names(N) <- this.demography$genotypes
+raster.time <- microbenchmark( generation_raster(N,this.demography,carrying.capacity=habitat), times=10 )
+
+pop <- population( 
+                  habitat = habitat,
+                  genotypes = this.demography$genotypes,
+                  N = matrix(values(N)[!is.na(values(habitat))],ncol=3)
+             )
+matrix.demography <- this.demography
+matrix.demography$seed.migration <- migration( matrix.demography$seed.migration, do.M=TRUE, layer=habitat )
+matrix.demography$pollen.migration <- migration( matrix.demography$pollen.migration, do.M=TRUE, layer=habitat )
+matrix.germination.args <- germination.args
+matrix.germination.args$competition <- migration( matrix.germination.args$competition, do.M=TRUE, layer=habitat )
+matrix.demography$prob.germination <- function (N,carrying.capacity,...) {
+    matrix.germination.args$r0 / ( 1 + migrate(matrix.germination.args$competition,N)/carrying.capacity )
+}
+matrix.time <- microbenchmark( generation(pop,matrix.demography,carrying.capacity=values(habitat)[!is.na(values(habitat))]), times=10 )
+
+rbind( raster.time, matrix.time )
+```
+
+That's a speedup of `r round(mean(raster.time$time)/mean(matrix.time$time))` times, pretty good.

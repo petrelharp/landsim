@@ -38,7 +38,14 @@ A simulation step
 
 ```{r plot_setup}
 # plotting function for typical layers below
-this.plot <- function (x,nr=1,zlim=c(0,max(values(x),na.rm=TRUE)),...) {
+this.plot <- function (x,nr=1,zlim,...) {
+    if (missing(zlim)) {
+        if (inherits(x,"Raster")) {
+            zlim  <- c(0,max(values(x),na.rm=TRUE))
+        } else if (inherits(x,"population")) {
+            zlim  <- c(0,max(x$N,na.rm=TRUE))
+        }
+    }
     plot(x,nr=nr,zlim=zlim,...)
 }
 ```
@@ -111,14 +118,14 @@ this.plot(M)
 2. **Find the mean pollen flux:**
 
 ```{r pollen}
-P <- migrate(N,kern=pollen.kernel,sigma=pollen.sigma,radius=max.pollen.dist)
+P <- migrate_raster(N,kern=pollen.kernel,sigma=pollen.sigma,radius=max.pollen.dist)
 this.plot(P)
 ```
 
 3. **Find the mean seed production field:**
 
 ```{r mean_seed}
-S <- seed_production(seeders=M,pollen=P,mating=mating.tensor,
+S <- seed_production_raster(seeders=M,pollen=P,mating=mating.tensor,
                      fecundity=seed.fecundity)
 this.plot(S)
 ```
@@ -126,7 +133,7 @@ this.plot(S)
 4. **Disperse seeds:**
 
 ```{r disperse_seeds}
-SD <- migrate(S,kern=seed.kernel,sigma=seed.sigma,radius=max.seed.dist,
+SD <- migrate_raster(S,kern=seed.kernel,sigma=seed.sigma,radius=max.seed.dist,
                      normalize=TRUE)
 this.plot(SD)
 ```
@@ -134,7 +141,7 @@ this.plot(SD)
     according to $r_0/(1+f(x)/M(x))$:
 
 ```{r get_competition, fig.width=fig.dim}
-K <- migrate(sum(N),kern=competition.kernel,sigma=competition.sigma,
+K <- migrate_raster(sum(N),kern=competition.kernel,sigma=competition.sigma,
                     radius=max.competition.dist,normalize=TRUE)
 K <- prob.germination/(1+K/carrying.capacity)
 this.plot(K)
@@ -188,7 +195,6 @@ Class **population**:
 : matrix indexed by (habitable cells) x (genotypes) giving the number of each genotype in each habitable cell
 
 
-
 `migration`
 ---------
 
@@ -213,6 +219,21 @@ Class **migration**:
 `normalize`
 
 : normalization factor applied to the smoother
+
+
+migration.matrix
+----------------
+
+A `migration.matrix` object extends a `migration` object,
+in that it has a precomputed migration matrix,
+and hence is tied to a particular `population` setup
+(although this is not included).  This has additional entries
+
+Class **migration.matrix**:
+
+`M`
+
+: The pre-computed migration matirx.
 
 
 `demography`
@@ -277,11 +298,13 @@ germination.args <- list(
                                      kern="gaussian",
                                      sigma=100,
                                      radius=300,
-                                     normalize=1
+                                     normalize=1,
+                                     do.M=TRUE,
+                                     layer=habitat
                                  )
          )
 germination_fun <- function (N, carrying.capacity, ...) {
-    germination.args$r0 / ( 1 + migrate(N,germination.args$competition)/carrying.capacity )
+    germination.args$r0 / ( 1 + migrate(germination.args$competition,N)/carrying.capacity )
 }
 
 this.demography <- demography(
@@ -293,13 +316,17 @@ this.demography <- demography(
                             kern = function (x) { exp(-sqrt(x)) },
                             sigma = 100,
                             radius = 1000,
-                            normalize = NULL
+                            normalize = NULL,
+                            do.M=TRUE,
+                            layer=habitat
                      ),
         seed.migration = migration(
                             kern = "gaussian",
                             sigma = 20,
                             radius = 400,
-                            normalize = 1
+                            normalize = 1,
+                            do.M=TRUE,
+                            layer=habitat
                      ),
         genotypes = c("aa","aA","AA"),
         mating = mating_tensor( c("aa","aA","AA") ),
@@ -316,13 +343,14 @@ Now, doing the above simulation step is just a matter of calling `generation()`.
 pop <- population( 
                   habitat = habitat,
                   genotypes = c("aa","aA","AA"),
-                  N = cbind( aa=rpois(values(habitat)[!is.na(habitat)]/4),
-                             aA=rpois(values(habitat)[!is.na(habitat)]/2),
-                             AA=rpois(values(habitat)[!is.na(habitat)]/4) )
+                  N = cbind( aa=rpois_raster(habitat/4,only.values=TRUE),
+                             aA=rpois_raster(habitat/2,only.values=TRUE),
+                             AA=rpois_raster(habitat/4,only.values=TRUE) )
              )
-this.plot(N)
+
+this.plot(pop)
 for (k in 1:5) {
-    NN <- generation(N,this.demography,carrying.capacity=habitat)
-    this.plot(NN)
+    pop$N <- generation(pop,this.demography,carrying.capacity=values(pop$habitat)[pop$habitable])
+    this.plot(pop)
 }
 ```
