@@ -1,5 +1,5 @@
 ---
-title: "Simulating a simple selective sweep on a landscape."
+title: "Simulating spatial sweeps."
 author: "Peter Ralph"
 date: "`r Sys.Date()`"
 output: 
@@ -17,26 +17,27 @@ fig.dim <- 3
 knitr::opts_chunk$set(fig.width=3*fig.dim,fig.height=fig.dim,fig.align='center')
 library(Matrix)
 library(raster)
-library(jsonlite)
 devtools::load_all("..")
 set.seed(42)
 ```
 
 
-Here's a simple layer we'll work with.
+Here's a randomly generated landscape; the white areas (which are `NA`) are inaccessible areas.
 Note that units are in meters.
 ```{r setup_layer, fig.cap="The (random) habitat.", fig.height=4, fig.width=4}
-habitat <- raster(xmn=-1000, xmx=1000, ymn=-1000, ymx=1000, 
+diam <- 1e4
+habitat <- raster(xmn=-diam, xmx=diam, ymn=-diam, ymx=diam, 
       resolution=100,
       crs="+proj=utm +zone=11 +ellps=GRS80 +towgs84=0,0,0,0,0,0,0 +units=m +no_defs")
-values(habitat) <- exp(2+rnorm(ncell(habitat)))
-habitat <- migrate_raster( habitat, kern="gaussian", sigma=100, radius=1500 )
+values(habitat) <- pmin(20,(2+rcauchy(ncell(habitat))))
+habitat <- 20*migrate_raster( habitat, kern="gaussian", sigma=300, radius=1500 )
+values(habitat)[values(habitat)<0] <- NA
 plot(habitat)
 ```
 
 The total carrying capacity is `r sum(values(habitat),na.rm=TRUE)`.
 
-```{r plot_setup}
+```{r plot_setup, include=FALSE}
 # plotting function for typical layers below
 pl <- function (x,v,nr=1,zlim, ...) {
     if (!missing(v)) {
@@ -44,6 +45,7 @@ pl <- function (x,v,nr=1,zlim, ...) {
             x <- do.call(stack,list(x)[rep(1,NCOL(v))])
         }
         values(x)[!is.na(values(x))] <- as.numeric(v)
+        names(x) <- colnames(v)
     }
     if (missing(zlim)) {
         if (inherits(x,"Raster")) {
@@ -93,15 +95,15 @@ this.demography <- demography(
         prob.survival = 0.9,
         pollen.migration = migration(
                             kern = function (x) { exp(-sqrt(x)) },
-                            sigma = 100,
-                            radius = 1000,
+                            sigma = 30,
+                            radius = 500,
                             normalize = NULL,
                             do.M=TRUE,
                             population=habitat
                      ),
         seed.migration = migration(
                             kern = "gaussian",
-                            sigma = 20,
+                            sigma = 50,
                             radius = 400,
                             normalize = 1,
                             do.M=TRUE,
@@ -121,7 +123,7 @@ pop <- population(
                   habitat = habitat,
                   genotypes = c("aa","aA","AA"),
                   N = cbind( aa=rpois_raster(habitat,only.values=TRUE),
-                             aA=rpois_raster(habitat*100/total.habitat,only.values=TRUE),
+                             aA=rpois_raster(habitat*40/total.habitat,only.values=TRUE),
                              AA=0 )
              )
 
@@ -135,25 +137,18 @@ multiplied by the fecundity,
 multiplied by the probability of germination;
 this must be greater than the probability of death,
 calculated at low density.
-Here this is:
+Here is the number of offspring per individual at low density, minus one:
 ```{r stability_check}
-exp.pop <- pop
-exp.pop$N[] <- 1
-vitals <- generation(exp.pop,this.demography,
-                     carrying.capacity=values(pop$habitat)[pop$habitable],
-                     expected=TRUE,return.everything=TRUE)
-for (k in seq_along(vitals)) {
-    pl(exp.pop$habitat,v=vitals[[k]],main=c("",paste(names(vitals)[k],"density 1"),""))
-}
+base.r <- intrinsic_growth( pop, this.demography, 
+                         carrying.capacity=values(pop$habitat)[pop$habitable] )
+pl(pop$habitat, v=base.r-1)
 ```
 
-Just for comparison, here's the number of germinating seeds per capita at a much higher density
+To check for stability, here's the same thing, at density 500:
 ```{r high_density}
-exp.pop$N[] <- 500
-vitals <- generation(exp.pop,this.demography,
-                     carrying.capacity=values(pop$habitat)[pop$habitable],
-                     expected=TRUE,return.everything=TRUE)
-pl(exp.pop$habitat,v=vitals$germination/exp.pop$N,main=c("","per capita germination at density 500","") )
+base.r <- intrinsic_growth( pop, this.demography, density=500,
+                         carrying.capacity=values(pop$habitat)[pop$habitable] )
+pl(pop$habitat, v=base.r-1)
 ```
 
 Now, we can run the simulation.
@@ -161,7 +156,7 @@ Note that we have to pass `carrying.capacity` in.
 We'll record the full state of the population at several times, 
 and record the total number of each genotype in every generation.
 ```{r run_sim}
-plot.times <- 1+c(1,10,20,40,100,200)
+plot.times <- 50*(1:8)
 sim <- simulate( pop, this.demography, times=plot.times, 
                 carrying.capacity=values(pop$habitat)[pop$habitable],
                 summaries=list( totals=function(x){colSums(x$N)} )
