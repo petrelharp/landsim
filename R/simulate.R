@@ -50,6 +50,28 @@ simulate <- function (
         population$N <- generation(population,demography,t=t,...)
         t <- t+1
     }
-    return(list(N=out,summaries=sums))
+    return(list(N=out,summaries=sums,times=times,summary.times=summary.times,final.t=t))
 }
+
+#' Convert Simulation Array to RasterBrick(s).
+#'
+#' From a population object and an array of values 
+#' whose dimensions correspond to habitable cells, genotypes, and times (in that order),
+#' create a list of RasterBricks, one for each genotype.
+#'
+#' @param sim An array, as above.
+#' @param pop A \code{population} object.
+#' @export
+#' @return A named list of RasterBrick objects.
+sim_to_brick <- function (sim,pop) {
+    out <- lapply( pop$genotypes, function (geno) {
+                  rb <- do.call( stack, list( pop$habitat )[rep(1,dim(sim$N)[3])] )
+                  values(rb)[pop$habitable] <- sim$N[,match(geno,pop$genotypes),]
+                  names(rb) <- sim$times
+                  rb
+           } )
+    names(out) <- pop$genotypes
+    return(out)
+}
+
 

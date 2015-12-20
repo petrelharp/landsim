@@ -156,17 +156,17 @@ Note that we have to pass `carrying.capacity` in.
 We'll record the full state of the population at several times, 
 and record the total number of each genotype in every generation.
 ```{r run_sim}
-plot.times <- 50*(1:8)
+plot.times <- seq(0,700,length.out=71)
 sim <- simulate( pop, this.demography, times=plot.times, 
                 carrying.capacity=values(pop$habitat)[pop$habitable],
                 summaries=list( totals=function(x){colSums(x$N)} )
             )
 ```
 
-Here are snapshots of the simulation:
-```{r plot_sim_snapshots}
+Here is a video of the simulation:
+```{r plot_sim_snapshots, fig.show="animate", aniopts="controls", interval=0.2}
 for (k in seq_along(plot.times)) {
-    pl(pop$habitat,v=sim$N[,,k],main=c("",sprintf("t=%d",plot.times[k])))
+    pl(pop$habitat,v=sim$N[,,k],main=c("",sprintf("t=%d",plot.times[k])),zlim=range(sim$N,finite=TRUE))
     # if (interactive() && is.null(locator(n=1))) {break;}
 }
 ```
