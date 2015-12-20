@@ -5,7 +5,7 @@ date: "`r Sys.Date()`"
 output: 
     rmarkdown::html_vignette
 vignette: >
-  %\VignetteIndexEntry{Vignette Title}
+  %\VignetteIndexEntry{Raster-based landscape genomics simulations}
   %\VignetteEngine{knitr::rmarkdown}
   %\VignetteEncoding{UTF-8}
 ---
@@ -32,13 +32,9 @@ plot(habitat,asp=1)
 ```
 
 
-
-A simulation step
-=================
-
 ```{r plot_setup}
 # plotting function for typical layers below
-this.plot <- function (x,nr=1,zlim,...) {
+pl <- function (x,nr=1,zlim,...) {
     if (missing(zlim)) {
         if (inherits(x,"Raster")) {
             zlim  <- c(0,max(values(x),na.rm=TRUE))
@@ -50,11 +46,15 @@ this.plot <- function (x,nr=1,zlim,...) {
 }
 ```
 
+
+A simulation step
+=================
+
 Beginning with a population:
 ```{r init_pop, fig.cap="Abundances of genotypes."}
 N <- rpois_raster( brick( habitat, habitat, habitat )/3 )
 genotypes <- names(N) <- c("aa","aA","AA")
-this.plot(N)
+pl(N)
 ```
 
 Here are the population parameters.
@@ -112,14 +112,14 @@ prob.survival <- 0.9
 
 ```{r seeds}
 M <- rbinom_raster(N,prob.seed)
-this.plot(M)
+pl(M)
 ```
 
 2. **Find the mean pollen flux:**
 
 ```{r pollen}
 P <- migrate_raster(N,kern=pollen.kernel,sigma=pollen.sigma,radius=max.pollen.dist)
-this.plot(P)
+pl(P)
 ```
 
 3. **Find the mean seed production field:**
@@ -127,7 +127,7 @@ this.plot(P)
 ```{r mean_seed}
 S <- seed_production_raster(seeders=M,pollen=P,mating=mating.tensor,
                      fecundity=seed.fecundity)
-this.plot(S)
+pl(S)
 ```
 
 4. **Disperse seeds:**
@@ -135,7 +135,7 @@ this.plot(S)
 ```{r disperse_seeds}
 SD <- migrate_raster(S,kern=seed.kernel,sigma=seed.sigma,radius=max.seed.dist,
                      normalize=TRUE)
-this.plot(SD)
+pl(SD)
 ```
 5. **Find competition kernel:**
     according to $r_0/(1+f(x)/M(x))$:
@@ -144,7 +144,7 @@ this.plot(SD)
 K <- migrate_raster(sum(N),kern=competition.kernel,sigma=competition.sigma,
                     radius=max.competition.dist,normalize=TRUE)
 K <- prob.germination/(1+K/carrying.capacity)
-this.plot(K)
+pl(K)
 ```
 
 6. **Sample new individuals:**
@@ -152,14 +152,14 @@ this.plot(K)
 ```{r new_inds}
 G <- rpois_raster(SD*K)
 names(G) <- names(SD) # multiplication removes names
-this.plot(G)
+pl(G)
 ```
 
 7. **Kill off old individuals and add in new ones:**
 
 ```{r next_gen}
 NN <- rbinom_raster(N,prob.survival) + G
-this.plot(NN)
+pl(NN)
 ```
 
 
@@ -300,11 +300,11 @@ germination.args <- list(
                                      radius=300,
                                      normalize=1,
                                      do.M=TRUE,
-                                     layer=habitat
+                                     population=habitat
                                  )
          )
 germination_fun <- function (N, carrying.capacity, ...) {
-    germination.args$r0 / ( 1 + migrate(germination.args$competition,N)/carrying.capacity )
+    germination.args$r0 / ( 1 + migrate(germination.args$competition,x=N)/carrying.capacity )
 }
 
 this.demography <- demography(
@@ -318,7 +318,7 @@ this.demography <- demography(
                             radius = 1000,
                             normalize = NULL,
                             do.M=TRUE,
-                            layer=habitat
+                            population=habitat
                      ),
         seed.migration = migration(
                             kern = "gaussian",
@@ -326,11 +326,10 @@ this.demography <- demography(
                             radius = 400,
                             normalize = 1,
                             do.M=TRUE,
-                            layer=habitat
+                            population=habitat
                      ),
         genotypes = c("aa","aA","AA"),
-        mating = mating_tensor( c("aa","aA","AA") ),
-        germination.ags = germination.args
+        mating = mating_tensor( c("aa","aA","AA") )
     )
 ```
 
@@ -348,9 +347,9 @@ pop <- population(
                              AA=rpois_raster(habitat/4,only.values=TRUE) )
              )
 
-this.plot(pop)
+pl(pop)
 for (k in 1:5) {
     pop$N <- generation(pop,this.demography,carrying.capacity=values(pop$habitat)[pop$habitable])
-    this.plot(pop)
+    pl(pop)
 }
 ```

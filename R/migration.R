@@ -8,14 +8,16 @@
 #' @param radius The maximum distance to migrate over.
 #' @param normalize Total number of migrants per unit of input.
 #' @param do.M Precompute an explicit migration matrix?
-#' @param layer Used in computing \code{M}.
+#' @param population A Raster* or a \code{population}; used in computing \code{M}.
 #' @param from Used in computing \code{M}.
 #' @param to Used in computing \code{M}.
 #' @param ... Other parameters that are included verbatim in the output object.
 #' @export
 #' @return A \code{migration} S3 object (just a named list).
 #'
-#' @section If \code{kern} is a migration object, can be used to add a migration matrix to it.
+#' @section{Details}
+#'
+#' If \code{kern} is a migration object, can be used to add a migration matrix to it.
 #' See \code{migration_matrix}.
 migration <- function (
                        kern, 
@@ -23,8 +25,8 @@ migration <- function (
                        sigma=1, 
                        normalize=1, 
                        do.M=FALSE,
-                       layer, 
-                       from=which(raster::values(!is.na(layer))),
+                       population, 
+                       from=which(raster::values(!is.na(population))),
                        to=from,
                        ...)  {
     if (inherits(kern,"migration")) {
@@ -39,7 +41,8 @@ migration <- function (
     }
     class(out) <- "migration"
     if (do.M) {
-        out$M <- migration_matrix( layer=layer, migration=out, from=from, to=to )
+        if (missing(population)) { stop("To compute M you need a population or a Raster.") }
+        out$M <- migration_matrix( population=population, migration=out, from=from, to=to )
         class(out) <- c(class(out),"migration.matrix")
     }
     return(out)

@@ -1,0 +1,172 @@
+---
+title: "Simulating selective sweeps on a landscape."
+author: "Peter Ralph"
+date: "`r Sys.Date()`"
+output: 
+    rmarkdown::html_vignette
+vignette: >
+  %\VignetteIndexEntry{Simulating selective sweeps on a landscape}
+  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteEncoding{UTF-8}
+---
+
+
+
+```{r doc_setup, include=FALSE}
+fig.dim <- 3
+knitr::opts_chunk$set(fig.width=3*fig.dim,fig.height=fig.dim,fig.align='center')
+library(Matrix)
+library(raster)
+library(jsonlite)
+devtools::load_all("..")
+set.seed(42)
+```
+
+
+Here's a simple layer we'll work with.
+Note that units are in meters.
+```{r setup_layer, fig.cap="The (random) habitat.", fig.height=4, fig.width=4}
+habitat <- raster(xmn=-1000, xmx=1000, ymn=-1000, ymx=1000, 
+      resolution=100,
+      crs="+proj=utm +zone=11 +ellps=GRS80 +towgs84=0,0,0,0,0,0,0 +units=m +no_defs")
+values(habitat) <- exp(2+rnorm(ncell(habitat)))
+habitat <- migrate_raster( habitat, kern="gaussian", sigma=100, radius=1500 )
+plot(habitat)
+```
+
+The total carrying capacity is `r sum(values(habitat),na.rm=TRUE)`.
+
+```{r plot_setup}
+# plotting function for typical layers below
+pl <- function (x,v,nr=1,zlim, ...) {
+    if (!missing(v)) {
+        if (nlayers(x)<NCOL(v)) {
+            x <- do.call(stack,list(x)[rep(1,NCOL(v))])
+        }
+        values(x)[!is.na(values(x))] <- as.numeric(v)
+    }
+    if (missing(zlim)) {
+        if (inherits(x,"Raster")) {
+            zlim  <- range(0,values(x),finite=TRUE)
+        } else if (inherits(x,"population")) {
+            zlim  <- range(0,as.numeric(x$N),finite=TRUE)
+        }
+    }
+    plot(x,nr=nr,zlim=zlim,...)
+}
+```
+
+Genotype-dependent recruitment
+------------------------------
+
+Let's suppose there's strong, additive selection:
+heterozygous *Aa* alleles are 10% more likely to germinate than *aa* alleles,
+and *AA* alleles are 20% more likely to germinate.
+The `germination_fun` gets called with the current state of the population as an argument (`N`),
+whose result is multiplied by the total seed flux, per genotype and per location,
+to get the mean number of newly recruited individuals.
+
+
+Here's the demographic set-up
+```{r demog_setup}
+germination.args <- list( 
+             r0 = 0.01,  # one in ten seeds will germinate at low densities
+             competition = migration(
+                                     kern="gaussian",
+                                     sigma=100,
+                                     radius=300,
+                                     normalize=1,
+                                     do.M=TRUE,
+                                     population=habitat
+                                 )
+         )
+germination_fun <- function (N, carrying.capacity, ...) {
+    out <- germination.args$r0 / ( 1 + migrate(germination.args$competition,x=N)/carrying.capacity )
+    out[,"aA"] <- 1.1*out[,"aA"]
+    out[,"AA"] <- 1.2*out[,"AA"]
+    return(out)
+}
+
+this.demography <- demography(
+        prob.seed = 0.2,
+        fecundity = 200,
+        prob.germination = germination_fun,
+        prob.survival = 0.9,
+        pollen.migration = migration(
+                            kern = function (x) { exp(-sqrt(x)) },
+                            sigma = 100,
+                            radius = 1000,
+                            normalize = NULL,
+                            do.M=TRUE,
+                            population=habitat
+                     ),
+        seed.migration = migration(
+                            kern = "gaussian",
+                            sigma = 20,
+                            radius = 400,
+                            normalize = 1,
+                            do.M=TRUE,
+                            population=habitat
+                     ),
+        genotypes = c("aa","aA","AA"),
+        mating = mating_tensor( c("aa","aA","AA") )
+    )
+```
+
+
+
+We'll start the population with only a few of the advantageous alleles:
+```{r init_pop}
+total.habitat <- sum(values(habitat),na.rm=TRUE)
+pop <- population( 
+                  habitat = habitat,
+                  genotypes = c("aa","aA","AA"),
+                  N = cbind( aa=rpois_raster(habitat,only.values=TRUE),
+                             aA=rpois_raster(habitat*100/total.habitat,only.values=TRUE),
+                             AA=0 )
+             )
+
+pl(pop)
+```
+
+Let's check this looks to allow a stable population.
+The mean number of offspring per individual
+the probability of seeding
+multiplied by the fecundity,
+multiplied by the probability of germination;
+this must be greater than the probability of death,
+calculated at low density.
+Here this is:
+```{r stability_check}
+exp.pop <- pop
+exp.pop$N[] <- 1
+vitals <- generation(exp.pop,this.demography,
+                     carrying.capacity=values(pop$habitat)[pop$habitable],
+                     expected=TRUE,return.everything=TRUE)
+for (k in seq_along(vitals)) {
+    pl(exp.pop$habitat,v=vitals[[k]],main=c("",paste(names(vitals)[k],"density 1"),""))
+    if (interactive() && is.null(locator(n=1))) {break;}
+}
+```
+
+Just for comparison, here's the number of germinating seeds per capita at a much higher density
+```{r high_density}
+exp.pop$N[] <- 500
+vitals <- generation(exp.pop,this.demography,
+                     carrying.capacity=values(pop$habitat)[pop$habitable],
+                     expected=TRUE,return.everything=TRUE)
+pl(exp.pop$habitat,v=vitals$germination/exp.pop$N,main=c("","per capita germination at density 500","") )
+```
+
+Now, we can run the simulation.
+Note that we have to pass `carrying.capacity` in.
+```{r run_sim}
+plot.times <- 1+c(1,5,10,20,40,60,80,100)
+for (k in 2:max(plot.times)) {
+    pop$N <- generation(pop,this.demography,carrying.capacity=values(pop$habitat)[pop$habitable])
+    if (k %in% plot.times) { 
+        pl(pop) 
+        if (interactive() && is.null(locator(n=1))) {break;}
+    }
+}
+```

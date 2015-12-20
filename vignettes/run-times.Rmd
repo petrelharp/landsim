@@ -176,12 +176,12 @@ pop <- population(
                   N = matrix(values(N)[!is.na(values(habitat))],ncol=3)
              )
 matrix.demography <- this.demography
-matrix.demography$seed.migration <- migration( matrix.demography$seed.migration, do.M=TRUE, layer=habitat )
-matrix.demography$pollen.migration <- migration( matrix.demography$pollen.migration, do.M=TRUE, layer=habitat )
+matrix.demography$seed.migration <- migration( matrix.demography$seed.migration, do.M=TRUE, population=habitat )
+matrix.demography$pollen.migration <- migration( matrix.demography$pollen.migration, do.M=TRUE, population=habitat )
 matrix.germination.args <- germination.args
-matrix.germination.args$competition <- migration( matrix.germination.args$competition, do.M=TRUE, layer=habitat )
+matrix.germination.args$competition <- migration( matrix.germination.args$competition, do.M=TRUE, population=habitat )
 matrix.demography$prob.germination <- function (N,carrying.capacity,...) {
-    matrix.germination.args$r0 / ( 1 + migrate(matrix.germination.args$competition,N)/carrying.capacity )
+    matrix.germination.args$r0 / ( 1 + migrate(matrix.germination.args$competition,x=N)/carrying.capacity )
 }
 matrix.time <- microbenchmark( generation(pop,matrix.demography,carrying.capacity=values(habitat)[!is.na(values(habitat))]), times=10 )
 

@@ -1,4 +1,5 @@
 testthat::context("Agreement between migration_matrix and migrate.")
+require(Matrix)
 
 na_to_zero <- function (x) {
     x[is.na(x)] <- 0

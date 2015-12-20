@@ -8,10 +8,10 @@
 #' @export
 #' @return A matrix of values  of the same form as \code{x}.  See \code{migrate} for details.
 migrate <- function ( migration, 
-                      x
+                      population,
+                      x=population$N
                  ) {
-    if (is.list(x) && !is.null(x$N)) { x <- x$N }
-    out <- migration$M %*% x
+    out <- as( migration$M %*% x, class(x) )  # return a dense matrix if we got one in
     return(out)
 }
 

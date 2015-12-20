@@ -5,12 +5,21 @@
 #' (which can also be passed in separately; see \code{demography}).
 #'
 #' @inheritParams demography
-#' @param population
+#' @param population A \code{population} object, the initial state of the population.
 #' @param demography A \code{demography} object, containing the below parameters.
+#' @param expected If TRUE, do no sampling, returning only expected values.
+#' @param return.everything If TRUE, returns the number of seeders, amount of pollen, density of seeds, number of germinating seeds, and number of dying individuals.
 #' @param ... Additional parameters that will be passed to demographic functions.
 #' @export
-#' @return A new population of the same form as the old.
+#' @return A matrix of the same dimensions as \code{population$N},
+#' unless \code{return.everything} is TRUE, in which case it is a list with entries:
 #'
+#'   seeders : number of seeding individuals
+#'   pollen : quantity of pollen produced, by genotype of parent
+#'   seed.production : quantity of fertilized seeds produced
+#'   seeds.dispersed : quantity of seeds, post-dispersal
+#'   germination : number of new seeds that germinate (survive)
+#'   death : number of previously alive individuals that die
 generation <- function (
                        population,
                        demography,
@@ -22,6 +31,8 @@ generation <- function (
                        seed.migration = demography$seed.migration,
                        genotypes = demography$genotypes,
                        mating = demography$mating,
+                       expected = FALSE,
+                       return.everything = FALSE,
                        ...
         ) {
     # various of these can be simple numbers or more complicated functions
@@ -29,18 +40,40 @@ generation <- function (
         if (mode(f)=="function") { f(population$N,...) } else { f }
     }
     # sample number of seed-producing individuals:
-    M <- rbinom_matrix( size=population$N, prob=fun_or_number(prob.seed) )
+    if (!expected) {
+        seeders <- rbinom_matrix( size=population$N, prob=fun_or_number(prob.seed) )
+    } else {
+        seeders <- ( population$N * fun_or_number(prob.seed) )
+    }
     # find mean pollen flux
-    P <- migrate(pollen.migration,population)
+    pollen <- migrate(pollen.migration,population)
     # mean seed production
-    S <- seed_production(seeders=M,pollen=P,mating=mating,fecundity=fun_or_number(fecundity))
+    seed.production <- seed_production(seeders=seeders,pollen=pollen,mating=mating,fecundity=fun_or_number(fecundity))
     # seed dispersal
-    SD <- migrate(seed.migration,S)
+    seeds.dispersed <- migrate(seed.migration,x=seed.production)
     # new individuals
-    G <- rpois_matrix( SD * fun_or_number(prob.germination) )
+    if (!expected) {
+        germination <- rpois_matrix( seeds.dispersed * fun_or_number(prob.germination) )
+    } else {
+        germination <- ( seeds.dispersed * fun_or_number(prob.germination) )
+    }
     # deaths
-    V <- rbinom_matrix( size=population$N, prob=fun_or_number(prob.survival) )
-    return(V+G)
+    if (!expected) {
+        survivors <- rbinom_matrix( size=population$N, prob=fun_or_number(prob.survival) )
+    } else {
+        survivors <- ( population$N * fun_or_number(prob.survival) )
+    }
+    if (return.everything) {
+        return( list(seeders=seeders, 
+                     pollen=pollen, 
+                     seed.production=seed.production, 
+                     seeds.dispersed=seeds.dispersed,
+                     germination=germination,
+                     death=population$N-survivors
+                 ) )
+    } else {
+        return(survivors+germination)
+    }
 }
 
 #' Apply a \code{demography} Object to a Raster

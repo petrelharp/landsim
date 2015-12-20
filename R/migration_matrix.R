@@ -1,49 +1,91 @@
 #' Weighted "Adjacency" Matrix from a Raster Layer.
 #'
 #' This returns the (sparse) Matrix giving the pseudo-adjacency matrix 
-#' for cells in \code{layer}, with weights.
+#' from and to for specified cells in the given Raster, with weights.
 #'
-#' @inheritParams layer_adjacency
+#' @param population Population object or Raster*.
+#' @param accessible Logical vector indicating which cells in `habitat` that migrants will attempt to go to.
+#' @param migration Migration object; is overrided by other parameters below.
 #' @param kern Weighting kernel applied to distances.
 #' @param sigma Distance scaling for kernel.
 #' @param radius Maximum distance away to truncate the kernel.
-#' @keywords layers
+#' @param from The indices of the cells corresponding to rows in the output matrix. [default: non-NA cells]
+#' @param to The indices of the cells corresponding to columns in the output matrix. [default: same as \code{from}]
+#' @param normalize If not NULL, migration weights to accessible locations are set to sum to this (see details).
 #' @export
-#' @return A sparse Matrix \code{M}, where \code{M[i,j]} is
+#' @return A sparse Matrix \code{M}, where for each pair of cells \code{i} in \code{from} and \code{i} in \code{to},
+#' the value \code{M[i,j]} is
 #'    kern( d[i,j]/\sigma )
 #' or, if \code{kern="gaussian"},
 #'    \exp( - d[i,j]^2/\sigma^2 ) / ( 2 \pi \sigma^2 ) * (area of a cell)
 #' where \code{d[i,j]} is the distance from \code{from[i]} to \code{to[j]},
 #' if this is greater than \code{min.prob}, and is 0 otherwise.
 #'
-#' Approximates the area of each cell to be constant.
-migration_matrix <- function (layer,
+#' Migration is possible to each \code{accessible} cell in the Raster*.
+#' If \code{normalize} is not NULL, then for each cell, the set of migration weights to each other accessible cell
+#' within distance \code{radius} is normalized to sum to \code{normalize}.
+#' The resulting matrix may not have rows summing to \code{normalize},
+#' however, if \code{from} is a subset of the \code{accessible} ones.
+#'
+#' If not normalized, the kernel is multiplied by the area of the cell (taken to be approximately constant).
+#'
+#' The usual way to use this is to call \code{migration_matrix(pop,mig)},
+#' where \code{pop} is a \code{population} object, which contains both the Raster 
+#' and the vector of which locations are accessible;
+#' and \code{mig} is a \code{migration} object containing the kernel, migration radius, etcetera.
+#'
+#' Alternatively, \code{population} can be a RasterLayer,
+#' in which case by default all non-NA cells are accessible.
+#'
+#' Inaccessible cells included in \code{to},
+#' have zero migration outwards.
+#' Inaccessible cells included in \code{from} behave as usual.
+migration_matrix <- function (population,
+                              accessible,
                               migration=list(sigma=1,normalize=1),
                               kern=migration$kern,
                               sigma=migration$sigma,
                               radius=migration$radius,
                               normalize=migration$normalize,
-                              from=which(raster::values(!is.na(layer))),
+                              from,
                               to=from
                  ) {
+    # Fill in default values.
+    if (inherits(population,"population")) {
+        if (missing(accessible)) { accessible <- population$accessible }
+        if (missing(from)) { from <- which(population$habitable) }
+        population <- population$habitat
+    } else if (inherits(population,"Raster")) {
+        if (missing(accessible)) { accessible <- !is.na(values(population)) }
+        if (missing(from)) { from <- which(!is.na(values(population))) }
+    }
+    if (!is.integer(from)) { stop("migration_matrix: 'from' must be integer-valued (not logical).") }
+    if (!is.logical(accessible)) { stop("migration_matrix: 'accessible' must be logical (not a vector of indices).") }
     kern <- get_kernel(kern)
-    area <- prod(raster::res(layer))
-    cell.radius <- ceiling(radius/raster::res(layer))
+    area <- prod(raster::res(population))
+    cell.radius <- ceiling(radius/raster::res(population))
     directions <- matrix( 1, nrow=2*cell.radius[1]+1, ncol=2*cell.radius[2]+1 )
     directions[cell.radius[1]+1,cell.radius[2]+1] <- 0
-    # note columns are (to,from)
+    # columns are (from,to)
     # does NOT include diagonal
-    ij <- raster::adjacent(layer,cells=from,target=to,directions=directions,pairs=TRUE)
-    from.pos <- raster::xyFromCell(layer,cell=from)
-    to.pos <- raster::xyFromCell(layer,cell=to)
-    ii <- match(ij[,1],from)
-    jj <- match(ij[,2],to)
-    adj <- Matrix::sparseMatrix( i=ii, j=jj,
-            x=kern(raster::pointDistance(from.pos[ii,],to.pos[jj,],lonlat=FALSE,allpairs=FALSE)/sigma)*area/sigma^2 )
-    diag(adj) <- kern(0)*area/sigma^2
+    use.to <- accessible[to]  # only want to go to accessible 'to' locations
+    to.acc <- to[use.to]
+    ij <- raster::adjacent(population,cells=from,target=to.acc,directions=directions,pairs=TRUE)
+    from.pos <- raster::xyFromCell(population,cell=from)
+    to.pos <- raster::xyFromCell(population,cell=to.acc)
+    # add on the diagonal
+    both.ij <- intersect(from,to.acc)
+    ii <- match(c(ij[,1],both.ij),from)
+    jj <- match(c(ij[,2],both.ij),to.acc)
+    adj <- Matrix::sparseMatrix( 
+            i = ii,
+            j = which(use.to)[jj], # map back to index in all given 'to' values
+            x = kern(raster::pointDistance(from.pos[ii,],to.pos[jj,],lonlat=FALSE,allpairs=FALSE)/sigma)*area/sigma^2,
+            dims=c(length(from),length(to))
+        )
     if (!is.null(normalize)) {
         # adj <- (normalize/Matrix::rowSums(adj)) * adj
-        # this is twice as quick:
+        # # this is twice as quick:
         adj@x <- (normalize/Matrix::rowSums(adj)[1L+adj@i]) * adj@x
     }
     return(adj)

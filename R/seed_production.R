@@ -18,7 +18,7 @@ seed_production <- function (
     stopifnot( all( dim(mating) == c( NCOL(seeders), NCOL(pollen), NCOL(seeders) ) ) )
     if (is.null(dim(seeders))) { dim(seeders) <- c(NROW(seeders),NCOL(seeders)) }
     if (is.null(dim(pollen))) { dim(pollen) <- c(NROW(pollen),NCOL(pollen)) }
-    total.pollen <- sum(pollen)
+    total.pollen <- rowSums(pollen)
     out <- 0.0 * seeders
     for (i in 1:dim(mating)[1]) {
         for (j in 1:dim(mating)[2]) {
@@ -50,7 +50,7 @@ seed_production_raster <- function (
                          mating,
                          fecundity=1
                      ) {
-    total.pollen <- sum(pollen)
+    total.pollen <- sum(pollen)  # this is the Raster method that acts like rowSums( )
     out <- 0.0 * do.call( brick, list(total.pollen)[rep(1,dim(mating)[3])] )
     # values(out)[!is.na(values(out))] <- 0  # this is done by the multiplication by 0
     for (i in 1:dim(mating)[1]) {

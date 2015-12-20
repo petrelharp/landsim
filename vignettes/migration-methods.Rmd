@@ -77,6 +77,20 @@ from inhospitable ones.
 Summary and usage
 -----------------
 
+`migration_matrix()`:
+When precomputing a migration matrix,
+set absorbing boundary elements to `accessible`,
+but do not include them in `from` (and `to`).
+Mark reflecting (non-)boundaries as not `accessible`.
+External boundaries will be reflecting,
+so if they should be absorbing, you need to extend the raster and set values appropriately
+(see examples below).
+
+`migrate_raster()`:
+Currently, migration with `migrate_raster()`, which uses `raster::focal()`,
+only implements absorbing boundaries.
+Reflecting boundaries using raster-based methods requires using the much-slower `weighted.sum()` function;
+see below for how to do this.
 
 
 **Guts:** Absorbing internal and external boundaries
