@@ -38,7 +38,7 @@ germination.args <- list(
                                  )
          )
 germination_fun <- function (N,carrying.capacity,...) {
-    germination.args$r0 / ( 1 + migrate_raster(N,germination.args$competition)/carrying.capacity )
+    germination.args$r0 / ( 1 + migrate_raster(raster::sum(N),germination.args$competition)/carrying.capacity )
 }
 
 this.demography <- demography(
