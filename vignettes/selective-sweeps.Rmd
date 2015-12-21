@@ -168,11 +168,10 @@ sim <- simulate( pop, this.demography, times=plot.times,
             )
 ```
 
-Here are snapshots of the simulation:
-```{r plot_sim_snapshots}
+Here is a video of the simulation:
+```{r plot_sim_snapshots, fig.show="animate", aniopts="controls", interval=0.2}
 for (k in seq_along(plot.times)) {
-    pl(pop$habitat,v=sim$N[,,k],main=c("",sprintf("t=%d",plot.times[k])))
-    # if (interactive() && is.null(locator(n=1))) {break;}
+    pl(pop$habitat,v=sim$N[,,k],main=c("",sprintf("t=%d",plot.times[k])),zlim=range(sim$N,finite=TRUE))
 }
 ```
 
