@@ -26,8 +26,8 @@ migration <- function (
                        normalize=1, 
                        do.M=FALSE,
                        population, 
-                       from=which(raster::values(!is.na(population))),
-                       to=from,
+                       from,
+                       to,
                        ...)  {
     if (inherits(kern,"migration")) {
         out <- kern
@@ -38,11 +38,14 @@ migration <- function (
                     sigma=sigma,
                     normalize=normalize ), 
                  list(...) )
+        class(out) <- "migration"
     }
-    class(out) <- "migration"
     if (do.M) {
         if (missing(population)) { stop("To compute M you need a population or a Raster.") }
-        out$M <- migration_matrix( population=population, migration=out, from=from, to=to )
+        mm.args <- list(population=population, migration=out)
+        if (!missing(from)) { mm.args <- c( mm.args, list( from=from ) ) }
+        if (!missing(to)) { mm.args <- c( mm.args, list( to=to ) ) }
+        out$M <- do.call( migration_matrix, mm.args )
         class(out) <- c(class(out),"migration.matrix")
     }
     return(out)

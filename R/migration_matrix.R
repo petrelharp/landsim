@@ -15,9 +15,9 @@
 #' @export
 #' @return A sparse Matrix \code{M}, where for each pair of cells \code{i} in \code{from} and \code{i} in \code{to},
 #' the value \code{M[i,j]} is
-#'    kern( d[i,j]/\sigma )
+#'    kern( d[i,j]/sigma )
 #' or, if \code{kern="gaussian"},
-#'    \exp( - d[i,j]^2/\sigma^2 ) / ( 2 \pi \sigma^2 ) * (area of a cell)
+#'    exp( - d[i,j]^2/sigma^2 ) / ( 2 pi sigma^2 ) * (area of a cell)
 #' where \code{d[i,j]} is the distance from \code{from[i]} to \code{to[j]},
 #' if this is greater than \code{min.prob}, and is 0 otherwise.
 #'

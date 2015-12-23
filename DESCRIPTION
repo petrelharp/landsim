@@ -10,11 +10,12 @@ Imports:
     Matrix,
     raster,
     sp,
-    jsonlite
+    rgeos
 RoxygenNote: 5.0.1.9000
 Suggests: 
     knitr,
     rmarkdown,
     testthat,
-    microbenchmark
+    microbenchmark,
+    jsonlite
 VignetteBuilder: knitr

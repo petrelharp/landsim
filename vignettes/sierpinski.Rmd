@@ -1,0 +1,100 @@
+---
+title: "Sierpinski Serpents"
+author: "Peter Ralph"
+date: "`r Sys.Date()`"
+output: 
+    rmarkdown::html_vignette
+vignette: >
+  %\VignetteIndexEntry{Sierpinski Serpents}
+  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteEncoding{UTF-8}
+---
+
+
+
+```{r doc_setup, include=FALSE}
+fig.dim <- 3
+knitr::opts_chunk$set(fig.width=3*fig.dim,fig.height=fig.dim,fig.align='center')
+library(Matrix)
+library(raster)
+devtools::load_all("..")
+set.seed(42)
+```
+
+Suppose, just for fun, that we have a population living on the [Sierpinski gasket](http://en.wikipedia.org/Sierpinski_gasket).
+There's a handy function to create this:
+```{r setup_habitat}
+diam <- 1e4
+habitat <- raster(xmn=-diam, xmx=diam, ymn=-diam, ymx=diam, 
+      resolution=100,
+      crs="+proj=utm +zone=11 +ellps=GRS80 +towgs84=0,0,0,0,0,0,0 +units=m +no_defs")
+values(habitat) <- 1.0
+sierp <- sierpinski_overlay(habitat,random=TRUE,n=3)
+plot(sierp)
+```
+
+Demography
+==========
+
+Here's the demographic set-up:
+```{r demog_setup}
+germination.args <- list( 
+             r0 = 0.01,  # one in ten seeds will germinate at low densities
+             s = 1.5,    # multiplicative selective benefit of the A allele
+             competition = migration(
+                                     kern="gaussian",
+                                     sigma=100,
+                                     radius=300,
+                                     normalize=1,
+                                     do.M=TRUE,
+                                     population=habitat
+                                 )
+         )
+germination_fun <- function (N, carrying.capacity, ...) {
+    out <- germination.args$r0 / ( 1 + migrate(germination.args$competition,x=rowSums(N))/carrying.capacity )
+    return( cbind( aa=out, aA=germination.args$s*out, AA=germination.args$s^2*out ) )
+}
+
+this.demography <- demography(
+        prob.seed = 0.2,
+        fecundity = 100,
+        prob.germination = germination_fun,
+        prob.survival = 0.9,
+        pollen.migration = migration(
+                            kern = function (x) { exp(-sqrt(x)) },
+                            sigma = 30,
+                            radius = 500,
+                            normalize = NULL,
+                            do.M=TRUE,
+                            population=habitat
+                     ),
+        seed.migration = migration(
+                            kern = "gaussian",
+                            sigma = 50,
+                            radius = 400,
+                            normalize = 1,
+                            do.M=TRUE,
+                            population=habitat
+                     ),
+        genotypes = c("aa","aA","AA"),
+        mating = mating_tensor( c("aa","aA","AA") )
+    )
+```
+
+
+
+
+Probability of establishment
+============================
+
+
+The probability of establishment only depends on what happens relatively nearby.
+We'll select random neighborhoods,
+seed them with mutants,
+and see how many establish.
+
+
+Wave speed
+==========
+
+

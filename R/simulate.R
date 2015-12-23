@@ -44,8 +44,8 @@ simulate <- function (
         if ( (length(summaries)>0) && (ks <= length(summary.times)) && (t>summary.times[ks]) ) {
             for (j in seq_along(summaries)) {
                 sums[[j]][ks,] <- as.vector( summaries[[j]](population) )
-                ks <- ks+1
             }
+            ks <- ks+1
         }
         population$N <- generation(population,demography,t=t,...)
         t <- t+1

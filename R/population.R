@@ -52,8 +52,8 @@ pop_to_raster <- function (population,x=population$N) {
 # require(raster)
 # setAs(from="population",to="Raster",def=function(from)pop_to_raster(population=from))
 
-plot.population <- function (pop,...) { plot(pop_to_raster(pop),...) }
-values.ppulation <- function (pop) { pop$N }
+plot.population <- function (pop,zlim=range(pop$N,finite=TRUE),...) { plot(pop_to_raster(pop),zlim=zlim,...) }
+values.population <- function (pop) { pop$N }
 
 #' Number of Habitable Cells in a Population.
 #'
@@ -63,4 +63,37 @@ values.ppulation <- function (pop) { pop$N }
 #' @export
 nhabitable <- function (population) {
     return( nrow(population$N) )
+}
+
+
+#' Access Values of Habitable Cells in a Population
+#'
+#' Provides a method to read values to the matrix of population sizes
+#' in a population object
+#' indexed by cells in the underlying Raster* rather than rows the matrix itself,
+#' which records only values at habitable locations.
+#'
+#' @param x The population object.
+#' @param i The rows to read values of, indexed by cells in x$habitat.
+#' @param j The columns to read values of, or names of genotypes.
+#' @export
+get_N <- function (x,i,j) {
+    x$N[ cbind(match(i,which(x$habitable)), j) ]
+}
+
+#' Assign Values to Habitable Cells in a Population
+#'
+#' Provides a method to assign values to the matrix of population sizes
+#' in a population object
+#' indexed by cells in the underlying Raster* rather than rows the matrix itself,
+#' which records only values at habitable locations.
+#'
+#' @param x The population object.
+#' @param values The new values.
+#' @param i The rows to replace values of, indexed by cells in x$habitat.
+#' @param j The columns to replace values of, or names of genotypes.
+#' @export
+set_N <- function (x,values,i,j) {
+    x$N[ cbind(match(i,which(x$habitable)), j) ] <- values
+    return(x)
 }
