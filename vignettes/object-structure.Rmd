@@ -1,0 +1,147 @@
+---
+title: "Package overview"
+author: "Peter Ralph"
+date: "`r Sys.Date()`"
+output: rmarkdown::html_vignette
+vignette: >
+  %\VignetteIndexEntry{Package overview}
+  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteEncoding{UTF-8}
+---
+
+```{r doc_setup, include=FALSE}
+fig.dim <- 4
+knitr::opts_chunk$set(fig.width=2*fig.dim,fig.height=fig.dim,fig.align='center')
+library(Matrix)
+library(raster)
+library(testthat)
+devtools::load_all("..")
+```
+
+
+To run a simulation, we need to know
+where the species lives,
+how it disperses,
+and how it reproduces and dies.
+Given a demographic model of this sort,
+we then keep track of the numbers of various genotypes
+across the species range.
+
+These are divided among different objects as follows:
+
+
+`population`
+----------
+
+Class **population**:
+
+`habitat`
+
+: a Raster with values that can be used in other computations.
+
+`accessible`
+
+: vector of indices of cells in `habitat` that migrants will attempt to go to
+
+`habitable`
+
+: vector of indices of cells in `habitat` that may have positive population
+
+`genotypes`
+
+: character vector of the genotypes
+
+`N`
+
+: matrix indexed by (habitable cells) x (genotypes) giving the number of each genotype in each habitable cell
+
+
+`migration`
+---------
+
+One structure we use several times
+is the setup for smoothing (with `migrate`);
+for this we need to know:
+
+Class **migration**:
+
+`kern`
+
+: function that gives weights for neighboring cells as a function of Euclidean distance
+
+`sigma`
+
+: scaling factor on distance before being passed to `kern`
+
+`radius`
+
+: maximum range of the smoother
+
+`normalize`
+
+: normalization factor applied to the smoother
+
+
+migration.matrix
+----------------
+
+A `migration.matrix` object extends a `migration` object,
+in that it has a precomputed migration matrix,
+and hence is tied to a particular `population` setup
+(although this is not included).  This has additional entries
+
+Class **migration.matrix**:
+
+`M`
+
+: The pre-computed migration matirx.
+
+
+`demography`
+----------
+
+Several of the base demographic parameters we might want to specify
+(as a fixed number or a layer),
+or compute (as a function of the current population state).
+Such **parameters** can be either something numeric
+or else a function that is applied to `N` to get the result.
+
+To do a single generation we need to know:
+
+Class **demography**:
+
+`prob.seed`
+
+: `parameter` object for  probability of seeding per individual per year
+
+`fecundity`
+
+: `parameter` object for mean number of seeds per seeding individual per year
+
+`prob.germination`
+
+: `parameter` object for probability of germination
+
+`prob.survival`
+
+: `parameter` object for probability of survival of already existing individuals
+
+`pollen.migration`
+
+: `migration` object for pollen dispersal (normalized to total pollen production)
+
+`seed.migration`
+
+: `migration` object for seed dispersal (normalized to 1)
+
+`genotypes`
+
+: vector of names of the genotypes represented by the layers
+
+`mating`
+
+: genotype x genotype x genotype tensor, with entry
+    `[i,j,k]` the probability that genotypes `i` and `j` combine to make offspring genotype `k`
+
+
+
