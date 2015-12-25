@@ -77,18 +77,18 @@ migration_matrix <- function (population,
     both.ij <- intersect(from,to.acc)
     ii <- match(c(ij[,1],both.ij),from)
     jj <- match(c(ij[,2],both.ij),to.acc)
-    adj <- Matrix::sparseMatrix( 
+    M <- Matrix::sparseMatrix( 
             i = ii,
             j = which(use.to)[jj], # map back to index in all given 'to' values
             x = kern(raster::pointDistance(from.pos[ii,],to.pos[jj,],lonlat=FALSE,allpairs=FALSE)/sigma)*area/sigma^2,
             dims=c(length(from),length(to))
         )
     if (!is.null(normalize)) {
-        # adj <- (normalize/Matrix::rowSums(adj)) * adj
+        # M <- (normalize/Matrix::rowSums(M)) * M
         # # this is twice as quick:
-        adj@x <- (normalize/Matrix::rowSums(adj)[1L+adj@i]) * adj@x
+        M@x <- (normalize/Matrix::rowSums(M)[1L+M@i]) * M@x
     }
-    return(adj)
+    return(M)
 }
 
 # helper function to find column indices of dgCMatrix objects

@@ -19,12 +19,15 @@ seed_production <- function (
     if (is.null(dim(seeders))) { dim(seeders) <- c(NROW(seeders),NCOL(seeders)) }
     if (is.null(dim(pollen))) { dim(pollen) <- c(NROW(pollen),NCOL(pollen)) }
     total.pollen <- rowSums(pollen)
+    pollen <- pollen/total.pollen
+    # otherwise we get NAs in places with no pollen
+    pollen[total.pollen==0,] <- 0
     out <- 0.0 * seeders
     for (i in 1:dim(mating)[1]) {
         for (j in 1:dim(mating)[2]) {
+            lprod <- seeders[,i]*pollen[,j]
             for (k in 1:dim(mating)[3]) {
                 if ( mating[i,j,k]>0 ) {
-                    lprod <- seeders[,i]*pollen[,j]/total.pollen
                     out[,k] <- out[,k]+mating[i,j,k]*lprod
                 }
             }

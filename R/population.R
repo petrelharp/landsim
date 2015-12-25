@@ -78,6 +78,7 @@ nhabitable <- function (population) {
 #' @param j The columns to read values of, or names of genotypes.
 #' @export
 get_N <- function (x,i,j) {
+    if (is.character(j)) { j <- match(j, x$genotypes) }
     x$N[ cbind(match(i,which(x$habitable)), j) ]
 }
 
@@ -93,7 +94,8 @@ get_N <- function (x,i,j) {
 #' @param i The rows to replace values of, indexed by cells in x$habitat.
 #' @param j The columns to replace values of, or names of genotypes.
 #' @export
-set_N <- function (x,values,i,j) {
-    x$N[ cbind(match(i,which(x$habitable)), j) ] <- values
+set_N <- function (x,i,j,...,value) {
+    if (is.character(j)) { j <- match(j, x$genotypes) }
+    x$N[ cbind(match(i,which(x$habitable)), j), ... ] <- value
     return(x)
 }
