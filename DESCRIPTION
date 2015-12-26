@@ -6,13 +6,13 @@ Description: Run forwards-time simulations of populations on landscapes derived
     from GIS layers.
 License: GPL-2
 LazyData: true
-Imports: 
+Imports:
     Matrix,
     raster,
     sp,
     rgeos
-RoxygenNote: 5.0.1.9000
-Suggests: 
+RoxygenNote: 5.0.1
+Suggests:
     knitr,
     rmarkdown,
     testthat,

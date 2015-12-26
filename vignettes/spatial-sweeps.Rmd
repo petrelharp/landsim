@@ -71,43 +71,35 @@ to get the mean number of newly recruited individuals.
 
 Here's the demographic set-up
 ```{r demog_setup}
-germination.args <- list( 
-             r0 = 0.01,  # one in ten seeds will germinate at low densities
-             s = 1.5,    # multiplicative selective benefit of the A allele
-             competition = migration(
-                                     kern="gaussian",
-                                     sigma=100,
-                                     radius=300,
-                                     normalize=1,
-                                     do.M=TRUE,
-                                     population=habitat
-                                 )
-         )
-germination_fun <- function (N, carrying.capacity, ...) {
-    out <- germination.args$r0 / ( 1 + migrate(germination.args$competition,x=rowSums(N))/carrying.capacity )
-    return( cbind( aa=out, aA=germination.args$s*out, AA=germination.args$s^2*out ) )
-}
-
-this.demography <- demography(
+demog <- demography(
         prob.seed = 0.2,
         fecundity = 100,
-        prob.germination = germination_fun,
+        prob.germination = germination_fun <- vital(
+                function (N, carrying.capacity, ...) {
+                    out <- r0 / ( 1 + migrate(competition,x=rowSums(N))/carrying.capacity )
+                    return( cbind( aa=out, aA=s*out, AA=s^2*out ) )
+                }
+                r0 = 0.01,  # one in ten seeds will germinate at low densities
+                s = 1.5,    # multiplicative selective benefit of the A allele
+                competition = migration(
+                                        kern="gaussian",
+                                        sigma=100,
+                                        radius=300,
+                                        normalize=1
+                                    )
+             ),
         prob.survival = 0.9,
         pollen.migration = migration(
                             kern = function (x) { exp(-sqrt(x)) },
                             sigma = 30,
                             radius = 500,
-                            normalize = NULL,
-                            do.M=TRUE,
-                            population=habitat
+                            normalize = NULL
                      ),
         seed.migration = migration(
                             kern = "gaussian",
                             sigma = 50,
                             radius = 400,
-                            normalize = 1,
-                            do.M=TRUE,
-                            population=habitat
+                            normalize = 1
                      ),
         genotypes = c("aa","aA","AA"),
         mating = mating_tensor( c("aa","aA","AA") )
@@ -139,14 +131,14 @@ this must be greater than the probability of death,
 calculated at low density.
 Here is the number of offspring per individual at low density, minus one:
 ```{r stability_check}
-base.r <- intrinsic_growth( pop, this.demography, 
+base.r <- intrinsic_growth( pop, demog, 
                          carrying.capacity=values(pop$habitat)[pop$habitable] )
 pl(pop$habitat, v=base.r-1)
 ```
 
 To check for stability, here's the same thing, at density 500:
 ```{r high_density}
-base.r <- intrinsic_growth( pop, this.demography, density=500,
+base.r <- intrinsic_growth( pop, demog, density=500,
                          carrying.capacity=values(pop$habitat)[pop$habitable] )
 pl(pop$habitat, v=base.r-1)
 ```
@@ -157,7 +149,7 @@ We'll record the full state of the population at several times,
 and record the total number of each genotype in every generation.
 ```{r run_sim}
 plot.times <- seq(0,700,length.out=71)
-sim <- simulate( pop, this.demography, times=plot.times, 
+sim <- simulate( pop, demog, times=plot.times, 
                 carrying.capacity=values(pop$habitat)[pop$habitable],
                 summaries=list( totals=function(x){colSums(x$N)} )
             )
