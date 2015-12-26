@@ -90,9 +90,10 @@ get_N <- function (x,i,j) {
 #' which records only values at habitable locations.
 #'
 #' @param x The population object.
-#' @param values The new values.
+#' @param value The new values.
 #' @param i The rows to replace values of, indexed by cells in x$habitat.
 #' @param j The columns to replace values of, or names of genotypes.
+#' @param ... Arguments passed to "[.matrix"
 #' @export
 set_N <- function (x,i,j,...,value) {
     if (is.character(j)) { j <- match(j, x$genotypes) }

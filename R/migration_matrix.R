@@ -102,7 +102,11 @@ p.to.j <- function (p) { rep( seq.int( length(p)-1 ), diff(p) ) }
 #'
 #' @param M The migration matrix.
 #' @param old The original Raster* the migration matrix was computed for.
-#' @param new The new Raster* migraiton matrix.
+#' @param new The Raster* for the new migration matrix.
+#' @param from.old The indices of the "from" cells corresponding to rows in the original migration matrix.
+#' @param to.old The indices of the "to" cells corresponding to columns in the original migration matrix.
+#' @param from.new The indices of the "from" cells corresponding to rows in the resulting migration matrix.
+#' @param to.new The indices of the "to" cells corresponding to columns in the resulting migration matrix.
 #' @export
 #' @return A migration matrix.  See \code{migrate}.
 subset_migration <- function (M, old, new, 
