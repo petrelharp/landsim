@@ -42,4 +42,22 @@ demography <- function (
     return(out)
 }
 
-
+#' Set up a Demography Object for a Concrete Population
+#'
+#' Demography objects are agnostic about the map they work on,
+#' but for application we need to link them to a particular one.
+#' This function does that, by setting up any elements that are \code{migration} or \code{vital} objects.
+#'
+#' @param demog The demography object.
+#' @param pop The population object.
+#' @param ... Other parameters passed to \code{migration()}.
+#' @export
+#' @return A \code{demography} object, as before, but with but with any migration objects having a migration matrix.
+#'
+setup_demography <- function (demog,pop,...) {
+    for (k in seq_along(demog)) {
+        if (inherits(demog[[k]],"migration")) { demog[[k]] <- setup_migration(demog[[k]],pop,...) }
+        if (inherits(demog[[k]],"vital")) { demog[[k]] <- setup_vital(demog[[k]],pop,...) }
+    }
+    return(demog)
+}

@@ -52,30 +52,17 @@ migration <- function (
 }
 
 
-#' Set Up a Migration object from a Configuration
+#' Set up Migration Object for a Concrete Population
 #'
-#' Provides a method to read and store migration configuration, particularly for use as JSON.
+#' Migration objects are agnostic about the map they work on,
+#' but for application we need to add a migration matrix.
 #'
-#' @param habitat The path to the file where the raster is stored.
-#' @param inaccessible.value The values in the raster that should be marked as inaccessible.
-#' @param uninhabitable.value The values in the raster that should be marked as not habitable.
-#' @param genotypes A character vector of genotypes.
-#' @param json Instead of the above, a file name or character string containing JSON with the above.
+#' @param m The migration object.
+#' @param population The population object.
+#' @param ... Other parameters passed to \code{migration()}.
 #' @export
-make_migration <- function (
-                     kern = NULL,
-                     sigma = NULL,
-                     radius = NULL,
-                     normalize = NULL,
-                     json = "{}"
-                 ) {
-    arg.list <- jsonlite::fromJSON(json)
-    for (x in setdiff(names(formals()),"json")) {
-        xval <- get(x)
-        if (!is.null(xval)) {
-            arg.list[[x]] <- xval
-        }
-    }
-    do.call( migration, arg.list )
+#' @return A \code{migration} object, as before, but with but with a migration matrix (see \code{migration()}).
+#'
+setup_migration <- function (m,population,...) {
+    m <- migration(m,population=population,do.M=TRUE,...)
 }
-

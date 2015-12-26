@@ -110,45 +110,31 @@ set_N <- function (x,i,j,...,value) {
 #' @param inaccessible.value The values in the raster that should be marked as inaccessible.
 #' @param uninhabitable.value The values in the raster that should be marked as not habitable.
 #' @param genotypes A character vector of genotypes.
-#' @param json Instead of the above, a file name or character string containing JSON with the above.
 #' @export
 make_population <- function (
-                             habitat=NULL,
-                             inaccessible.value=NULL,
-                             uninhabitable.value=NULL,
-                             genotypes=NULL,
-                             N=NULL,
-                             json="{}"
+                             habitat,
+                             inaccessible.value,
+                             uninhabitable.value,
+                             genotypes,
+                             N=0
                          ) {
-    pop.list <- jsonlite::fromJSON(json)
-    for (x in setdiff(names(formals()),"json")) {
-        xval <- get(x)
-        if (!is.null(xval)) {
-            pop.list[[x]] <- xval
-        }
-    }
-    if (is.null(pop.list$N)) { pop.list$N <- 0 }
-    for (xn in c("inaccessible.value","uninhabitable.value")) {
-        pop.list[[xn]][ pop.list[[xn]] == "NA" ] <- NA
-        pop.list[[xn]] <- as.numeric(pop.list[[xn]])
-    }
     habitat <- raster::raster(pop.list$habitat)
-    accessible <- if (is.na(pop.list$inaccessible.value)) { 
+    accessible <- if (is.na(inaccessible.value)) { 
             is.na(raster::values(habitat)) 
         } else { 
-            !is.na(values(habitat)) & (raster::values(habitat) != pop.list$inaccessible.value) 
+            !is.na(values(habitat)) & (raster::values(habitat) != inaccessible.value) 
         }
-    habitable <- if (is.na(pop.list$uninhabitable.value)) { 
+    habitable <- if (is.na(uninhabitable.value)) { 
             is.na(raster::values(habitat)) 
         } else { 
-            !is.na(values(habitat)) & (raster::values(habitat) != pop.list$uninhabitable.value) 
+            !is.na(values(habitat)) & (raster::values(habitat) != uninhabitable.value) 
         }
     population(
-                      habitat = habitat,
-                      accessible = accessible, 
-                      habitable = habitable,
-                      genotypes = pop.list$genotypes,
-                      N = matrix(pop.list$N,nrow=sum(habitable),ncol=length(pop.list$genotypes))
-                  )
+              habitat = habitat,
+              accessible = accessible, 
+              habitable = habitable,
+              genotypes = genotypes,
+              N = matrix(N,nrow=sum(habitable),ncol=length(genotypes))
+          )
 }
 

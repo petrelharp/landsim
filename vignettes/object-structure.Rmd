@@ -14,7 +14,6 @@ fig.dim <- 4
 knitr::opts_chunk$set(fig.width=2*fig.dim,fig.height=fig.dim,fig.align='center')
 library(Matrix)
 library(raster)
-library(jsonlite)
 devtools::load_all("..")
 ```
 
@@ -78,20 +77,13 @@ The configuration can be stored as JSON:
 **Example:**
 
 Here is the JSON:
-```{r pop_json, echo=FALSE}
-pop.list <- list(
+```{r pop_defn}
+pop <- make_population(
                  habitat = system.file("inst/extdata/test_raster.gri",package="landsim"),
                  inaccessible.value = "NA",
                  uninhabitable.value = 0.0,
                  genotypes = c( "aa", "aA", "AA" )
              )
-pop.json <- toJSON(pop.list,prett=TRUE)
-pop.json
-```
-
-This can be parsed using `make_population()`:
-```
-pop <- make_population(pop.json)
 ```
 
 
@@ -124,20 +116,13 @@ Class **migration**:
 **Example:**
 
 Here is the JSON:
-```{r pop_json, echo=FALSE}
-migr.list <- list(
+```{r pop_defn}
+migr <- migration(
                  kern = "gaussian",
                  sigma = 100,
                  radius = 1000,
                  normalize = 1.0
              )
-migr.json <- toJSON(migr.list,prett=TRUE)
-migr.json
-```
-
-This can be parsed using `make_population()`:
-```
-migr <- make_migration(migr.json)
 ```
 
 
@@ -158,10 +143,10 @@ Class **migration.matrix**:
 
 **Example:**
 
-This is added with the function `migration`:
+This is added with the function `setup_migration()`.
 
 ```
-migr <- migration( migr, population=pop, do.M=TRUE )
+migr <- setup_migration( migr, population=pop )
 ```
 
 
@@ -171,48 +156,51 @@ migr <- migration( migr, population=pop, do.M=TRUE )
 Vital rates may be numbers or vectors
 but may also be functions,
 to allow them to depend on the current state of the system.
+We would like to have the parameters in these visible,
+changeable, and carried around with them.
+To this end, we define `vital` objects
+by specifying a function
+and auxialliary parameters that will be kept along with the function.
+
+**Simple example:**
+
+This class allows assigning and accessing things directly from the environment of the function,
+without having them clutter up the global environment.
+```{r simple_vital_defn}
+f <- vital( function (N,...) { N+x }, x=3 )
+f(10)
+f$x
+f$x <- 12
+f(10)
+```
+
+
 
 **Example:**
 
-Here is the JSON:
-```{r vital_json, echo=FALSE}
-vital.list <- list(
+```{r vital_defn}
+germ.vital <- vital(
+             function (N, ...) {
+                out <- r0 / ( 1 + migrate(competition,x=rowSums(N))/carrying.capacity )
+                return( cbind( aa=out, aA=s*out, AA=s^2*out ) )
+             },
              r0 = 0.01,  # one in ten seeds will germinate at low densities
              s = 1.5,    # multiplicative selective benefit of the A allele
-             carrying.capacity = 10*habitat,
+             carrying.capacity = 10,
              competition = migration(
                                      kern="gaussian",
                                      sigma=100,
                                      radius=300,
-                                     normalize=1,
-                                     do.M=TRUE,
-                                     population=population
-                                 ),
-             value = function (N, ...) {
-                out <- r0 / ( 1 + migrate(competition,x=rowSums(N))/carrying.capacity )
-                return( cbind( aa=out, aA=s*out, AA=s^2*out ) )
-             }
+                                     normalize=1
+                                 )
          )
-
-vital.json <- '
-{
-    "value" : { "function" : 
-              " out <- r0 / ( 1 + migrate(competition,x=rowSums(N))/carrying.capacity ) ;
-                return( cbind( aa=out, aA=s*out, AA=s^2*out ) ) " 
-        },
-    "r0" : 0.01,
-    "s" : 1.5,
-    "carrying.capacity" : { "R" : "10*habitat" },
-    "competition" : { "migration" : { 
-            "kern" : "gaussian",
-            "sigma" : 100,
-            "radius" : 300,
-            "normalize" : 1.0
-        } }
-}
-'
 ```
 
+Note that this also has a `migration` object as part of its definition.
+This needs to be set up also:
+```{r setup_vital}
+germ.vital <- setup_vital(germ.vital,pop)
+```
 
 
 `demography`
@@ -266,17 +254,19 @@ Class **demography**:
 
 **Example:**
 
-Here is the JSON:
-```{r demog, echo=FALSE}
-demog.list <- list(
+```{r demog}
+demog <- demography(
         prob.seed = 0.2,
         fecundity = 100,
-        prob.germination = gsub("\n","",vital.json),
+        prob.germination = germ.vital,
         prob.survival = 0.9, 
-        pollen.migration = migr.list, 
-        seed.migration = migr.list, 
+        seed.migration = migr,
+        pollen.migration = migration(
+                         kern="gaussian",
+                         sigma=300,
+                         radius=900,
+                         normalize=10
+                     ),
         genotypes = c("aa", "aA", "AA")
      )
-demog.json <- toJSON(demog.list,pretty=TRUE)
-demog.json
 ```
