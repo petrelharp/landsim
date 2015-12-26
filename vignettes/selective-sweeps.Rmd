@@ -164,7 +164,7 @@ and record the total number of each genotype in every generation.
 plot.times <- 1+c(1,10,20,40,100,200)
 sim <- simulate( pop, this.demography, times=plot.times, 
                 carrying.capacity=values(pop$habitat)[pop$habitable],
-                summaries=list( totals=function(x){colSums(x$N)} )
+                summaries=list( totals=function(N){colSums(N)} )
             )
 ```
 

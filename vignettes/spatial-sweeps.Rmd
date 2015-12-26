@@ -71,14 +71,14 @@ to get the mean number of newly recruited individuals.
 
 Here's the demographic set-up
 ```{r demog_setup}
-demog <- demography(
+demog <- setup_demography( demography(
         prob.seed = 0.2,
         fecundity = 100,
         prob.germination = germination_fun <- vital(
                 function (N, carrying.capacity, ...) {
                     out <- r0 / ( 1 + migrate(competition,x=rowSums(N))/carrying.capacity )
                     return( cbind( aa=out, aA=s*out, AA=s^2*out ) )
-                }
+                },
                 r0 = 0.01,  # one in ten seeds will germinate at low densities
                 s = 1.5,    # multiplicative selective benefit of the A allele
                 competition = migration(
@@ -101,9 +101,8 @@ demog <- demography(
                             radius = 400,
                             normalize = 1
                      ),
-        genotypes = c("aa","aA","AA"),
-        mating = mating_tensor( c("aa","aA","AA") )
-    )
+        genotypes = c("aa","aA","AA")
+    ) )
 ```
 
 
@@ -151,7 +150,7 @@ and record the total number of each genotype in every generation.
 plot.times <- seq(0,700,length.out=71)
 sim <- simulate( pop, demog, times=plot.times, 
                 carrying.capacity=values(pop$habitat)[pop$habitable],
-                summaries=list( totals=function(x){colSums(x$N)} )
+                summaries=list( totals=function(N){colSums(N)} )
             )
 ```
 
