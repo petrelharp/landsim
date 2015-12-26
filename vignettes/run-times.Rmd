@@ -19,27 +19,25 @@ library(raster)
 library(microbenchmark)
 devtools::load_all("..")
 set.seed(42)
-this.plot <- function (x,nr=1,zlim=c(0,max(values(x),na.rm=TRUE)),...) {
-    plot(x,nr=nr,zlim=zlim,...)
-}
 ```
 
 **How well do the simulation methods work with larger rasters?**
 
 Here are the demographic parameters:
 ```{r fancy_setup}
-germination.args <- list( 
-             r0 = 0.01,
-             competition = migration(
-                                     kern="gaussian",
-                                     sigma=100,
-                                     radius=300,
-                                     normalize=1
-                                 )
-         )
-germination_fun <- function (N,carrying.capacity,...) {
-    germination.args$r0 / ( 1 + migrate_raster(raster::sum(N),germination.args$competition)/carrying.capacity )
-}
+germination_fun <- vital( 
+        function (N,carrying.capacity,...) {
+            # note this is 'sum' applied to a RasterBrick object, which acts like rowSums
+            r0 / ( 1 + migrate_raster(sum(N),competition)/carrying.capacity )
+        },
+        r0 = 0.01,
+        competition = migration(
+                                kern="gaussian",
+                                sigma=100,
+                                radius=300,
+                                normalize=1
+                            )
+     )
 
 this.demography <- demography(
         prob.seed = 0.2,

@@ -116,7 +116,7 @@ Class **migration**:
 **Example:**
 
 Here is the JSON:
-```{r pop_defn}
+```{r migr_defn}
 migr <- migration(
                  kern = "gaussian",
                  sigma = 100,
