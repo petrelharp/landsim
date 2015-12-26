@@ -76,7 +76,7 @@ demog <- demography(
         fecundity = 100,
         prob.germination = germination_fun <- vital(
                 function (N, carrying.capacity, ...) {
-                    out <- r0 / ( 1 + migrate(competition,x=rowSums(N))/carrying.capacity )
+                    out <- r0 / ( 1 + migrate(rowSums(N),competition)/carrying.capacity )
                     return( cbind( aa=out, aA=s*out, AA=s^2*out ) )
                 },
                 r0 = 0.01,  # one in ten seeds will germinate at low densities

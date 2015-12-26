@@ -48,11 +48,11 @@ generation <- function (
         seeders <- ( N * fun_or_number(prob.seed) )
     }
     # find mean pollen flux
-    pollen <- migrate(pollen.migration,x=N)
+    pollen <- migrate(N,pollen.migration)
     # mean seed production
     seed.production <- seed_production(seeders=seeders,pollen=pollen,mating=mating,fecundity=fun_or_number(fecundity))
     # seed dispersal
-    seeds.dispersed <- migrate(seed.migration,x=seed.production)
+    seeds.dispersed <- migrate(seed.production,seed.migration)
     # new individuals
     if (!expected) {
         germination <- rpois_matrix( seeds.dispersed * fun_or_number(prob.germination) )

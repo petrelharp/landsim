@@ -2,15 +2,14 @@
 #'
 #' This applies a \code{migration} operation to a given population object.
 #'
+#' @param x A numeric matrix, or a population object, in which case migration will be applied to \code{x$N}.
 #' @param migration The \code{migration} object.
-#' @param population The population object to apply the migration operation to.
-#' @param x Values to be migrated, if not those given in \code{population}.
 #' @export
 #' @return A matrix of values  of the same form as \code{x}.  See \code{migrate} for details.
-migrate <- function ( migration, 
-                      population,
-                      x=population$N
+migrate <- function ( x,
+                      migration
                  ) {
+    if (inherits(x,"population")) { x <- x$N }
     out <- as( migration$M %*% x, class(x) )  # return a dense matrix if we got one in
     return(out)
 }
@@ -21,7 +20,7 @@ migrate <- function ( migration,
 #' This applies a \code{migration} operation to a given Raster* object.
 #'
 #' @param migration The \code{migration} object containing the relevant parameters, which may alternatively be passed in individually.
-#' @param population The population object to apply the migration operation to.
+#' @param x The Raster* to apply the migration operation to.
 #' @param kern Weighting kernel applied to distances.
 #' @param sigma Distance scaling for kernel.
 #' @param radius Maximum distance away to truncate the kernel.
@@ -32,30 +31,30 @@ migrate <- function ( migration,
 #' but may be pretty far off if the discretization is very coarse.
 #' It is exactly stochastic if \code{normalize} is 1;
 #' the interpretation of \code{normalize} more generally is the total production
-#' per unit of \code{population}.
+#' per unit of \code{x}.
 #'
 #' However, note that even if \code{normalize} is 1, the migration will still not be conservative
 #' at any raster cells nearby to boundary or NA cells.
-migrate_raster <- function (population,
+migrate_raster <- function (x,
                             migration=list(sigma=1,normalize=1),
                             kern=migration$kern,
                             sigma=migration$sigma,
                             radius=migration$radius,
                             normalize=migration$normalize
                  ) {
-    if (!inherits(population,"Raster")) {
-        stop("population must be a Raster* object.")
+    if (!inherits(x,"Raster")) {
+        stop("x must be a Raster* object.")
     } 
     kern <- get_kernel(kern)
-    area <- prod(raster::res(population))
-    cell.radius <- ceiling(radius/raster::res(population))
+    area <- prod(raster::res(x))
+    cell.radius <- ceiling(radius/raster::res(x))
         w <- matrix(nrow=2*cell.radius[1]+1,ncol=2*cell.radius[2]+1)
         cc <- cell.radius+1
-        w[] <- kern( sqrt( (xres(population)*(row(w)-cc[1]))^2 + (yres(population)*(col(w)-cc[2]))^2 )/sigma ) * area/sigma^2
+        w[] <- kern( sqrt( (xres(x)*(row(w)-cc[1]))^2 + (yres(x)*(col(w)-cc[2]))^2 )/sigma ) * area/sigma^2
         if (!is.null(normalize)) { w <- (normalize/sum(w))*w }
-        out <- focal( population, w=w, na.rm=TRUE, pad=TRUE, padValue=0 )
-        out[is.na(population)] <- NA
-    names(out) <- names(population)
+        out <- focal( x, w=w, na.rm=TRUE, pad=TRUE, padValue=0 )
+        out[is.na(x)] <- NA
+    names(out) <- names(x)
     return(out)
 }
 

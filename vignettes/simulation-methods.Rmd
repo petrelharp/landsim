@@ -184,7 +184,7 @@ germination.args <- list(
                                  )
          )
 germination_fun <- function (N, carrying.capacity, ...) {
-    germination.args$r0 / ( 1 + migrate(germination.args$competition,x=rowSums(N))/carrying.capacity )
+    germination.args$r0 / ( 1 + migrate(rowSums(N),germination.args$competition)/carrying.capacity )
 }
 
 this.demography <- demography(
