@@ -13,7 +13,7 @@ intrinsic_growth <- function (population, demography, density=1, ...) {
     growth <- sapply( population$genotypes, function (geno) {
                 population$N[] <- 0
                 population$N[,geno] <- density
-                rowSums( generation(population,this.demography, expected=TRUE, ... ) )/density
+                rowSums( generation(population,demography, expected=TRUE, ... ) )/density
          } )
     colnames(growth) <- pop$genotypes
     return(growth)

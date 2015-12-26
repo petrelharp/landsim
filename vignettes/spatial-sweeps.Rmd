@@ -71,7 +71,7 @@ to get the mean number of newly recruited individuals.
 
 Here's the demographic set-up
 ```{r demog_setup}
-demog <- setup_demography( demography(
+demog <- demography(
         prob.seed = 0.2,
         fecundity = 100,
         prob.germination = germination_fun <- vital(
@@ -102,7 +102,7 @@ demog <- setup_demography( demography(
                             normalize = 1
                      ),
         genotypes = c("aa","aA","AA")
-    ) )
+    )
 ```
 
 
@@ -117,6 +117,7 @@ pop <- population(
                              aA=rpois_raster(habitat*40/total.habitat,only.values=TRUE),
                              AA=0 )
              )
+demog <- setup_demography( demog, pop )
 
 pl(pop)
 ```
