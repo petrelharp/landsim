@@ -51,7 +51,7 @@ germination.args <- list(
                                  )
          )
 germination_fun <- function (N, carrying.capacity, ...) {
-    out <- germination.args$r0 / ( 1 + migrate(germination.args$competition,x=rowSums(N))/carrying.capacity )
+    out <- germination.args$r0 / ( 1 + migrate(rowSums(N),germination.args$competition)/carrying.capacity )
     return( cbind( aa=out, aA=germination.args$s*out, AA=germination.args$s^2*out ) )
 }
 
