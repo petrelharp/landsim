@@ -51,3 +51,31 @@ migration <- function (
     return(out)
 }
 
+
+#' Set Up a Migration object from a Configuration
+#'
+#' Provides a method to read and store migration configuration, particularly for use as JSON.
+#'
+#' @param habitat The path to the file where the raster is stored.
+#' @param inaccessible.value The values in the raster that should be marked as inaccessible.
+#' @param uninhabitable.value The values in the raster that should be marked as not habitable.
+#' @param genotypes A character vector of genotypes.
+#' @param json Instead of the above, a file name or character string containing JSON with the above.
+#' @export
+make_migration <- function (
+                     kern = NULL,
+                     sigma = NULL,
+                     radius = NULL,
+                     normalize = NULL,
+                     json = "{}"
+                 ) {
+    arg.list <- jsonlite::fromJSON(json)
+    for (x in setdiff(names(formals()),"json")) {
+        xval <- get(x)
+        if (!is.null(xval)) {
+            arg.list[[x]] <- xval
+        }
+    }
+    do.call( migration, arg.list )
+}
+

@@ -5,7 +5,7 @@
 #'
 #' @param population Population object or Raster*.
 #' @param accessible Logical vector indicating which cells in `habitat` that migrants will attempt to go to.
-#' @param migration Migration object; is overrided by other parameters below.
+#' @param migration Migration object; is overridden by other parameters below.
 #' @param kern Weighting kernel applied to distances.
 #' @param sigma Distance scaling for kernel.
 #' @param radius Maximum distance away to truncate the kernel.

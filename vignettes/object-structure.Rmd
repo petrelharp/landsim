@@ -14,7 +14,7 @@ fig.dim <- 4
 knitr::opts_chunk$set(fig.width=2*fig.dim,fig.height=fig.dim,fig.align='center')
 library(Matrix)
 library(raster)
-library(testthat)
+library(jsonlite)
 devtools::load_all("..")
 ```
 
@@ -56,6 +56,45 @@ Class **population**:
 : matrix indexed by (habitable cells) x (genotypes) giving the number of each genotype in each habitable cell
 
 
+The configuration can be stored as JSON:
+
+`habitat`
+
+: The path to the file where the raster is stored.
+
+`inaccessible.value`
+
+: The values in the raster that should be marked as inaccessible.
+
+`uninhabitable.value`
+
+: The values in the raster that should be marked as not habitable.
+
+`genotypes`
+
+: A character vector of genotypes.
+
+
+**Example:**
+
+Here is the JSON:
+```{r pop_json, echo=FALSE}
+pop.list <- list(
+                 habitat = system.file("inst/extdata/test_raster.gri",package="landsim"),
+                 inaccessible.value = "NA",
+                 uninhabitable.value = 0.0,
+                 genotypes = c( "aa", "aA", "AA" )
+             )
+pop.json <- toJSON(pop.list,prett=TRUE)
+pop.json
+```
+
+This can be parsed using `make_population()`:
+```
+pop <- make_population(pop.json)
+```
+
+
 `migration`
 ---------
 
@@ -82,6 +121,26 @@ Class **migration**:
 : normalization factor applied to the smoother
 
 
+**Example:**
+
+Here is the JSON:
+```{r pop_json, echo=FALSE}
+migr.list <- list(
+                 kern = "gaussian",
+                 sigma = 100,
+                 radius = 1000,
+                 normalize = 1.0
+             )
+migr.json <- toJSON(migr.list,prett=TRUE)
+migr.json
+```
+
+This can be parsed using `make_population()`:
+```
+migr <- make_migration(migr.json)
+```
+
+
 migration.matrix
 ----------------
 
@@ -94,7 +153,66 @@ Class **migration.matrix**:
 
 `M`
 
-: The pre-computed migration matirx.
+: The pre-computed migration matrix.
+
+
+**Example:**
+
+This is added with the function `migration`:
+
+```
+migr <- migration( migr, population=pop, do.M=TRUE )
+```
+
+
+`vital_rate`
+----------
+
+Vital rates may be numbers or vectors
+but may also be functions,
+to allow them to depend on the current state of the system.
+
+**Example:**
+
+Here is the JSON:
+```{r vital_json, echo=FALSE}
+vital.list <- list(
+             r0 = 0.01,  # one in ten seeds will germinate at low densities
+             s = 1.5,    # multiplicative selective benefit of the A allele
+             carrying.capacity = 10*habitat,
+             competition = migration(
+                                     kern="gaussian",
+                                     sigma=100,
+                                     radius=300,
+                                     normalize=1,
+                                     do.M=TRUE,
+                                     population=population
+                                 ),
+             value = function (N, ...) {
+                out <- r0 / ( 1 + migrate(competition,x=rowSums(N))/carrying.capacity )
+                return( cbind( aa=out, aA=s*out, AA=s^2*out ) )
+             }
+         )
+
+vital.json <- '
+{
+    "value" : { "function" : 
+              " out <- r0 / ( 1 + migrate(competition,x=rowSums(N))/carrying.capacity ) ;
+                return( cbind( aa=out, aA=s*out, AA=s^2*out ) ) " 
+        },
+    "r0" : 0.01,
+    "s" : 1.5,
+    "carrying.capacity" : { "R" : "10*habitat" },
+    "competition" : { "migration" : { 
+            "kern" : "gaussian",
+            "sigma" : 100,
+            "radius" : 300,
+            "normalize" : 1.0
+        } }
+}
+'
+```
+
 
 
 `demography`
@@ -145,3 +263,20 @@ Class **demography**:
 
 
 
+
+**Example:**
+
+Here is the JSON:
+```{r demog, echo=FALSE}
+demog.list <- list(
+        prob.seed = 0.2,
+        fecundity = 100,
+        prob.germination = gsub("\n","",vital.json),
+        prob.survival = 0.9, 
+        pollen.migration = migr.list, 
+        seed.migration = migr.list, 
+        genotypes = c("aa", "aA", "AA")
+     )
+demog.json <- toJSON(demog.list,pretty=TRUE)
+demog.json
+```
