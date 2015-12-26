@@ -104,7 +104,7 @@ set_N <- function (x,i,j,...,value) {
 
 #' Set Up a Population from a Configuration
 #'
-#' Provides a method to read and store population configuration, particularly for use as JSON.
+#' Provides a method to read and store population configuration.
 #'
 #' @param habitat The path to the file where the raster is stored.
 #' @param inaccessible.value The values in the raster that should be marked as inaccessible.

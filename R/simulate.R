@@ -97,7 +97,7 @@ sim_to_brick <- function (sim,pop) {
 #'
 #' Run a previously initiated popluation for more generations.
 #'
-#' @inheritParams simulation
+#' @inheritParams simulate
 #' @param sim The previous \code{simulation} object.
 #' @param append If TRUE, append results to results in previous simulation object.
 #' @export

@@ -270,3 +270,9 @@ demog <- demography(
         genotypes = c("aa", "aA", "AA")
      )
 ```
+
+This can be set up for use with a population with `setup_demography`,
+which sets up all the associated migration and vital objects.
+```{r setup_demog}
+demog <- setup_demography(demog,pop)
+```

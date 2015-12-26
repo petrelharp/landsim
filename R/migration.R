@@ -15,8 +15,6 @@
 #' @export
 #' @return A \code{migration} S3 object (just a named list).
 #'
-#' @section{Details}
-#'
 #' If \code{kern} is a migration object, can be used to add a migration matrix to it.
 #' See \code{migration_matrix}.
 migration <- function (
