@@ -176,11 +176,21 @@ pop <- population(
 matrix.demography <- this.demography
 matrix.demography$seed.migration <- migration( matrix.demography$seed.migration, do.M=TRUE, population=habitat )
 matrix.demography$pollen.migration <- migration( matrix.demography$pollen.migration, do.M=TRUE, population=habitat )
-matrix.germination.args <- germination.args
-matrix.germination.args$competition <- migration( matrix.germination.args$competition, do.M=TRUE, population=habitat )
-matrix.demography$prob.germination <- function (N,carrying.capacity,...) {
-    matrix.germination.args$r0 / ( 1 + migrate(matrix.germination.args$competition,x=N)/carrying.capacity )
-}
+matrix.demography$prob.germination <- vital( 
+        function (N,carrying.capacity,...) {
+            # and this is rowSums, for the matrix
+            r0 / ( 1 + migrate_raster(rowSums(N),competition)/carrying.capacity )
+        },
+        r0 = 0.01,
+        competition = migration(
+                                kern="gaussian",
+                                sigma=100,
+                                radius=300,
+                                normalize=1
+                                do.M=TRUE,
+                                population=habitat
+                            )
+     )
 matrix.time <- microbenchmark( generation(pop,matrix.demography,carrying.capacity=values(habitat)[!is.na(values(habitat))]), times=10 )
 
 rbind( raster.time, matrix.time )

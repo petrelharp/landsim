@@ -106,7 +106,7 @@ set_N <- function (x,i,j,...,value) {
 #'
 #' Provides a method to read and store population configuration.
 #'
-#' @param habitat The path to the file where the raster is stored.
+#' @param habitat A RasterLayer, or the path to the file where the raster is stored.
 #' @param inaccessible.value The values in the raster that should be marked as inaccessible.
 #' @param uninhabitable.value The values in the raster that should be marked as not habitable.
 #' @param genotypes A character vector of genotypes.
@@ -118,7 +118,7 @@ make_population <- function (
                              genotypes,
                              N=0
                          ) {
-    habitat <- raster::raster(pop.list$habitat)
+    if (!inherits(habitat,"Raster")) { habitat <- raster::raster(habitat) }
     accessible <- if (is.na(inaccessible.value)) { 
             is.na(raster::values(habitat)) 
         } else { 
