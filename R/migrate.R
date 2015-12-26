@@ -43,8 +43,9 @@ migrate_raster <- function (population,
                             radius=migration$radius,
                             normalize=migration$normalize
                  ) {
+    if (inherits(population,"population")) { population <- population$habitat }
     if (!inherits(population,"Raster")) {
-        stop("population must be a Raster* object.")
+        stop("migrate_raster: population must be a population or a Raster* object.")
     } 
     kern <- get_kernel(kern)
     area <- prod(raster::res(population))

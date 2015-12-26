@@ -179,14 +179,14 @@ matrix.demography$pollen.migration <- migration( matrix.demography$pollen.migrat
 matrix.demography$prob.germination <- vital( 
         function (N,carrying.capacity,...) {
             # and this is rowSums, for the matrix
-            r0 / ( 1 + migrate_raster(rowSums(N),competition)/carrying.capacity )
+            r0 / ( 1 + migrate(competition,x=rowSums(N))/carrying.capacity )
         },
         r0 = 0.01,
         competition = migration(
                                 kern="gaussian",
                                 sigma=100,
                                 radius=300,
-                                normalize=1
+                                normalize=1,
                                 do.M=TRUE,
                                 population=habitat
                             )
