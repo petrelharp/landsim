@@ -7,6 +7,7 @@
 #' @param seeders A numeric matrix of numbers of seeding individuals, with number of columns equal to the number of genotypes.
 #' @param pollen A numeric matrix of pollen density, with number of columns equal to the number of genotypes.
 #' @param mating An array with probabilities of producing each genotype from each parental genotype.
+#' @param fecundity Scaling factor that multiplies the resulting matrix.
 #' @export
 #' @return A matrix of the same form as \code{seeders}.
 seed_production <- function (
@@ -45,6 +46,7 @@ seed_production <- function (
 #' @param seeders A Raster* of numbers of seeding individuals.
 #' @param pollen A Raster* of pollen density.
 #' @param mating An array with probabilities of producing each genotype from each parental genotype.
+#' @param fecundity Scaling factor that multiplies the resulting matrix.
 #' @export
 #' @return A Raster* of the same form as the input.
 seed_production_raster <- function (

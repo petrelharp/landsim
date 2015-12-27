@@ -55,7 +55,9 @@ Class **population**:
 : matrix indexed by (habitable cells) x (genotypes) giving the number of each genotype in each habitable cell
 
 
-The configuration can be stored as JSON:
+**Set-up:**
+
+This can be initiated with `make_population()` by specifying the following:
 
 `habitat`
 
@@ -76,7 +78,6 @@ The configuration can be stored as JSON:
 
 **Example:**
 
-Here is the JSON:
 ```{r pop_defn}
 pop <- make_population(
                  habitat = system.file("inst/extdata/test_raster.gri",package="landsim"),
@@ -115,7 +116,6 @@ Class **migration**:
 
 **Example:**
 
-Here is the JSON:
 ```{r migr_defn}
 migr <- migration(
                  kern = "gaussian",

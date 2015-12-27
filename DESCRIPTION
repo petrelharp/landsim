@@ -16,6 +16,5 @@ Suggests:
     knitr,
     rmarkdown,
     testthat,
-    microbenchmark,
-    jsonlite
+    microbenchmark
 VignetteBuilder: knitr

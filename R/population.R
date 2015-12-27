@@ -111,15 +111,19 @@ set_N <- function (x,i,j,...,value) {
 #' @param inaccessible.value The values in the raster that should be marked as inaccessible.
 #' @param uninhabitable.value The values in the raster that should be marked as not habitable.
 #' @param genotypes A character vector of genotypes.
+#' @param N Numerical value(s) to initialize the matrix of genotype counts with.
+#' @param extent A raster::extent object (or a vector of xmin,xmax,ymin,ymax) to crop the habitat with.
 #' @export
 make_population <- function (
                              habitat,
                              inaccessible.value,
                              uninhabitable.value,
                              genotypes,
-                             N=0
+                             N=0,
+                             extent
                          ) {
     if (!inherits(habitat,"Raster")) { habitat <- raster::raster(habitat) }
+    if (!missing(extent)) { habitat <- raster::crop(habitat,extent) }
     accessible <- if (is.na(inaccessible.value)) { 
             is.na(raster::values(habitat)) 
         } else { 

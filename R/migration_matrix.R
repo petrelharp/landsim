@@ -123,3 +123,29 @@ subset_migration <- function (M, old, new,
     to.inds <- match( raster::cellFromXY(old,to.locs), to.old )
     return(M[from.inds,to.inds])
 }
+
+
+
+#' Take a Geometric Power of a Matrix
+#'
+#' For a matrix M, compute (1-p) ( I + p M + p^2 M^2 + ... ) = (1-p)(I-pM)^{-1} .
+#' If M is a transition matrix, the result is the distribution after taking a Geometric(p) number of steps.
+#'
+#' @param M The migration matrix.
+#' @param p The parameter in the geometric distribution (must be between 0 and 1).
+#' @param eps The numerical tolerance.
+#' @param n The number of terms to use, minus one (defaults so that p^n = eps).
+#' @export
+#' @return A matrix of the same form as M.
+geo_power <- function (M, p, eps=1e-8, n=log(eps)/log(p)) {
+    if (p==0) { n <- 0 }
+    out <- pM <- p * M
+    diag(out) <- diag(out) + 1
+    if (n>1) {
+        for (k in 2:n) {
+            pM <- p * M %*% pM
+            out <- out + pM
+        }
+    }
+    return( (1-p)*out )
+}
