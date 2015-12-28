@@ -17,7 +17,7 @@ fig.dim <- 3
 knitr::opts_chunk$set(fig.width=3*fig.dim,fig.height=fig.dim,fig.align='center')
 library(Matrix)
 library(raster)
-devtools::load_all("..")
+library(landsim)
 set.seed(42)
 ```
 

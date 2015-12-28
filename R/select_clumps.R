@@ -12,8 +12,8 @@
 #' @return A Raster* of the same form as \code{x}.
 select_clumps <- function (x, threshold, ...) {
     cats <-  raster::clump( raster::distance(x) <= threshold, ... )
-    catord <- order( tabulate(values(cats)), decreasing=TRUE )
-    values(x)[!is.na(values(x))] <- catord[values(cats)[!is.na(values(x))]]
+    catord <- order( tabulate(raster::values(cats)), decreasing=TRUE )
+    raster::values(x)[!is.na(raster::values(x))] <- catord[raster::values(cats)[!is.na(raster::values(x))]]
     return(x)
 }
 

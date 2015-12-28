@@ -15,17 +15,17 @@
 #' @return A \code{population} S3 object (just a named list).
 population <- function (
                         habitat,
-                        accessible=!is.na(values(habitat)),
-                        habitable=!is.na(values(habitat)),
-                        genotypes=colNames(N),
+                        accessible=!is.na(raster::values(habitat)),
+                        habitable=!is.na(raster::values(habitat)),
+                        genotypes=colnames(N),
                         N=matrix(1,nrow=sum(habitable),ncol=length(genotypes)),
                         description='',
                        ...)  {
     if ( (NCOL(N) != length(genotypes)) || (NROW(N)!=sum(habitable)) ) {
         stop("N must be (number of habitable cells) x (number of genotypes)")
     }
-    if ( !is.logical(accessible) || (length(accessible) != ncell(habitat)) 
-        || !is.logical(accessible) || (length(accessible) != ncell(habitat)) ) {
+    if ( !is.logical(accessible) || (length(accessible) != raster::ncell(habitat)) 
+        || !is.logical(accessible) || (length(accessible) != raster::ncell(habitat)) ) {
         stop("accessible and habitable must be logical vectors of the same length as the number of cells in habitat.")
     }
     colnames(N) <- genotypes
@@ -49,17 +49,30 @@ population <- function (
 #' @param population The population object.
 #' @param x The values to be put into the Raster.
 pop_to_raster <- function (population,x=population$N) {
-    out <- stack( pop['habitat'][rep(1,NCOL(x))] )
-    names(out) <- pop$genotypes
-    values(out)[pop$habitable] <- as.numeric(x)
+    out <- raster::stack( population['habitat'][rep(1,NCOL(x))] )
+    names(out) <- population$genotypes
+    raster::values(out)[population$habitable] <- as.numeric(x)
     return(out)
 }
 
-# this only works for S4 methods
-# require(raster)
-# setAs(from="population",to="Raster",def=function(from)pop_to_raster(population=from))
-
+#' Plot a Population
+#'
+#' Plots a population object using pop_to_raster() and raster's method for plotting RasterBrick objects.
+#'
+#' @param pop The population object.
+#' @param zlim The range of color values.
+#' @param ... Other parameters passed to plot().
+#' @export
 plot.population <- function (pop,zlim=range(pop$N,finite=TRUE),...) { plot(pop_to_raster(pop),zlim=zlim,...) }
+
+#' Extract Matrix of Genotype Counts
+#'
+#' Parallels the \code{values()} function of the raster package,
+#' which allows usage of the same code for both types in some situations.
+#'
+#' @param pop The population object.
+#' @export
+#' @return The matrix of genotype counts.
 values.population <- function (pop) { pop$N }
 
 #' Number of Habitable Cells in a Population.
@@ -134,12 +147,12 @@ make_population <- function (
     accessible <- if (is.na(inaccessible.value)) { 
             is.na(raster::values(habitat)) 
         } else { 
-            !is.na(values(habitat)) & (raster::values(habitat) != inaccessible.value) 
+            !is.na(raster::values(habitat)) & (raster::values(habitat) != inaccessible.value) 
         }
     habitable <- if (is.na(uninhabitable.value)) { 
             is.na(raster::values(habitat)) 
         } else { 
-            !is.na(values(habitat)) & (raster::values(habitat) != uninhabitable.value) 
+            !is.na(raster::values(habitat)) & (raster::values(habitat) != uninhabitable.value) 
         }
     population(
               habitat = habitat,

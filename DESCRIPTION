@@ -10,8 +10,9 @@ Imports:
     Matrix,
     raster,
     sp,
-    rgeos
-RoxygenNote: 5.0.1
+    rgeos,
+    methods
+RoxygenNote: 5.0.1.9000
 Suggests:
     knitr,
     rmarkdown,

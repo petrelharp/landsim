@@ -56,7 +56,7 @@ seed_production_raster <- function (
                          fecundity=1
                      ) {
     total.pollen <- sum(pollen)  # this is the Raster method that acts like rowSums( )
-    out <- 0.0 * do.call( brick, list(total.pollen)[rep(1,dim(mating)[3])] )
+    out <- 0.0 * do.call( raster::brick, list(total.pollen)[rep(1,dim(mating)[3])] )
     # values(out)[!is.na(values(out))] <- 0  # this is done by the multiplication by 0
     for (i in 1:dim(mating)[1]) {
         for (j in 1:dim(mating)[2]) {

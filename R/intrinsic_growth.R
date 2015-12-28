@@ -15,7 +15,7 @@ intrinsic_growth <- function (population, demography, density=1, ...) {
                 population$N[,geno] <- density
                 rowSums( generation(population,demography, expected=TRUE, ... ) )/density
          } )
-    colnames(growth) <- pop$genotypes
+    colnames(growth) <- population$genotypes
     return(growth)
 }
 

@@ -34,6 +34,14 @@ rbinom_raster <- function (size, prob, only.values=FALSE) {
 }
 
 #' Sample from a Binomial, Preserving Dimension
+#'
+#' Works as `rbinom`, except that it preserves the dimensions, and dimnames of the input(s).
+#'
+#' @param size Integer vector, matrix, or array.
+#' @param prob Numeric vector, matrix, or array.
+#' @export
+#' @return An integer object of the same dimensions as the input (recycled to match each other),
+#' and the same dimnames if these can be matched.
 rbinom_matrix <- function (size, prob) {
     dims <- c( max(NROW(size),NROW(prob)), max(NCOL(size),NCOL(prob)) )
     out <- rbinom( prod(dims), size=as.numeric(size), prob=as.numeric(prob) )

@@ -17,7 +17,7 @@ fig.dim <- 3
 knitr::opts_chunk$set(fig.width=3*fig.dim,fig.height=fig.dim,fig.align='center')
 library(Matrix)
 library(raster)
-devtools::load_all("..")
+library(landsim)
 set.seed(42)
 ```
 
@@ -149,7 +149,7 @@ We'll record the full state of the population at several times,
 and record the total number of each genotype in every generation.
 ```{r run_sim}
 plot.times <- seq(0,700,length.out=71)
-sim <- simulate( pop, demog, times=plot.times, 
+sim <- simulate_pop( pop, demog, times=plot.times, 
                 carrying.capacity=values(pop$habitat)[pop$habitable],
                 summaries=list( totals=function(N){colSums(N)} )
             )

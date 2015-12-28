@@ -14,7 +14,14 @@ fig.dim <- 4
 knitr::opts_chunk$set(fig.width=2*fig.dim,fig.height=fig.dim,fig.align='center')
 library(Matrix)
 library(raster)
-devtools::load_all("..")
+library(landsim)
+```
+```{r test}
+f <- vital( function (N,...) { N+x }, x=3 )
+f(10)
+f$x
+f$x <- 12
+f(10)
 ```
 
 
@@ -80,7 +87,7 @@ This can be initiated with `make_population()` by specifying the following:
 
 ```{r pop_defn}
 pop <- make_population(
-                 habitat = system.file("inst/extdata/test_raster.gri",package="landsim"),
+                 habitat = system.file("extdata/test_raster.gri",package="landsim"),
                  inaccessible.value = "NA",
                  uninhabitable.value = 0.0,
                  genotypes = c( "aa", "aA", "AA" )
@@ -273,6 +280,6 @@ demog <- demography(
 
 This can be set up for use with a population with `setup_demography`,
 which sets up all the associated migration and vital objects.
-```{r setup_demog}
+```
 demog <- setup_demography(demog,pop)
 ```

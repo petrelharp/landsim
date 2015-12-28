@@ -17,8 +17,7 @@ fig.dim <- 3
 knitr::opts_chunk$set(fig.width=3*fig.dim,fig.height=fig.dim,fig.align='center')
 library(Matrix)
 library(raster)
-library(jsonlite)
-devtools::load_all("..")
+library(landsim)
 set.seed(42)
 ```
 
@@ -125,7 +124,9 @@ pop <- population(
                              AA=0 )
              )
 
-pl(pop)
+```
+```{r plot_pop}
+plot(pop)
 ```
 
 Let's check this looks to allow a stable population.
@@ -161,8 +162,8 @@ Note that we have to pass `carrying.capacity` in.
 We'll record the full state of the population at several times, 
 and record the total number of each genotype in every generation.
 ```{r run_sim}
-plot.times <- seq(1,200,length.out=50)
-sim <- simulate( pop, this.demography, times=plot.times, 
+plot.times <- seq(0,200,length.out=51)
+sim <- simulate_pop( pop, this.demography, times=plot.times, 
                 carrying.capacity=values(pop$habitat)[pop$habitable],
                 summaries=list( totals=function(N){colSums(N)} )
             )
@@ -171,7 +172,7 @@ sim <- simulate( pop, this.demography, times=plot.times,
 Here is a video of the simulation:
 ```{r plot_sim_snapshots, fig.show="animate", aniopts="controls", interval=0.2}
 for (k in seq_along(plot.times)) {
-    pl(pop$habitat,v=sim$N[,,k],main=c("",sprintf("t=%d",plot.times[k])),zlim=range(sim$N,finite=TRUE))
+    pl(pop$habitat,v=sim$N[,,k],main=c("",sprintf("t=%d",floor(plot.times[k]))),zlim=range(sim$N,finite=TRUE))
 }
 ```
 

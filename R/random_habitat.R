@@ -18,11 +18,11 @@ random_habitat <- function ( diam=1e4,
                              radius=1500
                             ) {
 
-    habitat <- raster(xmn=-diam, xmx=diam, ymn=-diam, ymx=diam, 
+    habitat <- raster::raster(xmn=-diam, xmx=diam, ymn=-diam, ymx=diam, 
           resolution=res,
           crs="+proj=utm +zone=11 +ellps=GRS80 +towgs84=0,0,0,0,0,0,0 +units=m +no_defs")
-    values(habitat) <- randfun(ncell(habitat))
+    raster::values(habitat) <- randfun(raster::ncell(habitat))
     habitat <- 20*migrate_raster( habitat, kern=kern, sigma=sigma, radius=radius )
-    values(habitat)[values(habitat)<0] <- NA
+    raster::values(habitat)[raster::values(habitat)<0] <- NA
     return(habitat)
 }

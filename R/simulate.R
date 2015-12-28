@@ -20,7 +20,7 @@
 #'       times = As in the input.
 #'       summary.times = As in the input.
 #'       t = The final generation.
-simulate <- function (
+simulate_pop <- function (
                         population,
                         demography,
                         times,
@@ -82,8 +82,8 @@ simulate <- function (
 #' @return A named list of RasterBrick objects.
 sim_to_brick <- function (sim,pop) {
     out <- lapply( pop$genotypes, function (geno) {
-                  rb <- do.call( stack, list( pop$habitat )[rep(1,dim(sim$N)[3])] )
-                  values(rb)[pop$habitable] <- sim$N[,match(geno,pop$genotypes),]
+                  rb <- do.call( raster::stack, list( pop$habitat )[rep(1,dim(sim$N)[3])] )
+                  raster::values(rb)[pop$habitable] <- sim$N[,match(geno,pop$genotypes),]
                   names(rb) <- sim$times
                   rb
            } )
@@ -97,7 +97,7 @@ sim_to_brick <- function (sim,pop) {
 #'
 #' Run a previously initiated popluation for more generations.
 #'
-#' @inheritParams simulate
+#' @inheritParams simulate_pop
 #' @param sim The previous \code{simulation} object.
 #' @param append If TRUE, append results to results in previous simulation object.
 #' @export
@@ -114,7 +114,7 @@ extend_simulation <- function (
                         summaries=NULL,
                         ...
                 ) {
-    new.sim <- simulate( population=population, demography=demography, times=times, N=N, tinit=tinit, summary.times=summary.times, summaries=summaries, ... )
+    new.sim <- simulate_pop( population=population, demography=demography, times=times, N=N, tinit=tinit, summary.times=summary.times, summaries=summaries, ... )
     if (append) {
         new.dims <- dim(new.sim$N)
         new.sim$N <- c( sim$N, new.sim$N )

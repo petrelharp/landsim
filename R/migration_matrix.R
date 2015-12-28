@@ -56,8 +56,8 @@ migration_matrix <- function (population,
         if (missing(from)) { from <- which(population$habitable) }
         population <- population$habitat
     } else if (inherits(population,"Raster")) {
-        if (missing(accessible)) { accessible <- !is.na(values(population)) }
-        if (missing(from)) { from <- which(!is.na(values(population))) }
+        if (missing(accessible)) { accessible <- !is.na(raster::values(population)) }
+        if (missing(from)) { from <- which(!is.na(raster::values(population))) }
     }
     if (!is.integer(from)) { stop("migration_matrix: 'from' must be integer-valued (not logical).") }
     if (!is.logical(accessible)) { stop("migration_matrix: 'accessible' must be logical (not a vector of indices).") }
@@ -110,11 +110,11 @@ p.to.j <- function (p) { rep( seq.int( length(p)-1 ), diff(p) ) }
 #' @export
 #' @return A migration matrix.  See \code{migrate}.
 subset_migration <- function (M, old, new, 
-                              from.old=which(!is.na(values(old))), to.old=from.old, 
-                              from.new=which(!is.na(values(new))), to.new=from.new
+                              from.old=which(!is.na(raster::values(old))), to.old=from.old, 
+                              from.new=which(!is.na(raster::values(new))), to.new=from.new
                          ) {
-    if (any(res(old)!=res(new))) { stop("Resolutions must be the same for the two layers to subset a migration matrix.") }
-    if ( xmin(new)<xmin(old) || xmax(new)>xmax(old) || ymin(new)<ymin(old) || ymax(new)>ymax(old) ) {
+    if (any(raster::res(old)!=raster::res(new))) { stop("Resolutions must be the same for the two layers to subset a migration matrix.") }
+    if ( raster::xmin(new)<raster::xmin(old) || raster::xmax(new)>raster::xmax(old) || raster::ymin(new)<raster::ymin(old) || raster::ymax(new)>raster::ymax(old) ) {
         stop("New layer must be contained in the old layer to subset a migration matrix.")
     }
     from.locs <- raster::xyFromCell(new,from.new)

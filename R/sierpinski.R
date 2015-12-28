@@ -11,7 +11,7 @@
 #' @return A Raster* of the same form as the input.
 sierpinski_overlay <- function (
                                 layer,
-                                box=bbox(layer),
+                                box=sp::bbox(layer),
                                 n=floor(log(max(nrow(layer),ncol(layer))/log(3))),
                                 random=FALSE
                         ) {
@@ -25,10 +25,10 @@ sierpinski_overlay <- function (
     # remove the middle ninth
     cutbox.coords <- cbind( s1=mid.s1[1+c(1,2,2,1,1)],
                             s2=mid.s2[1+c(1,1,2,2,1)] )
-    cutpoly <- Polygon( coords=cutbox.coords )
-    cutpoly.sp <- SpatialPolygons( list( Polygons( list( cutpoly ), ID="cutbox" ) ) )
-    cutmask <- rasterize( cutpoly.sp, layer, background=NA )
-    layer <- mask( layer, cutmask, inverse=TRUE )
+    cutpoly <- sp::Polygon( coords=cutbox.coords )
+    cutpoly.sp <- sp::SpatialPolygons( list( sp::Polygons( list( cutpoly ), ID="cutbox" ) ) )
+    cutmask <- raster::rasterize( cutpoly.sp, layer, background=NA )
+    layer <- raster::mask( layer, cutmask, inverse=TRUE )
     # iterate 
     if (n>1) {
         for (ii in 1:3) {

@@ -17,26 +17,6 @@ vital <- function (
 }
 
 
-#' Extract Parameters from Vital Function
-#'
-#' Unpackages parameters from the result of \code{vital()} (or more generally from the environment of a function).
-#'
-#' @param fun The function.
-#' @param ... Other variables used by \code{fun}.
-#' @export
-get_vital <- function ( fun, ...) {
-    mget(...,envir=environment(fun),inherits=FALSE)
-}
-
-
-as.list.vital <- function (x) { c( as.list(environment(x)), list(fun=x) ) }
-
-"$.vital" <- function (x, name) { get(name,envir=environment(x),inherits=FALSE) }
-"$<-.vital" <- "[[<-.vital" <- function (x, i, value) { assign(i,value,envir=environment(x),inherits=FALSE); x }
-"[[.vital" <- function (x, i) { get(i,envir=environment(x),inherits=FALSE) }
-"[.vital" <- function (x, i) { mget(i,envir=environment(x),inherits=FALSE) }
-names.vital <- function (x) { ls(environment(x)) }
-
 
 #' Set up a Vital Function for a Concrete Population
 #'
@@ -61,3 +41,50 @@ setup_vital <- function (fun,pop,...) {
     }
     return(fun)
 }
+
+
+#' Set Up a Vital Rates Function With Parameters
+#'
+#' Takes a function and an arbitrary collection of other parameters that are used in that function,
+#' and packages the other parameters into the environment of the function.
+#'
+#' @param x The function.
+#' @param ... Other variables used by \code{fun}.
+#' @export
+as.list.vital <- function (x,...) { c( as.list(environment(x)), list(fun=x) ) }
+
+#' Extract items from the environment of a vital function.
+#'
+#' @param x,object The vital function.
+#' @param i,name The name of the item to extract.
+#' @param value The new value to assign.
+#' @export
+getElement.vital <- function(object,name) { get(name,envir=environment(object),inherits=FALSE) }
+
+#' @describeIn getElement.vital Extract items from the environment of a vital function.
+#' @export
+"$.vital" <- function (x, name) { get(name,envir=environment(x),inherits=FALSE) }
+
+#' @describeIn getElement.vital Assign to environment of a vital function.
+#' @export
+"$<-.vital" <- function (x, i, value) { assign(i,value,envir=environment(x),inherits=FALSE); x }
+
+#' @describeIn getElement.vital Assign to environment of a vital function.
+#' @export
+"[[<-.vital" <- function (x, i, value) { assign(i,value,envir=environment(x),inherits=FALSE); x }
+
+#' @describeIn getElement.vital Extract items from the environment of a vital function.
+#' @export
+"[[.vital" <- function (x, i) { get(i,envir=environment(x),inherits=FALSE) }
+
+#' @describeIn getElement.vital Extract multiple items from the environment of a vital function.
+#' @export
+"[.vital" <- function (x, i) { mget(i,envir=environment(x),inherits=FALSE) }
+
+#' Extract Names of Objects in Environment of a vital Function
+#'
+#' @param x The vital function.
+#' @export
+names.vital <- function (x) { ls(environment(x)) }
+
+

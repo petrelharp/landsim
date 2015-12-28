@@ -51,9 +51,9 @@ migrate_raster <- function (x,
     cell.radius <- ceiling(radius/raster::res(x))
         w <- matrix(nrow=2*cell.radius[1]+1,ncol=2*cell.radius[2]+1)
         cc <- cell.radius+1
-        w[] <- kern( sqrt( (xres(x)*(row(w)-cc[1]))^2 + (yres(x)*(col(w)-cc[2]))^2 )/sigma ) * area/sigma^2
+        w[] <- kern( sqrt( (raster::xres(x)*(row(w)-cc[1]))^2 + (raster::yres(x)*(col(w)-cc[2]))^2 )/sigma ) * area/sigma^2
         if (!is.null(normalize)) { w <- (normalize/sum(w))*w }
-        out <- focal( x, w=w, na.rm=TRUE, pad=TRUE, padValue=0 )
+        out <- raster::focal( x, w=w, na.rm=TRUE, pad=TRUE, padValue=0 )
         out[is.na(x)] <- NA
     names(out) <- names(x)
     return(out)
@@ -82,7 +82,7 @@ require(raster)
 methods::setMethod("focal", signature("RasterStack"), function(x,...) {
           x.names <- names(x)
           for (k in seq_len(raster::nlayers(x))) {
-              x[[k]] <- focal( x[[k]], ... )
+              x[[k]] <- raster::focal( x[[k]], ... )
           }
           names(x) <- x.names
           return(x)
@@ -90,7 +90,7 @@ methods::setMethod("focal", signature("RasterStack"), function(x,...) {
 methods::setMethod("focal", signature("RasterBrick"), function(x,...) {
           x.names <- names(x)
           for (k in seq_len(raster::nlayers(x))) {
-              x[[k]] <- focal( x[[k]], ... )
+              x[[k]] <- raster::focal( x[[k]], ... )
           }
           names(x) <- x.names
           return(x)

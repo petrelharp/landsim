@@ -17,12 +17,12 @@ sample_neighborhoods <- function (x,
                                   n, 
                                   radius, 
                                   separation=radius, 
-                                  thin=TRUE, 
-                                  ...) {
+                                  thin=TRUE
+                              ) {
     centers <- raster::sampleRandom( x, size=n, xy=TRUE, cells=TRUE )
     goodones <- rep(TRUE,nrow(centers))
     if (thin) {
-        circles <- make_circles( centers[,c("x","y"),drop=FALSE], separation, proj4string=CRS(proj4string(x)) )
+        circles <- make_circles( centers[,c("x","y"),drop=FALSE], separation, proj4string=sp::CRS(sp::proj4string(x)) )
         for (k in seq_along(circles)[-length(circles)]) {
             checkthese <- goodones & (seq_along(circles)>k)
             if (any(goodones[checkthese])) {
@@ -43,10 +43,11 @@ sample_neighborhoods <- function (x,
 #' @param centers The centers of the circles.
 #' @param radii The radii of the circles.
 #' @param nsegs The number of segments in the polygon delimiting each neighborhood.
+#' @param proj4string The proj4string.
 #' @export
 #' @return A SpatialPolygons object of circles.
 make_circles <- function (centers, radii, proj4string, nsegs=20 ) {
-    if (inherits(centers,"SpatialPoints")) { centers <- coordinates(centers) }
+    if (inherits(centers,"SpatialPoints")) { centers <- sp::coordinates(centers) }
     radii <- rep_len(radii,length(centers))
     args <- seq(2*pi,0,length.out=nsegs+1)
     sp::SpatialPolygons( lapply( 1:nrow(centers), function (k) {
