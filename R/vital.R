@@ -43,6 +43,9 @@ names.vital <- function (x) { ls(environment(x)) }
 #' A vital function may include migration objects,
 #' which for use we need to link to particular population
 #' (precomputing the migration matrix).
+#' *In addition*, every element of the population is added
+#' to the environment of the function,
+#' so that the function can depend on objects only visible in the population.
 #'
 #' @param fun The vital function.
 #' @param pop The population object.
@@ -52,6 +55,9 @@ names.vital <- function (x) { ls(environment(x)) }
 setup_vital <- function (fun,pop,...) {
     for (k in names(fun)) {
         if (inherits(fun[[k]],"migration")) { fun[[k]] <- setup_migration(fun[[k]],pop,...) }
+    }
+    for (n in names(pop)) {
+        fun[[n]] <- pop[[n]]
     }
     return(fun)
 }

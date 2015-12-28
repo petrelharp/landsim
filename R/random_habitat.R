@@ -11,11 +11,11 @@
 #' @export
 #' @return A RasterLayer with nonnegative and missing values.
 random_habitat <- function ( diam=1e4, 
-                            res=100, 
-                            randfun=function(n)pmin(20,(2+rcauchy(n))),
-                            kern="gaussian", 
-                            sigma=300, 
-                            radius=1500
+                             res=100, 
+                             randfun=function(n)pmin(20,(2+rcauchy(n))),
+                             kern="gaussian", 
+                             sigma=300, 
+                             radius=1500
                             ) {
 
     habitat <- raster(xmn=-diam, xmx=diam, ymn=-diam, ymx=diam, 

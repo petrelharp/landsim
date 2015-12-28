@@ -9,6 +9,7 @@
 #' @param habitable Locgical vector indicating which cells in `habitat` that may have positive population.
 #' @param genotypes Character vector of the genotypes.
 #' @param N Matrix indexed by (habitable cells) x (genotypes) giving the number of each genotype in each habitable cell.
+#' @param description A description of this object.
 #' @param ... Other parameters that are included verbatim in the output object.
 #' @export
 #' @return A \code{population} S3 object (just a named list).
@@ -18,9 +19,14 @@ population <- function (
                         habitable=!is.na(values(habitat)),
                         genotypes=colNames(N),
                         N=matrix(1,nrow=sum(habitable),ncol=length(genotypes)),
+                        description='',
                        ...)  {
     if ( (NCOL(N) != length(genotypes)) || (NROW(N)!=sum(habitable)) ) {
         stop("N must be (number of habitable cells) x (number of genotypes)")
+    }
+    if ( !is.logical(accessible) || (length(accessible) != ncell(habitat)) 
+        || !is.logical(accessible) || (length(accessible) != ncell(habitat)) ) {
+        stop("accessible and habitable must be logical vectors of the same length as the number of cells in habitat.")
     }
     colnames(N) <- genotypes
     out <- c( list(
@@ -28,7 +34,8 @@ population <- function (
                 accessible=accessible,
                 habitable=habitable,
                 genotypes=genotypes,
-                N=N
+                N=N,
+                description=description
             ), list(...) )
     class(out) <- "population"
     return(out)

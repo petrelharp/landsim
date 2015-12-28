@@ -14,6 +14,7 @@
 #' @param seed.migration A \code{migration} object for seed dispersal.
 #' @param genotypes A character vector of genotypes.
 #' @param mating An array giving probabilities for offspring genotypes given parental genotypes.
+#' @param description A description of this object.
 #' @param ... Other parameters that are included verbatim in the output object.
 #' @export
 #' @return A \code{demography} S3 object (just a named list).
@@ -27,6 +28,7 @@ demography <- function (
                        seed.migration,
                        genotypes,
                        mating=mating_tensor(genotypes),
+                       description='',
                        ...)  {
     out <- c( list(
                 prob.seed=prob.seed,
@@ -36,7 +38,8 @@ demography <- function (
                 pollen.migration=pollen.migration,
                 seed.migration=seed.migration,
                 genotypes=genotypes,
-                mating=mating
+                mating=mating,
+                description=description
             ), list(...) )
     class(out) <- "demography"
     return(out)

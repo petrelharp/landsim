@@ -22,7 +22,7 @@ sample_neighborhoods <- function (x,
     centers <- raster::sampleRandom( x, size=n, xy=TRUE, cells=TRUE )
     goodones <- rep(TRUE,nrow(centers))
     if (thin) {
-        circles <- make_circles( centers[,c("x","y")], separation, proj4string=CRS(proj4string(x)) )
+        circles <- make_circles( centers[,c("x","y"),drop=FALSE], separation, proj4string=CRS(proj4string(x)) )
         for (k in seq_along(circles)[-length(circles)]) {
             checkthese <- goodones & (seq_along(circles)>k)
             if (any(goodones[checkthese])) {
@@ -31,8 +31,8 @@ sample_neighborhoods <- function (x,
         }
     }
     return( list( 
-                 centers = sp::SpatialPoints(centers[goodones,c("x","y")],proj4string=CRS(proj4string(x)) ), 
-                 neighborhoods = make_circles( centers[goodones,c("x","y")], radius, proj4string=CRS(proj4string(x)) ),
+                 centers = sp::SpatialPoints(centers[goodones,c("x","y"),drop=FALSE],proj4string=CRS(proj4string(x)) ), 
+                 neighborhoods = make_circles( centers[goodones,c("x","y"),drop=FALSE], radius, proj4string=CRS(proj4string(x)) ),
                  center.cells = centers[goodones,"cell"]  ) )
 }
 
