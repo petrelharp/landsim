@@ -88,6 +88,7 @@ migration_matrix <- function (population,
         # # this is twice as quick:
         M@x <- (normalize/Matrix::rowSums(M)[1L+M@i]) * M@x
     }
+    if (any(!is.finite(M@x))) { warning("Some values of migration matrix are not finite.") }
     return(M)
 }
 
