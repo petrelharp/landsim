@@ -67,7 +67,7 @@ get_kernel <- function (kern) {
                         exp(-x^2/2) / (2*pi)
                     },
                 cauchy=function (x) {
-                        1/(2*pi^2*x*(1+x^2))
+                        1/(pi^2*(1+x^2))
                     },
                 get(kern,mode="function") 
             )
