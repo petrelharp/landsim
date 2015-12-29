@@ -12,6 +12,7 @@
 #' @param tinit The current time at the beginning of the simulation (defaults to t=0).
 #' @param summary.times A sorted integer vector of times to record summaries of the population at.
 #' @param summaries A list of functions to apply to the matrix of genotype counts, population$N, at generations \code{summary.times}.
+#' @param stop.fun A function applied to N that, if it returns TRUE, will stop the simulation. (remainder of output array will be entirely zeros)
 #' @param ... Additional parameters that will be passed to \code{generation()}.
 #' @export
 #' @return A named list, with elements
@@ -28,6 +29,7 @@ simulate_pop <- function (
                         tinit=0,
                         summary.times=1:max(times),
                         summaries=NULL,
+                        stop.fun=NULL,
                         ...
                 ) {
     # Note we update N below, not population.
@@ -57,6 +59,10 @@ simulate_pop <- function (
                 sums[[j]][ks,] <- as.vector( summaries[[j]](N) )
             }
             ks <- ks+1
+        }
+        if (!is.null(stop.fun) && stop.fun(N)) {
+            cat("stopping early, at generation ", t, "\n")
+            break
         }
         # don't do the last, unnecessary step...
         if (t<max(times,summary.times)) {
