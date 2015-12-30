@@ -1,7 +1,7 @@
 ## this mostly just checks there aren't errors
 ## rather than checking the output
 
-context("Testing simulation code.")
+dir.create("testcache",showWarnings=FALSE)
 
 require(raster)
 require(landsim)
@@ -30,8 +30,9 @@ pop <- population(
                              AA=0 ),
              )
 
-# restore randomness, hopefully
-set.seed(seedish)
+test_that("make pop", {
+        expect_equal_to_reference(pop,"testcache/saved_pop_test.Rd") 
+     } )
 
 ##########
 context("Set up demography")
@@ -57,11 +58,16 @@ demog <- demography(
 
 
 
+
 ##########
 context("set up demography for population")
 
 demog <- setup_demography( demog, pop )
 
+
+test_that("make demog", {
+        expect_equal_to_reference(demog,"testcache/saved_demog_test.Rd") 
+     } )
 
 
 ##########
@@ -69,9 +75,11 @@ context("check for population stability")
 
 growths <- intrinsic_growth(pop,demog)
 
-expect_true( all( cor(growths)==1.0 ) )
-expect_true( all( ( growths[,"aa"] > 1.0 ) & ( growths[,"aa"] < 1.2 ) ) )
-expect_true( all( ( growths[,"AA"] > 1.2 ) & ( growths[,"AA"] < 1.5 ) ) )
+test_that("pop growth", {
+        expect_equal( as.numeric(cor(growths)), rep(1.0,9) )
+        expect_true( all( ( growths[,"aa"] > 1.0 ) & ( growths[,"aa"] < 1.2 ) ) )
+        expect_true( all( ( growths[,"AA"] > 1.2 ) & ( growths[,"AA"] < 1.5 ) ) )
+     } )
 
 #########
 context("initialize population values")
@@ -81,8 +89,10 @@ mutloc$center <- SpatialPoints(xyFromCell(pop$habitat,which(pop$habitable)[mutlo
 pop <- set_N( pop, i=which(pop$habitable), j="aA", 
          value=ifelse(1:nrow(pop$N)%in%mutloc$cell.number,10,0) )
 
-expect_equal( c(0,10)[1+((1:nrow(pop$N)) %in% mutloc$cell.number)], pop$N[,2] )
-expect_equal( pop$N[mutloc$cell.number,"aA"], rep(10,length(mutloc$cell.number)) )
+test_that( "using set_N", {
+        expect_equal( c(0,10)[1+((1:nrow(pop$N)) %in% mutloc$cell.number)], pop$N[,2] )
+        expect_equal( pop$N[mutloc$cell.number,"aA"], rep(10,length(mutloc$cell.number)) )
+     } )
 
 ##########
 context("run a simulation")
@@ -92,8 +102,14 @@ sim <- simulate_pop( pop, demog, times=seq(0,100,length.out=11),
                  stop.fun=function(N){ sum(N)==0 } )
 
 simbr <- sim_to_brick( sim, pop )
-expect_equal( sapply(simbr,dim), 
-     structure(c(10L, 10L, 11L, 10L, 10L, 11L, 10L, 10L, 11L), .Dim = c(3L, 3L), .Dimnames = list(NULL, c("aa", "aA", "AA"))) )
 
 sim <- extend_simulation( sim, pop, demog, times=seq(sim$t,200,length.out=11),
                  summaries= list( totals=function(N){colSums(N)} ) )
+
+
+test_that("run sims", {
+        expect_equal( sapply(simbr,dim), 
+             structure(c(10L, 10L, 11L, 10L, 10L, 11L, 10L, 10L, 11L), .Dim = c(3L, 3L), .Dimnames = list(NULL, c("aa", "aA", "AA"))) )
+        expect_equal_to_reference(sim,"testcache/saved_sim_test.Rd") 
+     } )
+
