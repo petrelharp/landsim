@@ -39,13 +39,13 @@ generation <- function (
         ) {
     # various of these can be simple numbers or more complicated functions
     fun_or_number <- function (f) {
-        if (mode(f)=="function") { f } else { function(N,t,...){f} }
+        if (mode(f)=="function") { f } else { function(...){f} }
     }
     # sample number of seed-producing individuals:
     if (!expected) {
-        seeders <- rbinom_matrix( size=N, prob=fun_or_number(prob.seed)(N,t=t,...) )
+        seeders <- rbinom_matrix( size=N, prob=fun_or_number(prob.seed)(N,...) )
     } else {
-        seeders <- ( N * fun_or_number(prob.seed)(N,t=t,...) )
+        seeders <- ( N * fun_or_number(prob.seed)(N,...) )
     }
     # find mean pollen flux
     pollen <- migrate(N,pollen.migration)
@@ -53,22 +53,22 @@ generation <- function (
     seed.production <- seed_production(seeders=seeders,
                                        pollen=pollen,
                                        mating=mating,
-                                       fecundity=fun_or_number(fecundity)(N,t=t,...) )
+                                       fecundity=fun_or_number(fecundity)(N,...) )
     # seed dispersal
     seeds.dispersed <- migrate(seed.production,seed.migration)
     # deaths
     if (!expected) {
-        survivors <- rbinom_matrix( size=N, prob=fun_or_number(prob.survival)(N,t=t,...) )
+        survivors <- rbinom_matrix( size=N, prob=fun_or_number(prob.survival)(N,...) )
     } else {
-        survivors <- ( N * fun_or_number(prob.survival)(N,t=t,...) )
+        survivors <- ( N * fun_or_number(prob.survival)(N,...) )
     }
     # have death occur before recruitment to allow just-vacated spots to be filled
     # (wouldn't be necessary if we had a seed bank)
     # new individuals
     if (!expected) {
-        germination <- rpois_matrix( seeds.dispersed * fun_or_number(prob.germination)(N=survivors,t=t,...) )
+        germination <- rpois_matrix( seeds.dispersed * fun_or_number(prob.germination)(N=survivors,...) )
     } else {
-        germination <- ( seeds.dispersed * fun_or_number(prob.germination)(N=survivors,t=t,...) )
+        germination <- ( seeds.dispersed * fun_or_number(prob.germination)(N=survivors,...) )
     }
     if (return.everything) {
         return( list(seeders=seeders, 

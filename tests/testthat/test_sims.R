@@ -9,6 +9,7 @@ require(landsim)
 ##########
 context("Set up random habitat")
 
+
 seedish <- floor(1e6*runif(1))
 # reproducible landscape
 set.seed(42)
