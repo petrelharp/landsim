@@ -1,0 +1,247 @@
+<!DOCTYPE html>
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+
+<head>
+
+<meta charset="utf-8">
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+<meta name="generator" content="pandoc" />
+
+<meta name="author" content="Peter Ralph" />
+
+<meta name="date" content="2015-12-27" />
+
+<title>Simulations on large rasters.</title>
+
+
+
+<style type="text/css">code{white-space: pre;}</style>
+<style type="text/css">
+div.sourceCode { overflow-x: auto; }
+table.sourceCode, tr.sourceCode, td.lineNumbers, td.sourceCode {
+  margin: 0; padding: 0; vertical-align: baseline; border: none; }
+table.sourceCode { width: 100%; line-height: 100%; }
+td.lineNumbers { text-align: right; padding-right: 4px; padding-left: 4px; color: #aaaaaa; border-right: 1px solid #aaaaaa; }
+td.sourceCode { padding-left: 5px; }
+code > span.kw { color: #007020; font-weight: bold; } /* Keyword */
+code > span.dt { color: #902000; } /* DataType */
+code > span.dv { color: #40a070; } /* DecVal */
+code > span.bn { color: #40a070; } /* BaseN */
+code > span.fl { color: #40a070; } /* Float */
+code > span.ch { color: #4070a0; } /* Char */
+code > span.st { color: #4070a0; } /* String */
+code > span.co { color: #60a0b0; font-style: italic; } /* Comment */
+code > span.ot { color: #007020; } /* Other */
+code > span.al { color: #ff0000; font-weight: bold; } /* Alert */
+code > span.fu { color: #06287e; } /* Function */
+code > span.er { color: #ff0000; font-weight: bold; } /* Error */
+code > span.wa { color: #60a0b0; font-weight: bold; font-style: italic; } /* Warning */
+code > span.cn { color: #880000; } /* Constant */
+code > span.sc { color: #4070a0; } /* SpecialChar */
+code > span.vs { color: #4070a0; } /* VerbatimString */
+code > span.ss { color: #bb6688; } /* SpecialString */
+code > span.im { } /* Import */
+code > span.va { color: #19177c; } /* Variable */
+code > span.cf { color: #007020; font-weight: bold; } /* ControlFlow */
+code > span.op { color: #666666; } /* Operator */
+code > span.bu { } /* BuiltIn */
+code > span.ex { } /* Extension */
+code > span.pp { color: #bc7a00; } /* Preprocessor */
+code > span.at { color: #7d9029; } /* Attribute */
+code > span.do { color: #ba2121; font-style: italic; } /* Documentation */
+code > span.an { color: #60a0b0; font-weight: bold; font-style: italic; } /* Annotation */
+code > span.cv { color: #60a0b0; font-weight: bold; font-style: italic; } /* CommentVar */
+code > span.in { color: #60a0b0; font-weight: bold; font-style: italic; } /* Information */
+</style>
+<style type="text/css">
+  pre:not([class]) {
+    background-color: white;
+  }
+</style>
+
+
+<link href="data:text/css;charset=utf-8,body%7Bbackground%2Dcolor%3A%23fff%3Bmargin%3A1em%20auto%3Bmax%2Dwidth%3A700px%3Boverflow%3Avisible%3Bpadding%2Dleft%3A2em%3Bpadding%2Dright%3A2em%3Bfont%2Dfamily%3A%22Open%20Sans%22%2C%20%22Helvetica%20Neue%22%2C%20Helvetica%2C%20Arial%2C%20sans%2Dserif%3Bfont%2Dsize%3A14px%3Bline%2Dheight%3A1%2E35%7D%23header%7Btext%2Dalign%3Acenter%7D%23TOC%7Bclear%3Aboth%3Bmargin%3A0%200%2010px%2010px%3Bpadding%3A4px%3Bwidth%3A400px%3Bborder%3A1px%20solid%20%23CCCCCC%3Bborder%2Dradius%3A5px%3Bbackground%2Dcolor%3A%23f6f6f6%3Bfont%2Dsize%3A13px%3Bline%2Dheight%3A1%2E3%7D%23TOC%20%2Etoctitle%7Bfont%2Dweight%3Abold%3Bfont%2Dsize%3A15px%3Bmargin%2Dleft%3A5px%7D%23TOC%20ul%7Bpadding%2Dleft%3A40px%3Bmargin%2Dleft%3A%2D1%2E5em%3Bmargin%2Dtop%3A5px%3Bmargin%2Dbottom%3A5px%7D%23TOC%20ul%20ul%7Bmargin%2Dleft%3A%2D2em%7D%23TOC%20li%7Bline%2Dheight%3A16px%7Dtable%7Bmargin%3A1em%20auto%3Bborder%2Dwidth%3A1px%3Bborder%2Dcolor%3A%23DDDDDD%3Bborder%2Dstyle%3Aoutset%3Bborder%2Dcollapse%3Acollapse%7Dtable%20th%7Bborder%2Dwidth%3A2px%3Bpadding%3A5px%3Bborder%2Dstyle%3Ainset%7Dtable%20td%7Bborder%2Dwidth%3A1px%3Bborder%2Dstyle%3Ainset%3Bline%2Dheight%3A18px%3Bpadding%3A5px%205px%7Dtable%2C%20table%20th%2C%20table%20td%7Bborder%2Dleft%2Dstyle%3Anone%3Bborder%2Dright%2Dstyle%3Anone%7Dtable%20thead%2C%20table%20tr%2Eeven%7Bbackground%2Dcolor%3A%23f7f7f7%7Dp%7Bmargin%3A0%2E5em%200%7Dblockquote%7Bbackground%2Dcolor%3A%23f6f6f6%3Bpadding%3A0%2E25em%200%2E75em%7Dhr%7Bborder%2Dstyle%3Asolid%3Bborder%3Anone%3Bborder%2Dtop%3A1px%20solid%20%23777%3Bmargin%3A28px%200%7Ddl%7Bmargin%2Dleft%3A0%7Ddl%20dd%7Bmargin%2Dbottom%3A13px%3Bmargin%2Dleft%3A13px%7Ddl%20dt%7Bfont%2Dweight%3Abold%7Dul%7Bmargin%2Dtop%3A0%7Dul%20li%7Blist%2Dstyle%3Acircle%20outside%7Dul%20ul%7Bmargin%2Dbottom%3A0%7Dpre%2C%20code%7Bbackground%2Dcolor%3A%23f7f7f7%3Bborder%2Dradius%3A3px%3Bcolor%3A%23333%7Dpre%7Bwhite%2Dspace%3Apre%2Dwrap%3Bborder%2Dradius%3A3px%3Bmargin%3A5px%200px%2010px%200px%3Bpadding%3A10px%7Dpre%3Anot%28%5Bclass%5D%29%7Bbackground%2Dcolor%3A%23f7f7f7%7Dcode%7Bfont%2Dfamily%3AConsolas%2C%20Monaco%2C%20%27Courier%20New%27%2C%20monospace%3Bfont%2Dsize%3A85%25%7Dp%20%3E%20code%2C%20li%20%3E%20code%7Bpadding%3A2px%200px%7Ddiv%2Efigure%7Btext%2Dalign%3Acenter%7Dimg%7Bbackground%2Dcolor%3A%23FFFFFF%3Bpadding%3A2px%3Bborder%3A1px%20solid%20%23DDDDDD%3Bborder%2Dradius%3A3px%3Bborder%3A1px%20solid%20%23CCCCCC%3Bmargin%3A0%205px%7Dh1%7Bmargin%2Dtop%3A0%3Bfont%2Dsize%3A35px%3Bline%2Dheight%3A40px%7Dh2%7Bborder%2Dbottom%3A4px%20solid%20%23f7f7f7%3Bpadding%2Dtop%3A10px%3Bpadding%2Dbottom%3A2px%3Bfont%2Dsize%3A145%25%7Dh3%7Bborder%2Dbottom%3A2px%20solid%20%23f7f7f7%3Bpadding%2Dtop%3A10px%3Bfont%2Dsize%3A120%25%7Dh4%7Bborder%2Dbottom%3A1px%20solid%20%23f7f7f7%3Bmargin%2Dleft%3A8px%3Bfont%2Dsize%3A105%25%7Dh5%2C%20h6%7Bborder%2Dbottom%3A1px%20solid%20%23ccc%3Bfont%2Dsize%3A105%25%7Da%7Bcolor%3A%230033dd%3Btext%2Ddecoration%3Anone%7Da%3Ahover%7Bcolor%3A%236666ff%7Da%3Avisited%7Bcolor%3A%23800080%7Da%3Avisited%3Ahover%7Bcolor%3A%23BB00BB%7Da%5Bhref%5E%3D%22http%3A%22%5D%7Btext%2Ddecoration%3Aunderline%7Da%5Bhref%5E%3D%22https%3A%22%5D%7Btext%2Ddecoration%3Aunderline%7Dcode%20%3E%20span%2Ekw%7Bcolor%3A%23555%3Bfont%2Dweight%3Abold%7Dcode%20%3E%20span%2Edt%7Bcolor%3A%23902000%7Dcode%20%3E%20span%2Edv%7Bcolor%3A%2340a070%7Dcode%20%3E%20span%2Ebn%7Bcolor%3A%23d14%7Dcode%20%3E%20span%2Efl%7Bcolor%3A%23d14%7Dcode%20%3E%20span%2Ech%7Bcolor%3A%23d14%7Dcode%20%3E%20span%2Est%7Bcolor%3A%23d14%7Dcode%20%3E%20span%2Eco%7Bcolor%3A%23888888%3Bfont%2Dstyle%3Aitalic%7Dcode%20%3E%20span%2Eot%7Bcolor%3A%23007020%7Dcode%20%3E%20span%2Eal%7Bcolor%3A%23ff0000%3Bfont%2Dweight%3Abold%7Dcode%20%3E%20span%2Efu%7Bcolor%3A%23900%3Bfont%2Dweight%3Abold%7Dcode%20%3E%20span%2Eer%7Bcolor%3A%23a61717%3Bbackground%2Dcolor%3A%23e3d2d2%7D" rel="stylesheet" type="text/css" />
+
+</head>
+
+<body>
+
+
+
+<div id="header">
+<h1 class="title">Simulations on large rasters.</h1>
+<h4 class="author"><em>Peter Ralph</em></h4>
+<h4 class="date"><em>2015-12-27</em></h4>
+</div>
+
+
+<p><strong>How well do the simulation methods work with larger rasters?</strong></p>
+<p>Here are the demographic parameters:</p>
+<div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r">germination_fun &lt;-<span class="st"> </span><span class="kw">vital</span>( 
+        function (N,carrying.capacity,...) {
+            <span class="co"># note this is 'sum' applied to a RasterBrick object, which acts like rowSums</span>
+            r0 /<span class="st"> </span>( <span class="dv">1</span> +<span class="st"> </span><span class="kw">migrate_raster</span>(<span class="kw">sum</span>(N),competition)/carrying.capacity )
+        },
+        <span class="dt">r0 =</span> <span class="fl">0.01</span>,
+        <span class="dt">competition =</span> <span class="kw">migration</span>(
+                                <span class="dt">kern=</span><span class="st">&quot;gaussian&quot;</span>,
+                                <span class="dt">sigma=</span><span class="dv">100</span>,
+                                <span class="dt">radius=</span><span class="dv">300</span>,
+                                <span class="dt">normalize=</span><span class="dv">1</span>
+                            )
+     )
+
+this.demography &lt;-<span class="st"> </span><span class="kw">demography</span>(
+        <span class="dt">prob.seed =</span> <span class="fl">0.2</span>,
+        <span class="dt">fecundity =</span> <span class="dv">200</span>,
+        <span class="dt">prob.germination =</span> germination_fun,
+        <span class="dt">prob.survival =</span> <span class="fl">0.9</span>,
+        <span class="dt">pollen.migration =</span> <span class="kw">migration</span>(
+                            <span class="dt">kern =</span> function (x) { <span class="kw">exp</span>(-<span class="kw">sqrt</span>(x)) },
+                            <span class="dt">sigma =</span> <span class="dv">100</span>,
+                            <span class="dt">radius =</span> <span class="dv">1000</span>,
+                            <span class="dt">normalize =</span> <span class="ot">NULL</span>
+                     ),
+        <span class="dt">seed.migration =</span> <span class="kw">migration</span>(
+                            <span class="dt">kern =</span> <span class="st">&quot;gaussian&quot;</span>,
+                            <span class="dt">sigma =</span> <span class="dv">20</span>,
+                            <span class="dt">radius =</span> <span class="dv">400</span>,
+                            <span class="dt">normalize =</span> <span class="dv">1</span>
+                     ),
+        <span class="dt">genotypes =</span> <span class="kw">c</span>(<span class="st">&quot;aa&quot;</span>,<span class="st">&quot;aA&quot;</span>,<span class="st">&quot;AA&quot;</span>),
+        <span class="dt">mating =</span> <span class="kw">mating_tensor</span>( <span class="kw">c</span>(<span class="st">&quot;aa&quot;</span>,<span class="st">&quot;aA&quot;</span>,<span class="st">&quot;AA&quot;</span>) )
+    )</code></pre></div>
+<div id="raster-extent" class="section level1">
+<h1>Raster extent</h1>
+<p>We will time a generation on rasters of different sizes. Here is a function to create a <span class="math inline">\(k\)</span>-kilometer square random raster. (But note that the base units of the raster are in meters.)</p>
+<div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r">habitat_size &lt;-<span class="st"> </span>function (k) {
+    habitat &lt;-<span class="st"> </span><span class="kw">raster</span>(<span class="dt">xmn=</span>-k*<span class="dv">1000</span>/<span class="dv">2</span>, <span class="dt">xmx=</span>k*<span class="dv">1000</span>/<span class="dv">2</span>, <span class="dt">ymn=</span>-k*<span class="dv">1000</span>/<span class="dv">2</span>, <span class="dt">ymx=</span>k*<span class="dv">1000</span>/<span class="dv">2</span>, 
+          <span class="dt">resolution=</span><span class="dv">100</span>, <span class="co">#fixed resolution</span>
+          <span class="dt">crs=</span><span class="st">&quot;+proj=utm +zone=11 +ellps=GRS80 +towgs84=0,0,0,0,0,0,0 +units=m +no_defs&quot;</span>)
+    <span class="kw">values</span>(habitat) &lt;-<span class="st"> </span><span class="kw">sample</span>( <span class="dv">100</span>*<span class="kw">c</span>(<span class="dv">1</span>,<span class="dv">2</span>,<span class="dv">5</span>,<span class="ot">NA</span>), <span class="kw">length</span>(habitat), <span class="dt">replace=</span><span class="ot">TRUE</span> )
+    <span class="kw">migrate_raster</span>(habitat,<span class="dt">kern=</span><span class="st">&quot;gaussian&quot;</span>,<span class="dt">sigma=</span><span class="dv">200</span>,<span class="dt">radius=</span><span class="dv">1000</span>)
+}</code></pre></div>
+<p>Here’s timing for one generation on rasters of various sizes:</p>
+<div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r">sizes &lt;-<span class="st"> </span><span class="dv">2</span>^(<span class="dv">0</span>:<span class="dv">6</span>)
+size.results &lt;-<span class="st"> </span><span class="kw">lapply</span>( sizes, function (k) {
+                  habitat &lt;-<span class="st"> </span><span class="kw">habitat_size</span>(k)
+                  N &lt;-<span class="st"> </span><span class="kw">rpois_raster</span>( <span class="kw">do.call</span>( brick, <span class="kw">list</span>(habitat)[<span class="kw">rep</span>(<span class="dv">1</span>,<span class="kw">length</span>(this.demography$genotypes))] ) )
+                  <span class="kw">names</span>(N) &lt;-<span class="st"> </span>this.demography$genotypes
+                  gen.time &lt;-<span class="st"> </span><span class="kw">system.time</span>( NN &lt;-<span class="st"> </span><span class="kw">generation_raster</span>(N,this.demography,<span class="dt">carrying.capacity=</span>habitat) )
+                  <span class="kw">return</span>( <span class="kw">list</span>( <span class="dt">time=</span>gen.time, <span class="dt">N=</span>N, <span class="dt">NN=</span>NN ) )
+          } )</code></pre></div>
+<p>Here’s the results:</p>
+<div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r">size.tab &lt;-<span class="st"> </span><span class="kw">data.frame</span>( <span class="dt">area=</span>sizes^<span class="dv">2</span>, <span class="dt">ncell=</span><span class="kw">sapply</span>(<span class="kw">lapply</span>(size.results,<span class="st">&quot;[[&quot;</span>,<span class="st">&quot;N&quot;</span>),ncell), <span class="kw">t</span>(<span class="kw">sapply</span>( size.results, <span class="st">&quot;[[&quot;</span>, <span class="st">&quot;time&quot;</span> )) )
+size.tab</code></pre></div>
+<pre><code>##   area  ncell user.self sys.self elapsed user.child sys.child
+## 1    1    100     0.812    0.000   0.813          0         0
+## 2    4    400     0.796    0.000   0.797          0         0
+## 3   16   1600     0.836    0.000   0.836          0         0
+## 4   64   6400     0.980    0.000   0.978          0         0
+## 5  256  25600     1.588    0.004   1.592          0         0
+## 6 1024 102400     3.960    0.028   3.991          0         0
+## 7 4096 409600    13.520    0.012  13.538          0         0</code></pre>
+<div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r"><span class="kw">layout</span>(<span class="kw">t</span>(<span class="dv">1</span>:<span class="dv">2</span>))
+<span class="kw">with</span>(size.tab, {
+     <span class="kw">plot</span>(area, user.self, <span class="dt">log=</span><span class="st">'xy'</span>, <span class="dt">xlab=</span><span class="st">'total area'</span>, <span class="dt">ylab=</span><span class="st">'computation time (sec)'</span>) 
+     <span class="kw">plot</span>(ncell, user.self, <span class="dt">log=</span><span class="st">'xy'</span>, <span class="dt">xlab=</span><span class="st">'number of raster cells'</span>, <span class="dt">ylab=</span><span class="st">'computation time (sec)'</span>) 
+     } )</code></pre></div>
+<p><img src="data:image/png;base64,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" title alt style="display: block; margin: auto;" /></p>
+<p>The computation time will depend critically on the number of cells within the radii of the <code>migration</code> operations; but at these settings, adding 3.216310^{4} cells increases the run time by a second.</p>
+</div>
+<div id="raster-resolution" class="section level1">
+<h1>Raster resolution</h1>
+<p>Changing the resolution at a fixed size also changes the number of cells, but affects the running time quite differently. Here is a function to create a 10-kilometer square random raster, with different resolutions. (But note that the base units of the raster are in meters.)</p>
+<div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r">habitat_res &lt;-<span class="st"> </span>function (resolution) {
+    habitat &lt;-<span class="st"> </span><span class="kw">raster</span>(<span class="dt">xmn=</span>-<span class="dv">10</span>*<span class="dv">1000</span>/<span class="dv">2</span>, <span class="dt">xmx=</span><span class="dv">10</span>*<span class="dv">1000</span>/<span class="dv">2</span>, <span class="dt">ymn=</span>-<span class="dv">10</span>*<span class="dv">1000</span>/<span class="dv">2</span>, <span class="dt">ymx=</span><span class="dv">10</span>*<span class="dv">1000</span>/<span class="dv">2</span>, 
+          <span class="dt">resolution=</span>resolution,
+          <span class="dt">crs=</span><span class="st">&quot;+proj=utm +zone=11 +ellps=GRS80 +towgs84=0,0,0,0,0,0,0 +units=m +no_defs&quot;</span>)
+    <span class="kw">values</span>(habitat) &lt;-<span class="st"> </span><span class="kw">sample</span>( <span class="dv">100</span>*<span class="kw">c</span>(<span class="dv">1</span>,<span class="dv">2</span>,<span class="dv">5</span>,<span class="ot">NA</span>), <span class="kw">length</span>(habitat), <span class="dt">replace=</span><span class="ot">TRUE</span> )
+    <span class="kw">migrate_raster</span>(habitat,<span class="dt">kern=</span><span class="st">&quot;gaussian&quot;</span>,<span class="dt">sigma=</span><span class="dv">200</span>,<span class="dt">radius=</span><span class="dv">1000</span>)
+}</code></pre></div>
+<p>Here’s timing for one generation on rasters of various sizes:</p>
+<div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r">resolutions &lt;-<span class="st"> </span><span class="dv">100</span>*<span class="dv">2</span>^(-<span class="dv">2</span>:<span class="dv">2</span>)
+res.results &lt;-<span class="st"> </span><span class="kw">lapply</span>( resolutions, function (resolution) {
+                  habitat &lt;-<span class="st"> </span><span class="kw">habitat_res</span>(resolution)
+                  N &lt;-<span class="st"> </span><span class="kw">rpois_raster</span>( <span class="kw">do.call</span>( brick, <span class="kw">list</span>(habitat)[<span class="kw">rep</span>(<span class="dv">1</span>,<span class="kw">length</span>(this.demography$genotypes))] ) )
+                  <span class="kw">names</span>(N) &lt;-<span class="st"> </span>this.demography$genotypes
+                  gen.time &lt;-<span class="st"> </span><span class="kw">system.time</span>( NN &lt;-<span class="st"> </span><span class="kw">generation_raster</span>(N,this.demography,<span class="dt">carrying.capacity=</span>habitat) )
+                  <span class="kw">return</span>( <span class="kw">list</span>( <span class="dt">time=</span>gen.time, <span class="dt">N=</span>N, <span class="dt">NN=</span>NN ) )
+          } )</code></pre></div>
+<p>Here’s the results:</p>
+<div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r">res.tab &lt;-<span class="st"> </span><span class="kw">data.frame</span>( <span class="dt">resolution=</span>resolutions, <span class="dt">ncell=</span><span class="kw">sapply</span>(<span class="kw">lapply</span>(res.results,<span class="st">&quot;[[&quot;</span>,<span class="st">&quot;N&quot;</span>),ncell), <span class="kw">t</span>(<span class="kw">sapply</span>( res.results, <span class="st">&quot;[[&quot;</span>, <span class="st">&quot;time&quot;</span> )) )
+res.tab</code></pre></div>
+<pre><code>##   resolution  ncell user.self sys.self elapsed user.child sys.child
+## 1         25 160000    48.888        0  48.908          0         0
+## 2         50  40000     4.220        0   4.221          0         0
+## 3        100  10000     1.096        0   1.097          0         0
+## 4        200   2500     0.812        0   0.814          0         0
+## 5        400    625     0.784        0   0.783          0         0</code></pre>
+<div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r"><span class="kw">layout</span>(<span class="kw">t</span>(<span class="dv">1</span>:<span class="dv">2</span>))
+<span class="kw">with</span>(res.tab, {
+     <span class="kw">plot</span>(resolution, user.self, <span class="dt">log=</span><span class="st">'xy'</span>, <span class="dt">xlab=</span><span class="st">'total area'</span>, <span class="dt">ylab=</span><span class="st">'computation time (sec)'</span>) 
+     <span class="kw">plot</span>(ncell, user.self, <span class="dt">log=</span><span class="st">'xy'</span>, <span class="dt">xlab=</span><span class="st">'number of raster cells'</span>, <span class="dt">ylab=</span><span class="st">'computation time (sec)'</span>) 
+     } )</code></pre></div>
+<p><img src="data:image/png;base64,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" title alt style="display: block; margin: auto;" /></p>
+<p>The computation time will depend critically on the number of cells within the radii of the <code>migration</code> operations; but at these settings, adding 2995 cells increases the run time by a second.</p>
+</div>
+<div id="two-implementations" class="section level1">
+<h1>Two implementations</h1>
+<p>Based on the above, we have two implementations of the method, one that works with <code>Raster</code> objects (so can take advantage of methods for those that work on layers too big to fit in memory); and one that precomputes a migration matrix and works directly with numeric matrices.</p>
+<p>Let’s compare the speeds.</p>
+<div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r">habitat &lt;-<span class="st"> </span><span class="kw">habitat_size</span>(<span class="dv">6</span>)
+N &lt;-<span class="st"> </span><span class="kw">rpois_raster</span>( <span class="kw">do.call</span>( brick, <span class="kw">list</span>(habitat)[<span class="kw">rep</span>(<span class="dv">1</span>,<span class="kw">length</span>(this.demography$genotypes))] ) )
+<span class="kw">names</span>(N) &lt;-<span class="st"> </span>this.demography$genotypes
+raster.time &lt;-<span class="st"> </span><span class="kw">microbenchmark</span>( <span class="kw">generation_raster</span>(N,this.demography,<span class="dt">carrying.capacity=</span>habitat), <span class="dt">times=</span><span class="dv">10</span> )
+
+pop &lt;-<span class="st"> </span><span class="kw">population</span>( 
+                  <span class="dt">habitat =</span> habitat,
+                  <span class="dt">genotypes =</span> this.demography$genotypes,
+                  <span class="dt">N =</span> <span class="kw">matrix</span>(<span class="kw">values</span>(N)[!<span class="kw">is.na</span>(<span class="kw">values</span>(habitat))],<span class="dt">ncol=</span><span class="dv">3</span>)
+             )
+matrix.demography &lt;-<span class="st"> </span>this.demography
+matrix.demography$seed.migration &lt;-<span class="st"> </span><span class="kw">migration</span>( matrix.demography$seed.migration, <span class="dt">do.M=</span><span class="ot">TRUE</span>, <span class="dt">population=</span>habitat )
+matrix.demography$pollen.migration &lt;-<span class="st"> </span><span class="kw">migration</span>( matrix.demography$pollen.migration, <span class="dt">do.M=</span><span class="ot">TRUE</span>, <span class="dt">population=</span>habitat )
+matrix.demography$prob.germination &lt;-<span class="st"> </span><span class="kw">vital</span>( 
+        function (N,carrying.capacity,...) {
+            <span class="co"># and this is rowSums, for the matrix</span>
+            r0 /<span class="st"> </span>( <span class="dv">1</span> +<span class="st"> </span><span class="kw">migrate</span>(competition,<span class="dt">x=</span><span class="kw">rowSums</span>(N))/carrying.capacity )
+        },
+        <span class="dt">r0 =</span> <span class="fl">0.01</span>,
+        <span class="dt">competition =</span> <span class="kw">migration</span>(
+                                <span class="dt">kern=</span><span class="st">&quot;gaussian&quot;</span>,
+                                <span class="dt">sigma=</span><span class="dv">100</span>,
+                                <span class="dt">radius=</span><span class="dv">300</span>,
+                                <span class="dt">normalize=</span><span class="dv">1</span>,
+                                <span class="dt">do.M=</span><span class="ot">TRUE</span>,
+                                <span class="dt">population=</span>habitat
+                            )
+     )
+matrix.time &lt;-<span class="st"> </span><span class="kw">microbenchmark</span>( <span class="kw">generation</span>(pop,matrix.demography,<span class="dt">carrying.capacity=</span><span class="kw">values</span>(habitat)[!<span class="kw">is.na</span>(<span class="kw">values</span>(habitat))]), <span class="dt">times=</span><span class="dv">10</span> )
+
+<span class="kw">rbind</span>( raster.time, matrix.time )</code></pre></div>
+<pre><code>## Unit: milliseconds
+##                                                                                              expr
+##                                generation_raster(N, this.demography, carrying.capacity = habitat)
+##  generation(pop, matrix.demography, carrying.capacity = values(habitat)[!is.na(values(habitat))])
+##        min        lq      mean    median        uq       max neval
+##  883.85203 887.59848 891.80543 888.30197 892.70221 909.04268    10
+##   18.03591  18.07289  18.10637  18.10385  18.11742  18.23959    10</code></pre>
+<p>That’s a speedup of 49 times, pretty good.</p>
+</div>
+
+
+
+<!-- dynamically load mathjax for compatibility with self-contained -->
+<script>
+  (function () {
+    var script = document.createElement("script");
+    script.type = "text/javascript";
+    script.src  = "https://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML";
+    document.getElementsByTagName("head")[0].appendChild(script);
+  })();
+</script>
+
+</body>
+</html>

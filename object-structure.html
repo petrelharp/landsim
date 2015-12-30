@@ -1,0 +1,259 @@
+<!DOCTYPE html>
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+
+<head>
+
+<meta charset="utf-8">
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+<meta name="generator" content="pandoc" />
+
+<meta name="author" content="Peter Ralph" />
+
+<meta name="date" content="2015-12-27" />
+
+<title>Package overview</title>
+
+
+
+<style type="text/css">code{white-space: pre;}</style>
+<style type="text/css">
+div.sourceCode { overflow-x: auto; }
+table.sourceCode, tr.sourceCode, td.lineNumbers, td.sourceCode {
+  margin: 0; padding: 0; vertical-align: baseline; border: none; }
+table.sourceCode { width: 100%; line-height: 100%; }
+td.lineNumbers { text-align: right; padding-right: 4px; padding-left: 4px; color: #aaaaaa; border-right: 1px solid #aaaaaa; }
+td.sourceCode { padding-left: 5px; }
+code > span.kw { color: #007020; font-weight: bold; } /* Keyword */
+code > span.dt { color: #902000; } /* DataType */
+code > span.dv { color: #40a070; } /* DecVal */
+code > span.bn { color: #40a070; } /* BaseN */
+code > span.fl { color: #40a070; } /* Float */
+code > span.ch { color: #4070a0; } /* Char */
+code > span.st { color: #4070a0; } /* String */
+code > span.co { color: #60a0b0; font-style: italic; } /* Comment */
+code > span.ot { color: #007020; } /* Other */
+code > span.al { color: #ff0000; font-weight: bold; } /* Alert */
+code > span.fu { color: #06287e; } /* Function */
+code > span.er { color: #ff0000; font-weight: bold; } /* Error */
+code > span.wa { color: #60a0b0; font-weight: bold; font-style: italic; } /* Warning */
+code > span.cn { color: #880000; } /* Constant */
+code > span.sc { color: #4070a0; } /* SpecialChar */
+code > span.vs { color: #4070a0; } /* VerbatimString */
+code > span.ss { color: #bb6688; } /* SpecialString */
+code > span.im { } /* Import */
+code > span.va { color: #19177c; } /* Variable */
+code > span.cf { color: #007020; font-weight: bold; } /* ControlFlow */
+code > span.op { color: #666666; } /* Operator */
+code > span.bu { } /* BuiltIn */
+code > span.ex { } /* Extension */
+code > span.pp { color: #bc7a00; } /* Preprocessor */
+code > span.at { color: #7d9029; } /* Attribute */
+code > span.do { color: #ba2121; font-style: italic; } /* Documentation */
+code > span.an { color: #60a0b0; font-weight: bold; font-style: italic; } /* Annotation */
+code > span.cv { color: #60a0b0; font-weight: bold; font-style: italic; } /* CommentVar */
+code > span.in { color: #60a0b0; font-weight: bold; font-style: italic; } /* Information */
+</style>
+<style type="text/css">
+  pre:not([class]) {
+    background-color: white;
+  }
+</style>
+
+
+<link href="data:text/css;charset=utf-8,body%7Bbackground%2Dcolor%3A%23fff%3Bmargin%3A1em%20auto%3Bmax%2Dwidth%3A700px%3Boverflow%3Avisible%3Bpadding%2Dleft%3A2em%3Bpadding%2Dright%3A2em%3Bfont%2Dfamily%3A%22Open%20Sans%22%2C%20%22Helvetica%20Neue%22%2C%20Helvetica%2C%20Arial%2C%20sans%2Dserif%3Bfont%2Dsize%3A14px%3Bline%2Dheight%3A1%2E35%7D%23header%7Btext%2Dalign%3Acenter%7D%23TOC%7Bclear%3Aboth%3Bmargin%3A0%200%2010px%2010px%3Bpadding%3A4px%3Bwidth%3A400px%3Bborder%3A1px%20solid%20%23CCCCCC%3Bborder%2Dradius%3A5px%3Bbackground%2Dcolor%3A%23f6f6f6%3Bfont%2Dsize%3A13px%3Bline%2Dheight%3A1%2E3%7D%23TOC%20%2Etoctitle%7Bfont%2Dweight%3Abold%3Bfont%2Dsize%3A15px%3Bmargin%2Dleft%3A5px%7D%23TOC%20ul%7Bpadding%2Dleft%3A40px%3Bmargin%2Dleft%3A%2D1%2E5em%3Bmargin%2Dtop%3A5px%3Bmargin%2Dbottom%3A5px%7D%23TOC%20ul%20ul%7Bmargin%2Dleft%3A%2D2em%7D%23TOC%20li%7Bline%2Dheight%3A16px%7Dtable%7Bmargin%3A1em%20auto%3Bborder%2Dwidth%3A1px%3Bborder%2Dcolor%3A%23DDDDDD%3Bborder%2Dstyle%3Aoutset%3Bborder%2Dcollapse%3Acollapse%7Dtable%20th%7Bborder%2Dwidth%3A2px%3Bpadding%3A5px%3Bborder%2Dstyle%3Ainset%7Dtable%20td%7Bborder%2Dwidth%3A1px%3Bborder%2Dstyle%3Ainset%3Bline%2Dheight%3A18px%3Bpadding%3A5px%205px%7Dtable%2C%20table%20th%2C%20table%20td%7Bborder%2Dleft%2Dstyle%3Anone%3Bborder%2Dright%2Dstyle%3Anone%7Dtable%20thead%2C%20table%20tr%2Eeven%7Bbackground%2Dcolor%3A%23f7f7f7%7Dp%7Bmargin%3A0%2E5em%200%7Dblockquote%7Bbackground%2Dcolor%3A%23f6f6f6%3Bpadding%3A0%2E25em%200%2E75em%7Dhr%7Bborder%2Dstyle%3Asolid%3Bborder%3Anone%3Bborder%2Dtop%3A1px%20solid%20%23777%3Bmargin%3A28px%200%7Ddl%7Bmargin%2Dleft%3A0%7Ddl%20dd%7Bmargin%2Dbottom%3A13px%3Bmargin%2Dleft%3A13px%7Ddl%20dt%7Bfont%2Dweight%3Abold%7Dul%7Bmargin%2Dtop%3A0%7Dul%20li%7Blist%2Dstyle%3Acircle%20outside%7Dul%20ul%7Bmargin%2Dbottom%3A0%7Dpre%2C%20code%7Bbackground%2Dcolor%3A%23f7f7f7%3Bborder%2Dradius%3A3px%3Bcolor%3A%23333%7Dpre%7Bwhite%2Dspace%3Apre%2Dwrap%3Bborder%2Dradius%3A3px%3Bmargin%3A5px%200px%2010px%200px%3Bpadding%3A10px%7Dpre%3Anot%28%5Bclass%5D%29%7Bbackground%2Dcolor%3A%23f7f7f7%7Dcode%7Bfont%2Dfamily%3AConsolas%2C%20Monaco%2C%20%27Courier%20New%27%2C%20monospace%3Bfont%2Dsize%3A85%25%7Dp%20%3E%20code%2C%20li%20%3E%20code%7Bpadding%3A2px%200px%7Ddiv%2Efigure%7Btext%2Dalign%3Acenter%7Dimg%7Bbackground%2Dcolor%3A%23FFFFFF%3Bpadding%3A2px%3Bborder%3A1px%20solid%20%23DDDDDD%3Bborder%2Dradius%3A3px%3Bborder%3A1px%20solid%20%23CCCCCC%3Bmargin%3A0%205px%7Dh1%7Bmargin%2Dtop%3A0%3Bfont%2Dsize%3A35px%3Bline%2Dheight%3A40px%7Dh2%7Bborder%2Dbottom%3A4px%20solid%20%23f7f7f7%3Bpadding%2Dtop%3A10px%3Bpadding%2Dbottom%3A2px%3Bfont%2Dsize%3A145%25%7Dh3%7Bborder%2Dbottom%3A2px%20solid%20%23f7f7f7%3Bpadding%2Dtop%3A10px%3Bfont%2Dsize%3A120%25%7Dh4%7Bborder%2Dbottom%3A1px%20solid%20%23f7f7f7%3Bmargin%2Dleft%3A8px%3Bfont%2Dsize%3A105%25%7Dh5%2C%20h6%7Bborder%2Dbottom%3A1px%20solid%20%23ccc%3Bfont%2Dsize%3A105%25%7Da%7Bcolor%3A%230033dd%3Btext%2Ddecoration%3Anone%7Da%3Ahover%7Bcolor%3A%236666ff%7Da%3Avisited%7Bcolor%3A%23800080%7Da%3Avisited%3Ahover%7Bcolor%3A%23BB00BB%7Da%5Bhref%5E%3D%22http%3A%22%5D%7Btext%2Ddecoration%3Aunderline%7Da%5Bhref%5E%3D%22https%3A%22%5D%7Btext%2Ddecoration%3Aunderline%7Dcode%20%3E%20span%2Ekw%7Bcolor%3A%23555%3Bfont%2Dweight%3Abold%7Dcode%20%3E%20span%2Edt%7Bcolor%3A%23902000%7Dcode%20%3E%20span%2Edv%7Bcolor%3A%2340a070%7Dcode%20%3E%20span%2Ebn%7Bcolor%3A%23d14%7Dcode%20%3E%20span%2Efl%7Bcolor%3A%23d14%7Dcode%20%3E%20span%2Ech%7Bcolor%3A%23d14%7Dcode%20%3E%20span%2Est%7Bcolor%3A%23d14%7Dcode%20%3E%20span%2Eco%7Bcolor%3A%23888888%3Bfont%2Dstyle%3Aitalic%7Dcode%20%3E%20span%2Eot%7Bcolor%3A%23007020%7Dcode%20%3E%20span%2Eal%7Bcolor%3A%23ff0000%3Bfont%2Dweight%3Abold%7Dcode%20%3E%20span%2Efu%7Bcolor%3A%23900%3Bfont%2Dweight%3Abold%7Dcode%20%3E%20span%2Eer%7Bcolor%3A%23a61717%3Bbackground%2Dcolor%3A%23e3d2d2%7D" rel="stylesheet" type="text/css" />
+
+</head>
+
+<body>
+
+
+
+<div id="header">
+<h1 class="title">Package overview</h1>
+<h4 class="author"><em>Peter Ralph</em></h4>
+<h4 class="date"><em>2015-12-27</em></h4>
+</div>
+
+
+<p>To run a simulation, we need to know where the species lives, how it disperses, and how it reproduces and dies. Given a demographic model of this sort, we then keep track of the numbers of various genotypes across the species range.</p>
+<p>These are divided among different objects as follows:</p>
+<div id="population" class="section level2">
+<h2><code>population</code></h2>
+<p>Class <strong>population</strong>:</p>
+<dl>
+<dt><code>habitat</code></dt>
+<dd><p>a Raster with values that can be used in other computations.</p>
+</dd>
+<dt><code>accessible</code></dt>
+<dd><p>vector of indices of cells in <code>habitat</code> that migrants will attempt to go to</p>
+</dd>
+<dt><code>habitable</code></dt>
+<dd><p>vector of indices of cells in <code>habitat</code> that may have positive population</p>
+</dd>
+<dt><code>genotypes</code></dt>
+<dd><p>character vector of the genotypes</p>
+</dd>
+<dt><code>N</code></dt>
+<dd><p>matrix indexed by (habitable cells) x (genotypes) giving the number of each genotype in each habitable cell</p>
+</dd>
+</dl>
+<p><strong>Set-up:</strong></p>
+<p>This can be initiated with <code>make_population()</code> by specifying the following:</p>
+<dl>
+<dt><code>habitat</code></dt>
+<dd><p>The path to the file where the raster is stored.</p>
+</dd>
+<dt><code>inaccessible.value</code></dt>
+<dd><p>The values in the raster that should be marked as inaccessible.</p>
+</dd>
+<dt><code>uninhabitable.value</code></dt>
+<dd><p>The values in the raster that should be marked as not habitable.</p>
+</dd>
+<dt><code>genotypes</code></dt>
+<dd><p>A character vector of genotypes.</p>
+</dd>
+</dl>
+<p><strong>Example:</strong></p>
+<div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r">pop &lt;-<span class="st"> </span><span class="kw">make_population</span>(
+                 <span class="dt">habitat =</span> <span class="kw">system.file</span>(<span class="st">&quot;extdata/test_raster.gri&quot;</span>,<span class="dt">package=</span><span class="st">&quot;landsim&quot;</span>),
+                 <span class="dt">inaccessible.value =</span> <span class="st">&quot;NA&quot;</span>,
+                 <span class="dt">uninhabitable.value =</span> <span class="fl">0.0</span>,
+                 <span class="dt">genotypes =</span> <span class="kw">c</span>( <span class="st">&quot;aa&quot;</span>, <span class="st">&quot;aA&quot;</span>, <span class="st">&quot;AA&quot;</span> )
+             )</code></pre></div>
+</div>
+<div id="migration" class="section level2">
+<h2><code>migration</code></h2>
+<p>One structure we use several times is the setup for smoothing (with <code>migrate</code>); for this we need to know:</p>
+<p>Class <strong>migration</strong>:</p>
+<dl>
+<dt><code>kern</code></dt>
+<dd><p>function that gives weights for neighboring cells as a function of Euclidean distance</p>
+</dd>
+<dt><code>sigma</code></dt>
+<dd><p>scaling factor on distance before being passed to <code>kern</code></p>
+</dd>
+<dt><code>radius</code></dt>
+<dd><p>maximum range of the smoother</p>
+</dd>
+<dt><code>normalize</code></dt>
+<dd><p>normalization factor applied to the smoother</p>
+</dd>
+</dl>
+<p><strong>Example:</strong></p>
+<div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r">migr &lt;-<span class="st"> </span><span class="kw">migration</span>(
+                 <span class="dt">kern =</span> <span class="st">&quot;gaussian&quot;</span>,
+                 <span class="dt">sigma =</span> <span class="dv">100</span>,
+                 <span class="dt">radius =</span> <span class="dv">1000</span>,
+                 <span class="dt">normalize =</span> <span class="fl">1.0</span>
+             )</code></pre></div>
+</div>
+<div id="migration.matrix" class="section level2">
+<h2>migration.matrix</h2>
+<p>A <code>migration.matrix</code> object extends a <code>migration</code> object, in that it has a precomputed migration matrix, and hence is tied to a particular <code>population</code> setup (although this is not included). This has additional entries</p>
+<p>Class <strong>migration.matrix</strong>:</p>
+<dl>
+<dt><code>M</code></dt>
+<dd><p>The pre-computed migration matrix.</p>
+</dd>
+</dl>
+<p><strong>Example:</strong></p>
+<p>This is added with the function <code>setup_migration()</code>.</p>
+<pre><code>migr &lt;- setup_migration( migr, population=pop )</code></pre>
+</div>
+<div id="vital_rate" class="section level2">
+<h2><code>vital_rate</code></h2>
+<p>Vital rates may be numbers or vectors but may also be functions, to allow them to depend on the current state of the system. We would like to have the parameters in these visible, changeable, and carried around with them. To this end, we define <code>vital</code> objects by specifying a function and auxialliary parameters that will be kept along with the function.</p>
+<p><strong>Simple example:</strong></p>
+<p>This class allows assigning and accessing things directly from the environment of the function, without having them clutter up the global environment.</p>
+<div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r">f &lt;-<span class="st"> </span><span class="kw">vital</span>( function (N,...) { N+x }, <span class="dt">x=</span><span class="dv">3</span> )
+<span class="kw">f</span>(<span class="dv">10</span>)</code></pre></div>
+<pre><code>## [1] 13</code></pre>
+<div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r">f$x</code></pre></div>
+<pre><code>## [1] 3</code></pre>
+<div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r">f$x &lt;-<span class="st"> </span><span class="dv">12</span>
+<span class="kw">f</span>(<span class="dv">10</span>)</code></pre></div>
+<pre><code>## [1] 22</code></pre>
+<p><strong>Example:</strong></p>
+<div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r">germ.vital &lt;-<span class="st"> </span><span class="kw">vital</span>(
+             function (N, ...) {
+                out &lt;-<span class="st"> </span>r0 /<span class="st"> </span>( <span class="dv">1</span> +<span class="st"> </span><span class="kw">migrate</span>(<span class="kw">rowSums</span>(N),competition)/carrying.capacity )
+                <span class="kw">return</span>( <span class="kw">cbind</span>( <span class="dt">aa=</span>out, <span class="dt">aA=</span>s*out, <span class="dt">AA=</span>s^<span class="dv">2</span>*out ) )
+             },
+             <span class="dt">r0 =</span> <span class="fl">0.01</span>,  <span class="co"># one in ten seeds will germinate at low densities</span>
+             <span class="dt">s =</span> <span class="fl">1.5</span>,    <span class="co"># multiplicative selective benefit of the A allele</span>
+             <span class="dt">carrying.capacity =</span> <span class="dv">10</span>,
+             <span class="dt">competition =</span> <span class="kw">migration</span>(
+                                     <span class="dt">kern=</span><span class="st">&quot;gaussian&quot;</span>,
+                                     <span class="dt">sigma=</span><span class="dv">100</span>,
+                                     <span class="dt">radius=</span><span class="dv">300</span>,
+                                     <span class="dt">normalize=</span><span class="dv">1</span>
+                                 )
+         )</code></pre></div>
+<p>Note that this also has a <code>migration</code> object as part of its definition. This needs to be set up also:</p>
+<div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r">germ.vital &lt;-<span class="st"> </span><span class="kw">setup_vital</span>(germ.vital,pop)</code></pre></div>
+</div>
+<div id="demography" class="section level2">
+<h2><code>demography</code></h2>
+<p>Several of the base demographic parameters we might want to specify (as a fixed number or a layer), or compute (as a function of the current population state). Such <strong>parameters</strong> can be either something numeric or else a function that is applied to <code>N</code> to get the result.</p>
+<p>To do a single generation we need to know:</p>
+<p>Class <strong>demography</strong>:</p>
+<dl>
+<dt><code>prob.seed</code></dt>
+<dd><p><code>parameter</code> object for probability of seeding per individual per year</p>
+</dd>
+<dt><code>fecundity</code></dt>
+<dd><p><code>parameter</code> object for mean number of seeds per seeding individual per year</p>
+</dd>
+<dt><code>prob.germination</code></dt>
+<dd><p><code>parameter</code> object for probability of germination</p>
+</dd>
+<dt><code>prob.survival</code></dt>
+<dd><p><code>parameter</code> object for probability of survival of already existing individuals</p>
+</dd>
+<dt><code>pollen.migration</code></dt>
+<dd><p><code>migration</code> object for pollen dispersal (normalized to total pollen production)</p>
+</dd>
+<dt><code>seed.migration</code></dt>
+<dd><p><code>migration</code> object for seed dispersal (normalized to 1)</p>
+</dd>
+<dt><code>genotypes</code></dt>
+<dd><p>vector of names of the genotypes represented by the layers</p>
+</dd>
+<dt><code>mating</code></dt>
+<dd><p>genotype x genotype x genotype tensor, with entry <code>[i,j,k]</code> the probability that genotypes <code>i</code> and <code>j</code> combine to make offspring genotype <code>k</code></p>
+</dd>
+</dl>
+<p><strong>Example:</strong></p>
+<div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r">demog &lt;-<span class="st"> </span><span class="kw">demography</span>(
+        <span class="dt">prob.seed =</span> <span class="fl">0.2</span>,
+        <span class="dt">fecundity =</span> <span class="dv">100</span>,
+        <span class="dt">prob.germination =</span> germ.vital,
+        <span class="dt">prob.survival =</span> <span class="fl">0.9</span>, 
+        <span class="dt">seed.migration =</span> migr,
+        <span class="dt">pollen.migration =</span> <span class="kw">migration</span>(
+                         <span class="dt">kern=</span><span class="st">&quot;gaussian&quot;</span>,
+                         <span class="dt">sigma=</span><span class="dv">300</span>,
+                         <span class="dt">radius=</span><span class="dv">900</span>,
+                         <span class="dt">normalize=</span><span class="dv">10</span>
+                     ),
+        <span class="dt">genotypes =</span> <span class="kw">c</span>(<span class="st">&quot;aa&quot;</span>, <span class="st">&quot;aA&quot;</span>, <span class="st">&quot;AA&quot;</span>)
+     )</code></pre></div>
+<p>This can be set up for use with a population with <code>setup_demography</code>, which sets up all the associated migration and vital objects.</p>
+<pre><code>demog &lt;- setup_demography(demog,pop)</code></pre>
+</div>
+
+
+
+<!-- dynamically load mathjax for compatibility with self-contained -->
+<script>
+  (function () {
+    var script = document.createElement("script");
+    script.type = "text/javascript";
+    script.src  = "https://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML";
+    document.getElementsByTagName("head")[0].appendChild(script);
+  })();
+</script>
+
+</body>
+</html>
