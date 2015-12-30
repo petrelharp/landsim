@@ -71,9 +71,15 @@ simulate_pop <- function (
             t <- t+1
         }
     }
-    outlist <- list(N=out,summaries=sums,times=times,summary.times=summary.times,t=t)
-    class(outlist) <- "popsim"
+    outlist <- simulation(N=out,summaries=sums,times=times,summary.times=summary.times,t=t)
     return(outlist)
+}
+
+#' @describeIn simulate_pop Constructor for a simulation object.
+simulation <- function (N, summaries, times, summary.times, t, ...) {
+    out <- list(N=N, summaries=summaries, times=times, summary.times=summary.times, t=t, ...)
+    class(out) <- "simulation"
+    return(out)
 }
 
 #' Convert Simulation Array to RasterBrick(s).
@@ -135,4 +141,24 @@ extend_simulation <- function (
     return(new.sim)
 }
 
+
+#' Crop a Simulation
+#'
+#' Crop a simulation object to a smaller region.
+#'
+#' @param sim A simulation object.
+#' @param pop The corresponding population object.
+#' @param extent A raster::extent object, or anything that can be used to crop a Raster*.
+#' @export
+#' @return A simulation object.  In the new object, `summaries` are NULL.
+crop_simulation <- function (sim, pop, extent) {
+    newpop <- crop_population(pop,extent,ind.return=TRUE)
+    simulation(
+                   N = sim$N[newpop$crop.inds,,,drop=FALSE],
+                   summaries=NULL,
+                   times=sim$times,
+                   summary.times=numeric(0),
+                   t=sim$t
+               )
+}
 

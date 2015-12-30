@@ -163,3 +163,34 @@ make_population <- function (
           )
 }
 
+#' Crop a Population
+#'
+#' Crop a population object to a smaller region.
+#'
+#' @param pop A population object.
+#' @param extent A raster::extent object, or anything that can be used to crop a Raster*.
+#' @param ind.return Also return the indices of cells in pop$N that are retained?
+#' @export
+#' @return A population object, possibly with a new `crop.inds` value.
+crop_population <- function (pop, extent, ind.return=FALSE) {
+    newhab <- crop(pop$habitat,extent)
+    # xy locations of new raster cells
+    from.locs <- raster::xyFromCell( newhab, 1:ncell(newhab) )
+    # indices of new cells in old raster
+    from.inds <- raster::cellFromXY(pop$habitat,from.locs)
+    # indices of new habitable cells in old raster
+    from.habitable <- from.inds[pop$habitable[from.inds]]
+    # indices of new habitable cells in old habitable cells
+    crop.inds <- cumsum(pop$habitable)[from.habitable]
+    newpop <- population(
+               habitat = newhab,
+               accessible = pop$accessible[from.inds],
+               habitable = pop$habitable[from.inds],
+               genotypes = pop$genotypes,
+               N = pop$N[ crop.inds,,drop=FALSE ]
+           )
+    if (ind.return) {
+        newpop$crop.inds <- crop.inds
+    }
+    return(newpop)
+}
