@@ -1,0 +1,155 @@
+---
+title: "Density Dependent Population Regulation"
+author: "Peter Ralph"
+date: "`r Sys.Date()`"
+output: 
+    rmarkdown::html_vignette
+vignette: >
+  %\VignetteIndexEntry{Density Dependent Population Regulation}
+  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteEncoding{UTF-8}
+---
+
+
+```{r doc_setup, include=FALSE}
+fig.dim <- 3
+knitr::opts_chunk$set(fig.width=3*fig.dim,fig.height=fig.dim,fig.align='center')
+library(Matrix)
+library(raster)
+library(landsim)
+set.seed(42)
+```
+
+This document will go through
+several ways of implementing density-dependent population regulation.
+
+Here's the habitat we'll work with.
+Note that units are in meters, and the resolution of the raster is 100m.
+```{r setup_layer, fig.cap="The (random) habitat.", fig.height=4, fig.width=4}
+pop <- make_population(
+            habitat = random_habitat(),
+            inaccessible.value = NA,
+            uninhabitable.value = NA,
+            genotypes = c("aa","aA","AA"),
+            N = 0
+        )
+pop$N[,"aa"] <- rpois(nrow(pop$N),values(pop$habitat)[pop$habitable]/4)
+pop$N[,"aA"] <- rpois(nrow(pop$N),values(pop$habitat)[pop$habitable]/2)
+pop$N[,"AA"] <- rpois(nrow(pop$N),values(pop$habitat)[pop$habitable]/4)
+plot(pop$habitat)
+```
+
+Here's the basic, default demography:
+```{r basic_demog}
+basic.migr <- migration(
+                    kern = "gaussian",
+                    sigma = 300,
+                    radius = 1000,
+                    normalize = 1
+             )
+basic.demog <- demography(
+        prob.seed = 0.05,
+        fecundity = 200,
+        prob.germination = 0.4,
+        prob.survival = 0.6,
+        pollen.migration = basic.migr,
+        seed.migration = basic.migr,
+        genotypes = c("aa","aA","AA")
+    )
+```
+
+Of course, 
+this demography has no dependence on the current state of the population,
+so the population numbers will grow without bound:
+without taking into account migration,
+the mean number of offspring is 
+$r basic.demog[["prob.seed"]]` × `r basic.demog[["fecundity"]]` × `r basic.demog[["prob.germination"]]` + `r basic.demog[["prob.survival"]]` 
+= `r basic.demog[["prob.seed"]] * basic.demog[["fecundity"]] * basic.demog[["prob.germination"]] + basic.demog[["prob.survival"]]`$
+```{r show_unconstrained_growth}
+demog <- setup_demography( basic.demog, pop )
+sim <- simulate_pop( pop, demog, times=seq(0,10,length.out=11),
+                summaries=list( totals=function(N){colSums(N)} )
+            )
+matplot(sim$summaries[["totals"]],type='l',lty=1, log='y',ylab='number of individuals')
+legend("bottomright",lty=1,col=1:3,legend=pop$genotypes)
+```
+
+
+# Resource competition: available space
+
+First, we could make the probability of germination (i.e., establishment)
+depend on the nearby density of individuals.
+Below, we set the probability of germination to $p=p_0/(1+n/K)$, 
+where $n$ is a local average number of individuals per raster cell;
+this is stable if $`r basic.demog[["prob.seed"]]` \times `r basic.demog[["fecundity"]]` \times p + `r basic.demog[["prob.survival"]]` = 1$, 
+which happens if if $p=`r round((1-basic.demog[["prob.survival"]])/(basic.demog[["prob.seed"]]*basic.demog[["fecundity"]]),2)`$,
+or, with $p_0 = `r basic.demog[["prob.germination"]]`$,
+if $n=`r round(basic.demog[["prob.germination"]]/((1-basic.demog[["prob.survival"]])/(basic.demog[["prob.seed"]]*basic.demog[["fecundity"]]))-1,2)` K$.
+```{r prob_germ}
+demog <- basic.demog
+demog$prob.germination <- vital(
+                    function (N,...) {
+                        out <- r0 / ( 1 + migrate(competition,x=rowSums(N))/K )
+                        cbind( aa=out, aA=out, AA=out )
+                    },
+                    r0 = 0.4,
+                    K = values(pop$habitat)[pop$habitable]/5,
+                    competition = migration(
+                                kern="gaussian",
+                                sigma=200,
+                                radius=400,
+                                normalize=1
+                        )
+                )
+```
+
+This puts a contraint on the population:
+```{r plot_prob_germ}
+demog <- setup_demography( demog, pop )
+sim <- simulate_pop( pop, demog, times=seq(0,100,length.out=101),
+                summaries=list( totals=function(N){colSums(N)} )
+            )
+matplot(sim$summaries[["totals"]],type='l',lty=1, log='y', ylab="number of individuals")
+legend("bottomright",lty=1,col=1:3,legend=pop$genotypes)
+```
+```{r anim_prob_germ, fig.show="animate", aniopts="controls", interval=0.2}
+plot(sim,pop,pause=FALSE)
+```
+
+
+# Density-dependent death rate
+
+Now, we'll try a different tack, making death rates depend on local densities.
+Since death occurs after reproduction,
+we need the mean number of offspring to be less than one
+for this to work.
+```{r prob_death}
+demog <- basic.demog
+demog$prob.seed <- 0.01
+demog$prob.survival <- vital(
+                    function (N,...) {
+                        out <- s0 / ( 1 + migrate(competition,x=rowSums(N))/K )
+                        cbind( aa=out, aA=out, AA=out )
+                    },
+                    s0 = 0.6,
+                    K = values(pop$habitat)[pop$habitable]/3,
+                    competition = migration(
+                                kern="gaussian",
+                                sigma=200,
+                                radius=400,
+                                normalize=1
+                        )
+                )
+```
+
+Here's what that looks like:
+```{r plot_prob_death}
+demog <- setup_demography( demog, pop )
+sim <- simulate_pop( pop, demog, times=seq(0,100,length.out=101),
+                summaries=list( totals=function(N){colSums(N)} ) )
+matplot(sim$summaries[["totals"]],type='l',lty=1, log='y')
+legend("bottomright",lty=1,col=1:3,legend=pop$genotypes)
+```
+```{r anim_prob_death, fig.show="animate", aniopts="controls", interval=0.2}
+plot(sim,pop,pause=FALSE)
+```

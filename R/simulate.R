@@ -162,3 +162,44 @@ crop_simulation <- function (sim, pop, extent) {
                )
 }
 
+
+#' Animate a Simulation
+#'
+#' Sequentially plot the time steps in a simulation, optionally cropped.
+#'
+#' @param sim A simulation object.
+#' @param pop The corresponding population object.
+#' @param max.frames Maximum number of frames to plot.
+#' @param zlim Range of values to represent by colors, consistently.
+#' @param legend.width,legend.mar Parameters controlling how the legend is displayed.
+#' @param ... Additional parameters passed to plot( ).
+#' @export
+plot.simulation <- function (sim, 
+                             pop, 
+                             max.frames=300,
+                             zlim=range(sim$N,finite=TRUE),
+                             pause=interactive(),
+                             legend.width=2,
+                             legend.mar=12,
+                             ... ) {
+    hab <- pop$habitat
+    # even out the sampled times
+    plot.t <- sim$times
+    plot.inds <- as.numeric( cut( seq(
+                                      min(plot.t),
+                                      max(plot.t),
+                                      length.out=min( max.frames,
+                                                     (1+diff(range(plot.t)))/ceiling(1/min(diff(plot.t)[diff(plot.t)>0])) )
+                                      ), 
+                     breaks=c(plot.t[1]-1,plot.t) ) )
+    layout(t(1:ncol(sim$N)))
+    for (k in plot.inds) {
+        mains <- paste( c(sprintf("t=%d",floor(plot.t[k])),rep("",length(pop$genotypes)-1)), pop$genotypes )
+        for (j in 1:ncol(sim$N)) {
+            values(hab)[pop$habitable] <- sim$N[,j,k]
+            plot(hab,zlim=zlim,main=mains[j],...)
+        }
+        if (pause && length(locator(1))==0) { break }
+    }
+}
+

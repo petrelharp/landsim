@@ -145,12 +145,12 @@ make_population <- function (
     if (!inherits(habitat,"Raster")) { habitat <- raster::raster(habitat) }
     if (!missing(extent)) { habitat <- raster::crop(habitat,extent) }
     accessible <- if (is.na(inaccessible.value)) { 
-            is.na(raster::values(habitat)) 
+            !is.na(raster::values(habitat)) 
         } else { 
             !is.na(raster::values(habitat)) & (raster::values(habitat) != inaccessible.value) 
         }
     habitable <- if (is.na(uninhabitable.value)) { 
-            is.na(raster::values(habitat)) 
+            !is.na(raster::values(habitat)) 
         } else { 
             !is.na(raster::values(habitat)) & (raster::values(habitat) != uninhabitable.value) 
         }

@@ -9,6 +9,7 @@
 migrate <- function ( x,
                       migration
                  ) {
+    if (is.null(migration$M)) { stop("Migration matrix does not exist: need to use setup_demography, or migrate_raster()?") }
     if (inherits(x,"population")) { x <- x$N }
     out <- as( migration$M %*% x, class(x) )  # return a dense matrix if we got one in
     return(out)

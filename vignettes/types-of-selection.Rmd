@@ -1,0 +1,217 @@
+---
+title: "Types of Selection"
+author: "Peter Ralph"
+date: "`r Sys.Date()`"
+output: 
+    rmarkdown::html_vignette
+vignette: >
+  %\VignetteIndexEntry{Types of Selection}
+  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteEncoding{UTF-8}
+---
+
+
+```{r doc_setup, include=FALSE}
+fig.dim <- 3
+knitr::opts_chunk$set(fig.width=3*fig.dim,fig.height=fig.dim,fig.align='center')
+library(Matrix)
+library(raster)
+library(landsim)
+set.seed(42)
+```
+
+This document will go through
+several ways of implementing selection.
+
+Here's the habitat we'll work with.
+Note that units are in meters, and the resolution of the raster is 100m.
+Since below we're looking at selection for the *A* allele,
+we'll start with about 100 copies of the *A* allele.
+```{r setup_layer, fig.cap="The (random) habitat.", fig.height=4, fig.width=4}
+pop <- make_population(
+            habitat = random_habitat(),
+            inaccessible.value = NA,
+            uninhabitable.value = NA,
+            genotypes = c("aa","aA","AA"),
+            N = 0
+        )
+pop$N[,"aa"] <- rpois(nrow(pop$N),values(pop$habitat)[pop$habitable])
+pop$N[,"aA"] <- rpois(nrow(pop$N),values(pop$habitat)[pop$habitable]*100/sum(values(pop$habitat),na.rm=TRUE))
+pop$N[,"AA"] <- 0
+plot(pop$habitat)
+```
+
+Here's the basic, default demography,
+with population size regulation by means of competition for spots to germinate:
+```{r basic_demog}
+basic.migr <- migration(
+                    kern = "gaussian",
+                    sigma = 300,
+                    radius = 1000,
+                    normalize = 1
+             )
+basic.demog <- demography(
+        prob.seed = 0.05,
+        fecundity = 200,
+        prob.germination = vital(
+                    function (N,...) {
+                        out <- r0 / ( 1 + migrate(competition,x=rowSums(N))/K )
+                        cbind( aa=out, aA=out, AA=out )
+                    },
+                    r0 = 0.4,
+                    K = values(pop$habitat)[pop$habitable]/5,
+                    competition = migration(
+                                kern="gaussian",
+                                sigma=200,
+                                radius=400,
+                                normalize=1
+                        )
+                ),
+        prob.survival = 0.6,
+        pollen.migration = basic.migr,
+        seed.migration = basic.migr,
+        genotypes = c("aa","aA","AA")
+    )
+```
+
+# Directional selection on germination
+
+First, we might make the probability of germination depend on the genotype:
+```{r germ_sel}
+demog <- basic.demog
+demog$prob.germination <- vital(
+                    function (N,...) {
+                        out <- r0 / ( 1 + migrate(competition,x=rowSums(N))/K )
+                        cbind( aa=s[1]*out, aA=s[2]*out, AA=s[3]*out )
+                    },
+                    s = c(aa=1,aA=1.4,AA=1.4^2),
+                    r0 = 0.4,
+                    K = values(pop$habitat)[pop$habitable]/5,
+                    competition = migration(
+                                kern="gaussian",
+                                sigma=200,
+                                radius=400,
+                                normalize=1
+                        )
+                )
+```
+
+This *increases* the carrying capacity of the *AA* genotypes, and so quickly leads to the *A* allele taking over.
+```{r plot_prob_germ}
+demog <- setup_demography( demog, pop )
+sim <- simulate_pop( pop, demog, times=seq(0,100,length.out=101),
+                summaries=list( totals=function(N){colSums(N)} ) )
+matplot(sim$summaries[["totals"]],type='l',lty=1, log='y', ylab="number of individuals")
+legend("bottomright",lty=1,col=1:3,legend=pop$genotypes)
+```
+```{r anim_prob_germ, fig.show="animate", aniopts="controls", interval=0.2}
+plot(sim,pop,pause=FALSE)
+```
+
+
+# Symmetric heterozygote disadvantage
+
+Let's mess with this a bit, creating an incompatibility:
+```{r het_sel}
+demog$prob.germination$s <- c( aa=1, aA=0.5, AA=1 )
+```
+
+So this looks nice, we'll start with comparable numbers of both types:
+```{r het_N}
+pop$N[,"aa"] <- rpois(nrow(pop$N),values(pop$habitat)[pop$habitable]/3)
+pop$N[,"aA"] <- rpois(nrow(pop$N),values(pop$habitat)[pop$habitable]/3)
+pop$N[,"AA"] <- rpois(nrow(pop$N),values(pop$habitat)[pop$habitable]/3)
+```
+
+Here's what this looks like:
+```{r plot_prob_het}
+demog <- setup_demography( demog, pop )
+sim <- simulate_pop( pop, demog, times=seq(0,100,length.out=101),
+                summaries=list( totals=function(N){colSums(N)} ) )
+matplot(sim$summaries[["totals"]],type='l',lty=1, log='y', ylab="number of individuals")
+legend("bottomright",lty=1,col=1:3,legend=pop$genotypes)
+```
+```{r anim_prob_het, fig.show="animate", aniopts="controls", interval=0.2}
+plot(sim,pop,pause=FALSE)
+```
+
+
+# Local adaptation by probability of death
+
+Now, let's set up a selective gradient where *a* is selected on one side, and *A* is selected on the other.
+```{r local_setup, fig.width=1.5*fig.dim, fig.height=1.5*fig.dim}
+grad <- pop$habitat
+values(grad) <- colFromCell(grad,1:ncell(grad))/ncol(grad) - 0.5
+plot(grad,main="gradient")
+demog <- basic.demog
+demog$prob.seed <- 0.01
+demog$prob.survival <- vital(
+                    function (N,...) {
+                        out <- s0 / ( 1 + migrate(competition,x=rowSums(N))/K )
+                        cbind( aa=(1-s)*out, aA=out, AA=(1+s)*out )
+                    },
+                    s0 = 0.6,
+                    s = values(grad)[pop$habitable],
+                    K = values(pop$habitat)[pop$habitable]/3,
+                    competition = migration(
+                                kern="gaussian",
+                                sigma=200,
+                                radius=400,
+                                normalize=1
+                        )
+                )
+```
+
+Here's what this looks like:
+```{r plot_prob_local}
+demog <- setup_demography( demog, pop )
+sim <- simulate_pop( pop, demog, times=seq(0,100,length.out=101),
+                summaries=list( totals=function(N){colSums(N)} ) )
+matplot(sim$summaries[["totals"]],type='l',lty=1, log='y', ylab="number of individuals")
+legend("bottomright",lty=1,col=1:3,legend=pop$genotypes)
+```
+```{r anim_prob_local, fig.show="animate", aniopts="controls", interval=0.2}
+plot(sim,pop,pause=FALSE)
+```
+
+
+# Soft selection
+
+
+The situations above have different carrying capacities for different genotypes.
+If we switch to soft selection, the overall carrying capacity is constant, regardless of the composition of genotypes.
+```{r soft_sel}
+demog <- basic.demog
+demog$prob.germination <- vital(
+                    function (N,...) {
+                        P <- (N[,2]/2+N[,3])
+                        P[P>0] <- P[P>0]/(rowSums(N)[P>0])
+                        out <- r0 / ( 1 + migrate(competition,x=rowSums(N))/K )
+                        out <- cbind( aa=(1-P*s)*out, aA=out, AA=(1+(1-P)*s)*out )
+                        if (any(out<0)||any(out>1)||any(!is.finite(out))) { browser () }
+                        out
+                    },
+                    s = 0.4,
+                    r0 = 0.4,
+                    K = values(pop$habitat)[pop$habitable]/5,
+                    competition = migration(
+                                kern="gaussian",
+                                sigma=200,
+                                radius=400,
+                                normalize=1
+                        )
+                )
+```
+
+This *increases* the carrying capacity of the *AA* genotypes, and so quickly leads to the *A* allele taking over.
+```{r plot_prob_soft}
+demog <- setup_demography( demog, pop )
+sim <- simulate_pop( pop, demog, times=seq(0,100,length.out=101),
+                summaries=list( totals=function(N){colSums(N)} ) )
+matplot(sim$summaries[["totals"]],type='l',lty=1, log='y', ylab="number of individuals")
+legend("bottomright",lty=1,col=1:3,legend=pop$genotypes)
+```
+```{r anim_prob_soft, fig.show="animate", aniopts="controls", interval=0.2}
+plot(sim,pop,pause=FALSE)
+```
+

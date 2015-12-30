@@ -10,6 +10,7 @@
 #' @param N Optionally, a matrix of the same form as \code{population$N} (overrides \code{population$N} if present).
 #' @param expected If TRUE, do no sampling, returning only expected values.
 #' @param return.everything If TRUE, returns the number of seeders, amount of pollen, density of seeds, number of germinating seeds, and number of dying individuals.
+#' @param debug Do checks for NAs and the like.
 #' @param ... Additional parameters that will be passed to demographic functions.
 #' @export
 #' @return A matrix of the same dimensions as \code{population$N},
@@ -35,6 +36,7 @@ generation <- function (
                        mating = demography$mating,
                        expected = FALSE,
                        return.everything = FALSE,
+                       debug=FALSE,
                        ...
         ) {
     # various of these can be simple numbers or more complicated functions
@@ -70,6 +72,7 @@ generation <- function (
     } else {
         germination <- ( seeds.dispersed * fun_or_number(prob.germination)(N=survivors,...) )
     }
+    if (debug && any(!is.finite(survivors+germination))) { stop("Missing values in N: something is wrong?") }
     if (return.everything) {
         return( list(seeders=seeders, 
                      pollen=pollen, 
