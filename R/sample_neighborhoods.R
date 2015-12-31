@@ -31,8 +31,8 @@ sample_neighborhoods <- function (x,
         }
     }
     return( list( 
-                 centers = sp::SpatialPoints(centers[goodones,c("x","y"),drop=FALSE],proj4string=CRS(proj4string(x)) ), 
-                 neighborhoods = make_circles( centers[goodones,c("x","y"),drop=FALSE], radius, proj4string=CRS(proj4string(x)) ),
+                 centers = sp::SpatialPoints(centers[goodones,c("x","y"),drop=FALSE],proj4string=sp::CRS(sp::proj4string(x)) ), 
+                 neighborhoods = make_circles( centers[goodones,c("x","y"),drop=FALSE], radius, proj4string=sp::CRS(sp::proj4string(x)) ),
                  center.cells = centers[goodones,"cell"]  ) )
 }
 

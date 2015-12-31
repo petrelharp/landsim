@@ -114,6 +114,7 @@ sim_to_brick <- function (sim,pop) {
 #' @param append If TRUE, append results to results in previous simulation object.
 #' @export
 #' @return A simulation object, as \code{simulation}.
+#' If summary functions are not the same, the initial ones are removed.
 extend_simulation <- function (
                         sim,
                         population,
@@ -132,8 +133,11 @@ extend_simulation <- function (
         new.sim$N <- c( sim$N, new.sim$N )
         dim(new.sim$N) <- c( 0, 0, new.dims[3] ) + dim( sim$N )
         for (k in seq_along(new.sim$summaries)) {
-            if (ncol(new.sim$summaries[[k]])!=ncol(sim$summaries[[k]])) { stop("summaries must be the same to extend a simulation object") }
-            new.sim$summaries[[k]] <- rbind( sim$summaries[[k]], new.sim$summaries[[k]] )
+            if (ncol(new.sim$summaries[[k]])!=ncol(sim$summaries[[k]])) { 
+                warning("summaries must be the same to extend a simulation object") 
+            } else {
+                new.sim$summaries[[k]] <- rbind( sim$summaries[[k]], new.sim$summaries[[k]] )
+            }
         }
         new.sim$times <- c(sim$times,new.sim$times)
         new.sim$summary.times <- c(sim$summary.times,new.sim$summary.times)
@@ -172,6 +176,8 @@ crop_simulation <- function (sim, pop, extent) {
 #' @param max.frames Maximum number of frames to plot.
 #' @param zlim Range of values to represent by colors, consistently.
 #' @param legend.width,legend.mar Parameters controlling how the legend is displayed.
+#' @param animate If not FALSE, instead of plotting the result, package frames into an mp4 animation with this file name.
+#' @param duration Duration of the animation in seconds.
 #' @param ... Additional parameters passed to plot( ).
 #' @export
 plot.simulation <- function (sim, 
@@ -181,10 +187,13 @@ plot.simulation <- function (sim,
                              pause=interactive(),
                              legend.width=2,
                              legend.mar=12,
+                             animate=NULL,
+                             duration=5,
                              ... ) {
     hab <- pop$habitat
     # even out the sampled times
-    plot.t <- sim$times
+    plot.t <- sort(unique(sim$times))
+    plot.cols <- match(plot.t,sim$times)
     plot.inds <- as.numeric( cut( seq(
                                       min(plot.t),
                                       max(plot.t),
@@ -192,14 +201,24 @@ plot.simulation <- function (sim,
                                                      (1+diff(range(plot.t)))/ceiling(1/min(diff(plot.t)[diff(plot.t)>0])) )
                                       ), 
                      breaks=c(plot.t[1]-1,plot.t) ) )
+    if (!is.null(animate)) {
+        png.base <- file.path( tempdir(), paste("frame",floor(1e6*runif(1)),"_",sep='') )
+        png.files <- paste( png.base, "%03d.png", sep='')
+        png( png.files, height=2*300, width=length(pop$genotypes)*2*300, res=300, pointsize=10 )
+        on.exit(dev.off(),add=TRUE)
+    }
     layout(t(1:ncol(sim$N)))
     for (k in plot.inds) {
         mains <- paste( c(sprintf("t=%d",floor(plot.t[k])),rep("",length(pop$genotypes)-1)), pop$genotypes )
         for (j in 1:ncol(sim$N)) {
-            values(hab)[pop$habitable] <- sim$N[,j,k]
+            values(hab)[pop$habitable] <- sim$N[,j,plot.cols[k]]
             plot(hab,zlim=zlim,main=mains[j],...)
         }
-        if (pause && length(locator(1))==0) { break }
+        if (pause && is.null(animate) && length(locator(1))==0) { break }
+    }
+    if (!is.null(animate)) {
+        system2( "ffmpeg", c("-y", "-v 8", "-i", png.files, "-r", length(plot.inds)/duration, animate) )
+        unlink( list.files( dirname(png.base), paste(basename(png.base), "[0-9]*[.]png$", sep=''), full.names=TRUE ) )
     }
 }
 
