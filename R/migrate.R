@@ -11,8 +11,12 @@ migrate <- function ( x,
                  ) {
     if (is.null(migration$M)) { stop("Migration matrix does not exist: need to use setup_demography, or migrate_raster()?") }
     if (inherits(x,"population")) { x <- x$N }
-    out <- as( migration$M %*% x, class(x) )  # return a dense matrix if we got one in
-    return(out)
+    orig.class <- class(x)
+    for (k in seq_len(migration$n)) {
+        x <- migration$M %*% x
+    }
+    # return a dense matrix if we got one in
+    return( as(x,orig.class) )
 }
 
 
@@ -37,11 +41,12 @@ migrate <- function ( x,
 #' However, note that even if \code{normalize} is 1, the migration will still not be conservative
 #' at any raster cells nearby to boundary or NA cells.
 migrate_raster <- function (x,
-                            migration=list(sigma=1,normalize=1),
+                            migration=list(sigma=1,normalize=1,n=1),
                             kern=migration$kern,
                             sigma=migration$sigma,
                             radius=migration$radius,
-                            normalize=migration$normalize
+                            normalize=migration$normalize,
+                            n=migration$n
                  ) {
     if (inherits(x,"population")) { x <- x$habitat }
     if (!inherits(x,"Raster")) {
@@ -50,14 +55,18 @@ migrate_raster <- function (x,
     kern <- get_kernel(kern)
     area <- prod(raster::res(x))
     cell.radius <- ceiling(radius/raster::res(x))
-        w <- matrix(nrow=2*cell.radius[1]+1,ncol=2*cell.radius[2]+1)
-        cc <- cell.radius+1
-        w[] <- kern( sqrt( (raster::xres(x)*(row(w)-cc[1]))^2 + (raster::yres(x)*(col(w)-cc[2]))^2 )/sigma ) * area/sigma^2
-        if (!is.null(normalize)) { w <- (normalize/sum(w))*w }
-        out <- raster::focal( x, w=w, na.rm=TRUE, pad=TRUE, padValue=0 )
-        out[is.na(x)] <- NA
-    names(out) <- names(x)
-    return(out)
+    w <- matrix(nrow=2*cell.radius[1]+1,ncol=2*cell.radius[2]+1)
+    cc <- cell.radius+1
+    w[] <- kern( sqrt( (raster::xres(x)*(row(w)-cc[1]))^2 + (raster::yres(x)*(col(w)-cc[2]))^2 )/sigma ) * area/sigma^2
+    if (!is.null(normalize)) { w <- (normalize/sum(w))*w }
+    x.na <- is.na(x)
+    x.names <- names(x)
+    for (k in seq_len(migration$n)) {
+        x <- raster::focal( x, w=w, na.rm=TRUE, pad=TRUE, padValue=0 )
+    }
+    x[x.na] <- NA
+    names(x) <- x.names
+    return(x)
 }
 
 # helper function used elsewhere as well

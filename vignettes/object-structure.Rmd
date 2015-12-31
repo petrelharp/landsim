@@ -120,6 +120,9 @@ Class **migration**:
 
 : normalization factor applied to the smoother
 
+`n`
+
+: number of times to apply the smoother to produce one "migration" step
 
 **Example:**
 

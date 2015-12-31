@@ -7,6 +7,7 @@
 #' @param sigma A number that distances are scaled by before being passed to \code{kern}.
 #' @param radius The maximum distance to migrate over.
 #' @param normalize Total number of migrants per unit of input.
+#' @param n The number of times to apply the smoother per migration step.
 #' @param do.M Precompute an explicit migration matrix?
 #' @param population A Raster* or a \code{population}; used in computing \code{M}.
 #' @param from Used in computing \code{M}.
@@ -17,11 +18,16 @@
 #'
 #' If \code{kern} is a migration object, can be used to add a migration matrix to it.
 #' See \code{migration_matrix}.
+#'
+#' Since the memory usage of the migration matrix increases quadratically with the size of the radius,
+#' it can be useful to keep it small and instead apply the migration operator several times;
+#' this is achieved by setting \code{n} to something larger than 1.
 migration <- function (
                        kern, 
                        radius, 
                        sigma=1, 
                        normalize=1, 
+                       n=1,
                        do.M=FALSE,
                        population, 
                        from,
@@ -34,7 +40,8 @@ migration <- function (
                     kern=kern,
                     radius=radius,
                     sigma=sigma,
-                    normalize=normalize ), 
+                    normalize=normalize,
+                    n=n ), 
                  list(...) )
         class(out) <- "migration"
     }
