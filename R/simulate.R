@@ -175,6 +175,7 @@ crop_simulation <- function (sim, pop, extent) {
 #' @param pop The corresponding population object.
 #' @param max.frames Maximum number of frames to plot.
 #' @param zlim Range of values to represent by colors, consistently.
+#' @param pause Pause for user input between frames? (left click to continue, right click to stop)
 #' @param legend.width,legend.mar Parameters controlling how the legend is displayed.
 #' @param animate If not FALSE, instead of plotting the result, package frames into an mp4 animation with this file name.
 #' @param duration Duration of the animation in seconds.

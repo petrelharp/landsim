@@ -30,6 +30,7 @@ migrate <- function ( x,
 #' @param sigma Distance scaling for kernel.
 #' @param radius Maximum distance away to truncate the kernel.
 #' @param normalize Normalize the kernel so that the total sum of weights is equal to this; pass NULL to do no normalization.
+#' @param n Number of times to apply the migration operation.
 #' @export
 #' @return A Raster* of the same form as the input.
 #' If the factor \code{normalize} is NULL then the result is approximately stochastic,
