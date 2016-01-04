@@ -32,7 +32,7 @@ migration <- function (
                        population,
                        ...)  {
     if (sum(n.weights)>1) {
-        warn("migration: n.weights sum to more than 1")
+        warning("migration: n.weights sum to more than 1")
     }
     if (inherits(kern,"migration")) {
         out <- kern

@@ -16,7 +16,7 @@ migrate <- function ( x,
     Mnx <- matrix( 0.0, nrow=nrow(migration$M), ncol=NCOL(x) )
     Mnx[migration$habitable.inds,] <- x
     zero.weight <- 1-sum(migration$n.weights)
-    if (zero.weight<0) { warn("n.weights sum to more than one.") }
+    if (zero.weight<0) { warning("n.weights sum to more than one.") }
     out <- if (zero.weight>0) {
             zero.weight*Mnx[migration$habitable.inds,] 
         } else { 
