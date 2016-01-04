@@ -69,5 +69,5 @@ migration <- function (
 #' @return A \code{migration} object, as before, but with but with a migration matrix (see \code{migration()}).
 #'
 setup_migration <- function (m,population,...) {
-    m <- migration(m,population=population,do.M=TRUE,...)
+    migration(m,population=population,do.M=TRUE,...)
 }

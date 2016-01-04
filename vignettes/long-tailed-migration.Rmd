@@ -29,11 +29,11 @@ where much of the range is inaccessible,
 like this one:
 ```{r setup_habitat}
 set.seed(42)
-habitat <- raster::raster(xmn=-diam, xmx=diam, ymn=-diam, ymx=diam, 
-      resolution=res,
+habitat <- raster::raster(xmn=-1e4, xmx=1e4, ymn=-1e4, ymx=1e4, 
+      resolution=100,
       crs="+proj=utm +zone=11 +ellps=GRS80 +towgs84=0,0,0,0,0,0,0 +units=m +no_defs")
 raster::values(habitat) <- pmax(-10,pmin(20,rcauchy(raster::ncell(habitat))))
-habitat <- 20*migrate_raster( habitat, kern=kern, sigma=sigma, radius=radius )
+habitat <- 20*migrate_raster( habitat, kern="gaussian", sigma=300, radius=1500 )
 values(habitat)[values(habitat) < (-5)] <- NA
 plot(habitat)
 ```
@@ -79,7 +79,7 @@ With $w_n = (0,0,\ldots,1)$, this should look just like a Gaussian smooth,
 with standard deviation equal to $\sigma \sqrt{m}$:
 ```{r gaussian}
 n.weights <- c(rep(0,10),1)
-pl( cbind( x=x, Mx=weighted_migrate(n.weights) ) )
+pl( cbind( x=x, Mx=weighted_migrate(n.weights) ), main=c("original","smoothed") )
 ```
 
 If we take the smoothing operator as a geometric sum,
@@ -93,6 +93,26 @@ then we get a long-tailed distribution:
 p <- 1/10
 n.weights <- (1-p)^(0:50)
 n.weights <- n.weights/sum(n.weights)
-pl( cbind( x=x, Mx=weighted_migrate(n.weights) ) )
+pl( cbind( x=x, Mx=weighted_migrate(n.weights) ), main=c("original","smoothed") )
 ```
 
+Implementation
+==============
+
+This is implemented via the `n.weights` parameter in `migration` objects
+(note that the first, "zero migration" index is implied):
+```{r implement}
+p <- 1/10
+n.weights <- (1-p)^(0:50)
+n.weights <- n.weights/sum(n.weights)
+pop <- population( habitat,
+                  accessible = ( !is.na(values(habitat)) ),
+                  habitable = ( ( !is.na(values(habitat)) ) & ( values(habitat) > 0 ) ),
+                  genotypes = 'aa'
+              )
+pop$N[] <- rpois( sum(pop$habitable), values(pop$habitat)[pop$habitable] )
+migr <- migration( kern="gaussian", sigma=100, radius=400, 
+              n.weights = n.weights[-1] )
+migr <- setup_migration( migr, pop )
+pl( cbind( x=pop$N[,"aa"], Mx=migrate( pop$N, migr ) ), main=c("original","smoothed") )
+```
