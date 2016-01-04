@@ -17,14 +17,15 @@ migrate <- function ( x,
     Mnx[migration$habitable.inds,] <- x
     zero.weight <- 1-sum(migration$n.weights)
     if (zero.weight<0) { warning("n.weights sum to more than one.") }
-    out <- if (zero.weight>0) {
+    out <- if (zero.weight!=0) {
             zero.weight*Mnx[migration$habitable.inds,] 
         } else { 
             numeric(length(migration$habitable.inds)) 
         }
     for (n in seq_along(migration$n.weights)) {
-        Mnx <- migration$M %*% Mnx
-        if (migration$n.weights[n]>0) {
+        # note crossprod not %*% because M is row-stochastic
+        Mnx <- Matrix::crossprod( migration$M, Mnx )
+        if (migration$n.weights[n]!=0) {
             out <- out + migration$n.weights[n]*Mnx[migration$habitable.inds,]
         }
     }
