@@ -1,0 +1,98 @@
+---
+title: "Long-tailed migration"
+author: "Peter Ralph"
+date: "`r Sys.Date()`"
+output: rmarkdown::html_vignette
+vignette: >
+  %\VignetteIndexEntry{Vignette Title}
+  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteEncoding{UTF-8}
+---
+
+
+```{r doc_setup, include=FALSE}
+fig.dim <- 5
+knitr::opts_chunk$set(fig.width=2*fig.dim,fig.height=fig.dim,fig.align='center')
+library(Matrix)
+library(raster)
+library(landsim)
+# helper plotting function
+pl <- function (z,zlim=range(0,z,finite=TRUE),...) {
+    hab <- do.call(stack,list(habitat)[rep(1,NCOL(z))]); 
+    values(hab)[habitable] <- z; 
+    plot(hab,nr=1,zlim=zlim,legend.width=2,legend.mar=12,...) 
+}
+```
+
+We'd like to run long-distance migration on a disconnected habitat 
+where much of the range is inaccessible,
+like this one:
+```{r setup_habitat}
+set.seed(42)
+habitat <- raster::raster(xmn=-diam, xmx=diam, ymn=-diam, ymx=diam, 
+      resolution=res,
+      crs="+proj=utm +zone=11 +ellps=GRS80 +towgs84=0,0,0,0,0,0,0 +units=m +no_defs")
+raster::values(habitat) <- pmax(-10,pmin(20,rcauchy(raster::ncell(habitat))))
+habitat <- 20*migrate_raster( habitat, kern=kern, sigma=sigma, radius=radius )
+values(habitat)[values(habitat) < (-5)] <- NA
+plot(habitat)
+```
+We'll use negative values as accessible but inhospitable locations,
+and NA values as inaccessible locations.
+
+The problem is that the number of nonzero entries in the migration matrix
+grows quadratically with the radius of the migration kernel.
+To deal with this, we can use a smaller-radius migration matrix,
+applied many times.
+To do this we will
+
+1. temporarily keep track of migration to *accessible* but not *habitable* locations
+2. assign weights to different numbers of applications of the kernel
+
+In general, the migration operator we want is
+\[
+    x \mapsto \sum_{n=0}^m w_n M^n ,
+\]
+with where $\sum w_n = 1$, and $M$ is some kind of fairly short-distance kernel.
+Here's the setup:
+```{r setup_migration}
+accessible <- ( !is.na(values(habitat)) )
+habitable <- ( accessible & values(habitat) > 0 )
+# positions of habitable cells in vector of accessible cells
+habitable.inds <- cumsum(accessible)[habitable]
+M <- migration_matrix( habitat, kern="gaussian", sigma=100, radius=400,
+                      from=which(accessible), to=which(accessible) )
+x <- rpois( sum(habitable), values(habitat)[habitable] )
+weighted_migrate <- function (n.weights) {
+    Mnx <- numeric(sum(accessible))
+    Mnx[habitable.inds] <- x
+    out <- n.weights[1]*Mnx[habitable.inds]
+    for (n in seq_along(n.weights)[-1]) {
+        Mnx <- M %*% Mnx
+        out <- out + n.weights[n]*Mnx[habitable.inds]
+    }
+    return(out)
+}
+```
+
+With $w_n = (0,0,\ldots,1)$, this should look just like a Gaussian smooth,
+with standard deviation equal to $\sigma \sqrt{m}$:
+```{r gaussian}
+n.weights <- c(rep(0,10),1)
+pl( cbind( x=x, Mx=weighted_migrate(n.weights) ) )
+```
+
+If we take the smoothing operator as a geometric sum,
+\[
+    x \mapsto \frac{p}{1-(1-p)^{n=1}} \sum_{n=0}^m (1-p)^n M^n ,
+\]
+with $p$ fairly small, 
+then we get a long-tailed distribution:
+
+```{r cauchy}
+p <- 1/10
+n.weights <- (1-p)^(0:50)
+n.weights <- n.weights/sum(n.weights)
+pl( cbind( x=x, Mx=weighted_migrate(n.weights) ) )
+```
+
