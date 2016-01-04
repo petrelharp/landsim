@@ -7,7 +7,7 @@
 #' @param sigma A number that distances are scaled by before being passed to \code{kern}.
 #' @param radius The maximum distance to migrate over.
 #' @param normalize Total number of migrants per unit of input.
-#' @param n The number of times to apply the smoother per migration step.
+#' @param n.weights Weights on the number of times to apply the smoother: the resulting operator is x -> (1-sum(n.weights)) * x + n.weights[1] * M x + n.weights[2] * M^2 x + ...
 #' @param do.M Precompute an explicit migration matrix?
 #' @param population A Raster* or a \code{population}; used in computing \code{M}.
 #' @param from Used in computing \code{M}.
@@ -21,18 +21,19 @@
 #'
 #' Since the memory usage of the migration matrix increases quadratically with the size of the radius,
 #' it can be useful to keep it small and instead apply the migration operator several times;
-#' this is achieved by setting \code{n} to something larger than 1.
+#' this is achieved by setting \code{n.weights} to have weight at indices larger than 2.
 migration <- function (
                        kern, 
                        radius, 
                        sigma=1, 
                        normalize=1, 
-                       n=1,
+                       n.weights=1,
                        do.M=FALSE,
-                       population, 
-                       from,
-                       to,
+                       population,
                        ...)  {
+    if (sum(n.weights)>1) {
+        warn("migration: n.weights sum to more than 1")
+    }
     if (inherits(kern,"migration")) {
         out <- kern
     } else {
@@ -41,16 +42,15 @@ migration <- function (
                     radius=radius,
                     sigma=sigma,
                     normalize=normalize,
-                    n=n ), 
+                    n.weights=n.weights ), 
                  list(...) )
         class(out) <- "migration"
     }
     if (do.M) {
-        if (missing(population)) { stop("To compute M you need a population or a Raster.") }
-        mm.args <- list(population=population, migration=out)
-        if (!missing(from)) { mm.args <- c( mm.args, list( from=from ) ) }
-        if (!missing(to)) { mm.args <- c( mm.args, list( to=to ) ) }
-        out$M <- do.call( migration_matrix, mm.args )
+        if (missing(population)) { stop("To compute M you need a population.") }
+        out$M <- migration_matrix( population=population, migration=out )
+        # which columns of M are habitable locations?
+        out$habitable.inds <- cumsum(population$accessible)[population$habitable]
         class(out) <- c(class(out),"migration.matrix")
     }
     return(out)

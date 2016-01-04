@@ -47,17 +47,15 @@ migration_matrix <- function (population,
                               sigma=migration$sigma,
                               radius=migration$radius,
                               normalize=migration$normalize,
-                              from,
+                              from=which(accessible),
                               to=from
                  ) {
     # Fill in default values.
     if (inherits(population,"population")) {
         if (missing(accessible)) { accessible <- population$accessible }
-        if (missing(from)) { from <- which(population$habitable) }
         population <- population$habitat
     } else if (inherits(population,"Raster")) {
         if (missing(accessible)) { accessible <- !is.na(raster::values(population)) }
-        if (missing(from)) { from <- which(!is.na(raster::values(population))) }
     }
     if (!is.integer(from)) { stop("migration_matrix: 'from' must be integer-valued (not logical).") }
     if (!is.logical(accessible)) { stop("migration_matrix: 'accessible' must be logical (not a vector of indices).") }
@@ -136,7 +134,6 @@ subset_migration <- function (M, old, new,
 #' @param p The parameter in the geometric distribution (must be between 0 and 1).
 #' @param eps The numerical tolerance.
 #' @param n The number of terms to use, minus one (defaults so that p^n = eps).
-#' @export
 #' @return A matrix of the same form as M.
 geo_power <- function (M, p, eps=1e-8, n=log(eps)/log(p)) {
     if (p==0) { n <- 0 }

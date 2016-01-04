@@ -26,7 +26,7 @@ dispersal_distance <- function ( M,
     # normalize
     if (!normalized) { M@x <- (1/Matrix::rowSums(M)[1L+M@i]) * M@x }
     # get distances between pairs we care about
-    cell.pos <- raster::xyFromCell(pop$habitat,cell=which(pop$habitable))
+    cell.pos <- raster::xyFromCell(pop$habitat,cell=which(pop$accessible))
     jj <- p.to.j(M@p)
     M@x <- M@x * raster::pointDistance(cell.pos[1L+M@i,],cell.pos[jj,],lonlat=FALSE,allpairs=FALSE)^2
     return( sqrt(Matrix::rowSums( M )) )

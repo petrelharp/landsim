@@ -12,11 +12,24 @@ migrate <- function ( x,
     if (is.null(migration$M)) { stop("Migration matrix does not exist: need to use setup_demography, or migrate_raster()?") }
     if (inherits(x,"population")) { x <- x$N }
     orig.class <- class(x)
-    for (k in seq_len(migration$n)) {
-        x <- migration$M %*% x
+    # set up for weighted sum
+    Mnx <- matrix( 0.0, nrow=nrow(migration$M), ncol=NCOL(x) )
+    Mnx[migration$habitable.inds,] <- x
+    zero.weight <- 1-sum(migration$n.weights)
+    if (zero.weight<0) { warn("n.weights sum to more than one.") }
+    out <- if (zero.weight>0) {
+            zero.weight*Mnx[migration$habitable.inds,] 
+        } else { 
+            numeric(length(migration$habitable.inds)) 
+        }
+    for (n in seq_along(migration$n.weights)) {
+        Mnx <- migration$M %*% Mnx
+        if (migration$n.weights[n]>0) {
+            out <- out + migration$n.weights[n]*Mnx[migration$habitable.inds,]
+        }
     }
     # return a dense matrix if we got one in
-    return( as(x,orig.class) )
+    return( as(out,orig.class) )
 }
 
 
@@ -30,7 +43,7 @@ migrate <- function ( x,
 #' @param sigma Distance scaling for kernel.
 #' @param radius Maximum distance away to truncate the kernel.
 #' @param normalize Normalize the kernel so that the total sum of weights is equal to this; pass NULL to do no normalization.
-#' @param n Number of times to apply the migration operation.
+#' @param n.weights The resulting operator is x -> (1-sum(n.weights)) * x + n.weights[1] * M x + n.weights[2] * M^2 x + ...
 #' @export
 #' @return A Raster* of the same form as the input.
 #' If the factor \code{normalize} is NULL then the result is approximately stochastic,
@@ -41,13 +54,15 @@ migrate <- function ( x,
 #'
 #' However, note that even if \code{normalize} is 1, the migration will still not be conservative
 #' at any raster cells nearby to boundary or NA cells.
+#'
+#' The weights in \code{n.weights} should sum to 1.
 migrate_raster <- function (x,
-                            migration=list(sigma=1,normalize=1,n=1),
+                            migration=list(sigma=1,normalize=1,n.weights=1),
                             kern=migration$kern,
                             sigma=migration$sigma,
                             radius=migration$radius,
                             normalize=migration$normalize,
-                            n=migration$n
+                            n.weights=migration$n.weights
                  ) {
     if (inherits(x,"population")) { x <- x$habitat }
     if (!inherits(x,"Raster")) {
@@ -62,8 +77,13 @@ migrate_raster <- function (x,
     if (!is.null(normalize)) { w <- (normalize/sum(w))*w }
     x.na <- is.na(x)
     x.names <- names(x)
-    for (k in seq_len(migration$n)) {
+    # weighted sum
+    out <- (1-sum(n.weights))*x
+    for (n in seq_along(n.weights)) {
         x <- raster::focal( x, w=w, na.rm=TRUE, pad=TRUE, padValue=0 )
+        if (n.weights[n]>0) {
+            out <- out + n.weights[n]*x
+        }
     }
     x[x.na] <- NA
     names(x) <- x.names

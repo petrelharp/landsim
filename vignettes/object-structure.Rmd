@@ -120,18 +120,33 @@ Class **migration**:
 
 : normalization factor applied to the smoother
 
-`n`
+`n.weights`
 
-: number of times to apply the smoother to produce one "migration" step
+: weights on the number of times to apply the smoother to produce one "migration" step, soif $M$ is the one-step smoother, 
+    and the weights are $n=(n_1,n_2,\ldots)$, the resulting smoother is
+    $$
+        x \mapsto (1-\sum_k n_k) x + \sum_k n_k M^k x . 
+    $$
 
 **Example:**
 
+This is a migration object for a Gaussian kernel with standard deviation 100 and maximum dispersal distance 1000.
 ```{r migr_defn}
 migr <- migration(
                  kern = "gaussian",
                  sigma = 100,
                  radius = 1000,
                  normalize = 1.0
+             )
+```
+and we can modify it so that a migrating individual takes no steps with probability $1/4$, one step with probability $1/2$, or five steps with probability $1/4$:
+```{r migr_defn}
+migr <- migration(
+                 kern = "gaussian",
+                 sigma = 100,
+                 radius = 1000,
+                 normalize = 1.0,
+                 n.weights = c(1/2,0,0,0,1/4)
              )
 ```
 
@@ -148,8 +163,11 @@ Class **migration.matrix**:
 
 `M`
 
-: The pre-computed migration matrix.
+: The pre-computed migration matrix, which has rows and columns indexed by `accessible` locations in the habitat.
 
+`habitable.inds`
+
+: The indices in columns of `M` that correspond to `habitable` locations.
 
 **Example:**
 
@@ -158,6 +176,9 @@ This is added with the function `setup_migration()`.
 ```
 migr <- setup_migration( migr, population=pop )
 ```
+
+The migration matrix has rows and columns indexed by *accessible* locations in the habitat,
+as opposed to `population$N`, which is indexed by *habitable* locations.
 
 
 `vital_rate`
