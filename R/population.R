@@ -18,7 +18,7 @@ population <- function (
                         accessible=!is.na(raster::values(habitat)),
                         habitable=!is.na(raster::values(habitat)),
                         genotypes=colnames(N),
-                        N=matrix(1,nrow=sum(habitable),ncol=length(genotypes)),
+                        N=matrix(0,nrow=sum(habitable),ncol=length(genotypes)),
                         description='',
                        ...)  {
     if ( (NCOL(N) != length(genotypes)) || (NROW(N)!=sum(habitable)) ) {

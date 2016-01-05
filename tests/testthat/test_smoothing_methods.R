@@ -1,4 +1,5 @@
-testthat::context("Agreement between migration_matrix and migrate.")
+context("Agreement between migration_matrix and migrate.")
+require(raster)
 require(Matrix)
 
 na_to_zero <- function (x) {
@@ -7,6 +8,9 @@ na_to_zero <- function (x) {
 }
 
 # check we understand focal()
+
+# NOTE that focal() does takes local averages, which corresponds to M %*% x,
+# which is NOT the same thing as dispersing matrial, corresponding to t(x %*% M) = crossprod(M,x)
 
 habitat <- raster(xmn=0, xmx=5, ymn=0, ymx=5, 
       resolution=1,
@@ -22,8 +26,10 @@ hf1.NA <- focal( habitat.NA, w=w, pad=TRUE, na.rm=TRUE, padValue=0 )
 
 hmat <- matrix(values(habitat),nrow=nrow(habitat),ncol=ncol(habitat))
 hmat.NA <- matrix(values(habitat.NA),nrow=nrow(habitat),ncol=ncol(habitat))
-testthat::expect_equivalent(as.numeric(hmat),values(habitat))
-testthat::expect_equivalent(as.numeric(hmat.NA),values(habitat.NA))
+test_that( "focal smooths as we expect", {
+        expect_equivalent(as.numeric(hmat),values(habitat))
+        expect_equivalent(as.numeric(hmat.NA),values(habitat.NA))
+      } )
 
 hmat.pad <- rbind( 0, cbind( 0, hmat, 0 ), 0 )
 hmat.NA.pad <- rbind( 0, cbind( 0, hmat.NA, 0 ), 0 )
@@ -36,20 +42,25 @@ for (dx in c(-1,0,1)) {
     }
 }
 
-testthat::expect_equivalent(as.numeric(hmf),values(hf1))
-testthat::expect_equivalent(as.numeric(hmf.NA),values(hf1.NA))
+test_that( "focal smooths as we expect with padding", {
+        expect_equivalent(as.numeric(hmf),values(hf1))
+        expect_equivalent(as.numeric(hmf.NA),values(hf1.NA))
+      } )
 
 
 # check simple smoothing matrix construction
 
 M <- migration_matrix( habitat, kern=function(x) { ifelse(x>0,1/16,1/2) }, sigma=1, radius=1, normalize=NULL )
 matrix(M[3,],nrow=5)
-testthat::expect_equal( hmf, matrix(M%*%as.numeric(hmat),nrow=nrow(hmf)) )
-testthat::expect_equal( hmf.NA, matrix(M%*%na_to_zero(as.numeric(hmat.NA)),nrow=nrow(hmf)) )
+
+test_that( "migration_matrix can reproduce focal()", {
+        expect_equal( hmf, matrix( (M %*% as.numeric(hmat)),nrow=nrow(hmf)) )
+        expect_equal( hmf.NA, matrix( (M %*% na_to_zero(as.numeric(hmat.NA))),nrow=nrow(hmf)) )
+      } )
 
 
 ########
-testthat::context("Absorbing external, not internal, boundaries")
+context("Absorbing external, not internal, boundaries")
 
 wm.fun <- function (x, na.rm) { weighted.mean(x,w=w,na.rm=na.rm) }
 hf2 <- focal( habitat, w=(w>0), pad=TRUE, fun=wm.fun, na.rm=TRUE, padValue=0 )
@@ -61,16 +72,18 @@ M <- migration_matrix( pad.habitat, kern=function(x) { ifelse(x>0,1/16,1/2) }, s
 M <- subset_migration( M, old=pad.habitat, new=habitat )
 matrix(M[3,],nrow=nrow(habitat))
 
-testthat::expect_equal( values(hf2), as.numeric(M%*%values(habitat)) )
 
 pad.habitat.NA <- extend(habitat.NA,pad.extent,value=0)
 M.NA <- migration_matrix( pad.habitat.NA, kern=function(x) { ifelse(x>0,1/16,1/2) }, sigma=1, radius=1, normalize=1 )
 M.NA <- subset_migration( M.NA, old=pad.habitat.NA, new=habitat.NA  )
 
-testthat::expect_equal( values(hf2.NA)[!is.na(values(habitat.NA))], as.numeric(M.NA%*%(values(habitat.NA)[!is.na(values(habitat.NA))])) )
+test_that( "agreement with absorbing external boundaries", {
+        expect_equal( values(hf2), as.numeric( (M %*%values(habitat)) ) )
+        expect_equal( values(hf2.NA)[!is.na(values(habitat.NA))], as.numeric( (M.NA %*% (values(habitat.NA)[!is.na(values(habitat.NA))])) ) )
+      } )
 
 ########
-testthat::context("Non-boundaries")
+context("Non-boundaries")
 
 
 wm.fun <- function (x, na.rm) { weighted.mean(x,w=w,na.rm=na.rm) }
@@ -79,9 +92,12 @@ hf3.NA <- focal( habitat.NA, w=(w>0), pad=TRUE, fun=wm.fun, na.rm=TRUE, padValue
 
 M <- migration_matrix( habitat, kern=function(x) { ifelse(x>0,1/16,1/2) }, sigma=1, radius=1, normalize=1 )
 matrix(M[3,],nrow=nrow(habitat))
-testthat::expect_equal( values(hf3), as.numeric(M%*%values(habitat)) )
 
 M.NA <- migration_matrix( habitat.NA, kern=function(x) { ifelse(x>0,1/16,1/2) }, sigma=1, radius=1, normalize=1 )
-testthat::expect_equal( values(hf3.NA)[!is.na(values(habitat.NA))], as.numeric(M.NA%*%(values(habitat.NA)[!is.na(values(habitat.NA))])) )
+
+test_that( "agreement with non-boundaries", {
+        expect_equal( values(hf3), as.numeric( (M %*% values(habitat)) ) )
+        expect_equal( values(hf3.NA)[!is.na(values(habitat.NA))], as.numeric( (M.NA %*% (values(habitat.NA)[!is.na(values(habitat.NA))])) ) )
+      } )
 
 

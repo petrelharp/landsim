@@ -56,7 +56,11 @@ migrate <- function ( x,
 #' However, note that even if \code{normalize} is 1, the migration will still not be conservative
 #' at any raster cells nearby to boundary or NA cells.
 #'
-#' The weights in \code{n.weights} should sum to 1.
+#' The weights in \code{n.weights} should sum to less than 1.
+#'
+#' It is not necessarily possible to do exactly the same thing with \code{migrate()} and with \code{migrate_raster()}.
+#' One difference is that this function takes local averages, which does not preserve mass,
+#' whereas \code{migrate()}, with \code{normalize=1}, does preserve mass.
 migrate_raster <- function (x,
                             migration=list(sigma=1,normalize=1,n.weights=1),
                             kern=migration$kern,
