@@ -86,6 +86,8 @@ migrate_raster <- function (x,
     out <- (1-sum(n.weights))*x
     for (n in seq_along(n.weights)) {
         x <- raster::focal( x, w=w, na.rm=TRUE, pad=TRUE, padValue=0 )
+        # this is about 6x faster. TO-DO: switch to this method.
+        # x <- raster::focal( x, w=w )
         if (n.weights[n]>0) {
             out <- out + n.weights[n]*x
         }
