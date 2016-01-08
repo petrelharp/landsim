@@ -42,22 +42,22 @@ sample_neighborhoods <- function (x,
 #'
 #' @param centers The centers of the circles.
 #' @param radii The radii of the circles.
-#' @param nsegs The number of segments in the polygon delimiting each neighborhood.
 #' @param proj4string The proj4string.
 #' @export
 #' @return A SpatialPolygons object of circles.
-make_circles <- function (centers, radii, proj4string, nsegs=20 ) {
-    if (inherits(centers,"SpatialPoints")) { centers <- sp::coordinates(centers) }
+make_circles <- function (centers, radii, proj4string=sp::CRS(sp::proj4string(centers)) ) {
+    if (!inherits(centers,"SpatialPoints")) { centers <- sp::SpatialPoints(centers,proj4string=proj4string) }
     radii <- rep_len(radii,length(centers))
-    args <- seq(2*pi,0,length.out=nsegs+1)
-    sp::SpatialPolygons( lapply( 1:nrow(centers), function (k) {
-                            cent <- centers[k,]
-                            sp::Polygons( list( 
-                               sp::Polygon( cbind( 
-                                          x = cent[1] + radii[k] * cos(args),
-                                          y = cent[2] + radii[k] * sin(args) ), hole=FALSE )
-                               ), ID=paste("neighborhood",k,sep="_") )
-                } ), proj4string=proj4string )
+    return( rgeos::gBuffer( centers, width=radii, byid=TRUE ) )
+    # args <- seq(2*pi,0,length.out=nsegs+1)
+    # sp::SpatialPolygons( lapply( 1:nrow(centers), function (k) {
+    #                         cent <- centers[k,]
+    #                         sp::Polygons( list( 
+    #                            sp::Polygon( cbind( 
+    #                                       x = cent[1] + radii[k] * cos(args),
+    #                                       y = cent[2] + radii[k] * sin(args) ), hole=FALSE )
+    #                            ), ID=paste("neighborhood",k,sep="_") )
+    #             } ), proj4string=proj4string )
 }
 
 #' Construct Census Functions for a Set of Neighborhoods
