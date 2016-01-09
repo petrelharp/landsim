@@ -179,6 +179,7 @@ crop_simulation <- function (sim, pop, extent) {
 #' @param legend.width,legend.mar Parameters controlling how the legend is displayed.
 #' @param animate If not FALSE, instead of plotting the result, package frames into an mp4 animation with this file name.
 #' @param duration Duration of the animation in seconds.
+#' @param cleanup Whether to delete pngs produced if 'animate' is TRUE.
 #' @param ... Additional parameters passed to plot( ).
 #' @export
 plot.simulation <- function (sim, 
@@ -189,6 +190,7 @@ plot.simulation <- function (sim,
                              legend.width=2,
                              legend.mar=12,
                              animate=NULL,
+                             cleanup=FALSE,
                              duration=5,
                              ... ) {
     hab <- pop$habitat
@@ -219,7 +221,11 @@ plot.simulation <- function (sim,
     }
     if (!is.null(animate)) {
         system2( "ffmpeg", c("-y", "-v 8", "-i", png.files, "-r", length(plot.inds)/duration, animate) )
-        unlink( list.files( dirname(png.base), paste(basename(png.base), "[0-9]*[.]png$", sep=''), full.names=TRUE ) )
+        if (cleanup) { 
+            unlink( list.files( dirname(png.base), paste(basename(png.base), "[0-9]*[.]png$", sep=''), full.names=TRUE ) ) 
+        } else {
+            return( list.files( dirname(png.base), paste(basename(png.base), "[0-9]*[.]png$", sep=''), full.names=TRUE ) )
+        }
     }
 }
 
