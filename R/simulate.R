@@ -191,7 +191,7 @@ plot.simulation <- function (sim,
                              legend.mar=12,
                              animate=NULL,
                              cleanup=FALSE,
-                             duration=5,
+                             duration=10,
                              ... ) {
     hab <- pop$habitat
     # even out the sampled times
@@ -220,7 +220,8 @@ plot.simulation <- function (sim,
         if (pause && is.null(animate) && length(locator(1))==0) { break }
     }
     if (!is.null(animate)) {
-        system2( "ffmpeg", c("-y", "-v 8", "-i", png.files, "-r", length(plot.inds)/duration, animate) )
+        # note -r is frame rate in fps, and comes before the *input* file
+        system2( "ffmpeg", c("-y", "-v 8", "-r", length(plot.inds)/duration, "-i", png.files, animate) )
         if (cleanup) { 
             unlink( list.files( dirname(png.base), paste(basename(png.base), "[0-9]*[.]png$", sep=''), full.names=TRUE ) ) 
         } else {
