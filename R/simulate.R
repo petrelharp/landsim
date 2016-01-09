@@ -199,7 +199,7 @@ plot.simulation <- function (sim,
                                       min(plot.t),
                                       max(plot.t),
                                       length.out=min( max.frames,
-                                                     (1+diff(range(plot.t)))/ceiling(1/min(diff(plot.t)[diff(plot.t)>0])) )
+                                                     ceiling((1+diff(range(plot.t)))/min(diff(plot.t)[diff(plot.t)>0])) )
                                       ), 
                      breaks=c(plot.t[1]-1,plot.t) ) )
     if (!is.null(animate)) {
