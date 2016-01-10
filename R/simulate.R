@@ -192,6 +192,10 @@ plot.simulation <- function (sim,
                              animate=NULL,
                              cleanup=FALSE,
                              duration=10,
+                             height=2,
+                             width=length(pop$genotypes)*2,
+                             res=300,
+                             pointsize=10,
                              ... ) {
     hab <- pop$habitat
     # even out the sampled times
@@ -207,7 +211,7 @@ plot.simulation <- function (sim,
     if (!is.null(animate)) {
         png.base <- file.path( tempdir(), paste("frame",floor(1e6*runif(1)),"_",sep='') )
         png.files <- paste( png.base, "%03d.png", sep='')
-        png( png.files, height=2*300, width=length(pop$genotypes)*2*300, res=300, pointsize=10 )
+        png( png.files, height=height*res, width=width*res, res=res, pointsize=pointsize )
         on.exit(dev.off(),add=TRUE)
     }
     layout(t(1:ncol(sim$N)))
