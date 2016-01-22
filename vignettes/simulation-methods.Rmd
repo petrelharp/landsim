@@ -177,9 +177,7 @@ germination.args <- list(
                                      kern="gaussian",
                                      sigma=100,
                                      radius=300,
-                                     normalize=1,
-                                     do.M=TRUE,
-                                     population=habitat
+                                     normalize=1
                                  )
          )
 germination_fun <- function (N, carrying.capacity, ...) {
@@ -195,17 +193,13 @@ this.demography <- demography(
                             kern = function (x) { exp(-sqrt(x)) },
                             sigma = 100,
                             radius = 1000,
-                            normalize = NULL,
-                            do.M=TRUE,
-                            population=habitat
+                            normalize = NULL
                      ),
         seed.migration = migration(
                             kern = "gaussian",
                             sigma = 20,
                             radius = 400,
-                            normalize = 1,
-                            do.M=TRUE,
-                            population=habitat
+                            normalize = 1
                      ),
         genotypes = c("aa","aA","AA"),
         mating = mating_tensor( c("aa","aA","AA") )
@@ -225,6 +219,7 @@ pop <- population(
                              aA=rpois_raster(habitat/2,only.values=TRUE),
                              AA=rpois_raster(habitat/4,only.values=TRUE) )
              )
+this.demography <- setup_demography(this.demography,pop)
 
 pl(pop)
 for (k in 1:5) {

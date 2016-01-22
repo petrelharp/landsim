@@ -45,9 +45,7 @@ germination.args <- list(
                                      kern="gaussian",
                                      sigma=100,
                                      radius=300,
-                                     normalize=1,
-                                     do.M=TRUE,
-                                     population=habitat
+                                     normalize=1
                                  )
          )
 germination_fun <- function (N, carrying.capacity, ...) {
@@ -64,17 +62,13 @@ this.demography <- demography(
                             kern = function (x) { exp(-sqrt(x)) },
                             sigma = 30,
                             radius = 500,
-                            normalize = NULL,
-                            do.M=TRUE,
-                            population=habitat
+                            normalize = NULL
                      ),
         seed.migration = migration(
                             kern = "gaussian",
                             sigma = 50,
                             radius = 400,
-                            normalize = 1,
-                            do.M=TRUE,
-                            population=habitat
+                            normalize = 1
                      ),
         genotypes = c("aa","aA","AA"),
         mating = mating_tensor( c("aa","aA","AA") )

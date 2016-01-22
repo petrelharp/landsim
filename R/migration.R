@@ -9,7 +9,7 @@
 #' @param normalize Total number of migrants per unit of input.
 #' @param n.weights Weights on the number of times to apply the smoother: the resulting operator is x -> (1-sum(n.weights)) * x + n.weights[1] * M x + n.weights[2] * M^2 x + ...
 #' @param do.M Precompute an explicit migration matrix?
-#' @param population A Raster* or a \code{population}; used in computing \code{M}.
+#' @param population A \code{population}; used in computing \code{M}.
 #' @param from Used in computing \code{M}.
 #' @param to Used in computing \code{M}.
 #' @param ... Other parameters that are included verbatim in the output object.
