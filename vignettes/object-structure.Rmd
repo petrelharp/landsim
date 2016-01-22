@@ -140,7 +140,7 @@ migr <- migration(
              )
 ```
 and we can modify it so that a migrating individual takes no steps with probability $1/4$, one step with probability $1/2$, or five steps with probability $1/4$:
-```{r migr_defn}
+```{r migr_defn_2}
 migr <- migration(
                  kern = "gaussian",
                  sigma = 100,

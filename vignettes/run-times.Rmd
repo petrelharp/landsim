@@ -174,8 +174,8 @@ pop <- population(
                   N = matrix(values(N)[!is.na(values(habitat))],ncol=3)
              )
 matrix.demography <- this.demography
-matrix.demography$seed.migration <- migration( matrix.demography$seed.migration, do.M=TRUE, population=habitat )
-matrix.demography$pollen.migration <- migration( matrix.demography$pollen.migration, do.M=TRUE, population=habitat )
+matrix.demography$seed.migration <- migration( matrix.demography$seed.migration, do.M=TRUE, population=pop )
+matrix.demography$pollen.migration <- migration( matrix.demography$pollen.migration, do.M=TRUE, population=pop )
 matrix.demography$prob.germination <- vital( 
         function (N,carrying.capacity,...) {
             # and this is rowSums, for the matrix
@@ -188,12 +188,14 @@ matrix.demography$prob.germination <- vital(
                                 radius=300,
                                 normalize=1,
                                 do.M=TRUE,
-                                population=habitat
+                                population=pop
                             )
      )
 matrix.time <- microbenchmark( generation(pop,matrix.demography,carrying.capacity=values(habitat)[!is.na(values(habitat))]), times=10 )
 
+speedup.fac <- round(mean(raster.time$time)/mean(matrix.time$time))
+
 rbind( raster.time, matrix.time )
 ```
 
-That's a speedup of `r round(mean(raster.time$time)/mean(matrix.time$time))` times, pretty good.
+That's a speedup of `r speedup.fac` times, pretty good.
