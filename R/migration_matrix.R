@@ -124,7 +124,6 @@ subset_migration <- function (M, old, new,
 }
 
 
-
 #' Take a Geometric Power of a Matrix
 #'
 #' For a matrix M, compute (1-p) ( I + p M + p^2 M^2 + ... ) = (1-p)(I-pM)^{-1} .

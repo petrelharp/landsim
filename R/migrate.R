@@ -107,6 +107,7 @@ get_kernel <- function (kern) {
                 cauchy=function (x) {
                         1/(pi^2*(1+x^2))
                     },
+                uniform=function (x) { 1 },
                 get(kern,mode="function") 
             )
     } else { kern }

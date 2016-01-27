@@ -21,6 +21,7 @@ population <- function (
                         N=matrix(0,nrow=sum(habitable),ncol=length(genotypes)),
                         description='',
                        ...)  {
+    if ( missing(genotypes) && missing(N) ) { stop("Must specify at least N or genotypes.") }
     if ( (NCOL(N) != length(genotypes)) || (NROW(N)!=sum(habitable)) ) {
         stop("N must be (number of habitable cells) x (number of genotypes)")
     }
