@@ -171,23 +171,22 @@ to be passed in at runtime, because it is a raster,
 and we want to demographic setup to be independent of the raster being used.
 
 ```{r fancy_setup}
-germination.args <- list( 
-             r0 = 0.01,
-             competition = migration(
-                                     kern="gaussian",
-                                     sigma=100,
-                                     radius=300,
-                                     normalize=1
-                                 )
-         )
 germination_fun <- function (N, carrying.capacity, ...) {
-    germination.args$r0 / ( 1 + migrate(rowSums(N),germination.args$competition)/carrying.capacity )
+    r0 / ( 1 + migrate(rowSums(N),competition)/carrying.capacity )
 }
 
 this.demography <- demography(
         prob.seed = 0.2,
         fecundity = 200,
-        prob.germination = germination_fun,
+        prob.germination = vital( germination_fun, 
+                r0 = 0.01,  # one in 100 seeds will germinate at low densities
+                competition = migration(
+                                     kern="gaussian",
+                                     sigma=100,
+                                     radius=300,
+                                     normalize=1
+                                 )
+                ),
         prob.survival = 0.9,
         pollen.migration = migration(
                             kern = function (x) { exp(-sqrt(x)) },
