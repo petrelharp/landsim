@@ -78,7 +78,7 @@ this.demography <- demography(
         fecundity = 100,
         prob.germination = vital( germination_fun, 
                 r0 = 0.01,  # one in 100 seeds will germinate at low densities
-                s = 1.5    # multiplicative selective benefit of the A allele
+                s = 1.5,    # multiplicative selective benefit of the A allele
                 competition = migration(
                                      kern="gaussian",
                                      sigma=100,
