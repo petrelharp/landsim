@@ -1,4 +1,4 @@
-#' Weighted "Adjacency" Matrix from a Raster Layer.
+#' Create Migration Matrix from a Migration object and a Population object
 #'
 #' This returns the (sparse) Matrix giving the pseudo-adjacency matrix 
 #' from and to for specified cells in the given Raster, with weights.
@@ -12,6 +12,8 @@
 #' @param from The indices of the cells corresponding to rows in the output matrix. [default: non-NA cells]
 #' @param to The indices of the cells corresponding to columns in the output matrix. [default: same as \code{from}]
 #' @param normalize If not NULL, migration weights to accessible locations are set to sum to this (see details).
+#' @param discretize Whether or not to "discretize" the kernel first using the \code{discretize_kernel} function.
+#' @param ... Further parameters passed to \code{discretize_kernel}.
 #' @export
 #' @return A sparse Matrix \code{M}, where for each pair of cells \code{i} in \code{from} and \code{i} in \code{to},
 #' the value \code{M[i,j]} is
@@ -20,6 +22,10 @@
 #'    exp( - d[i,j]^2/sigma^2 ) / ( 2 pi sigma^2 ) * (area of a cell)
 #' where \code{d[i,j]} is the distance from \code{from[i]} to \code{to[j]},
 #' if this is greater than \code{min.prob}, and is 0 otherwise.
+#'
+#' Summary of how to encode different types of boundary: set absorbing boundary elements to accessible, 
+#' but do not include them in from (and to). Mark reflecting (non-)boundaries as not accessible. 
+#' External boundaries will be reflecting, so if they should be absorbing, you need to extend the raster and set values appropriately.
 #'
 #' Migration is possible to each \code{accessible} cell in the Raster*.
 #' If \code{normalize} is not NULL, then for each cell, the set of migration weights to each other accessible cell
@@ -48,7 +54,9 @@ migration_matrix <- function (population,
                               radius=migration$radius,
                               normalize=migration$normalize,
                               from=which(accessible),
-                              to=from
+                              to=from,
+                              discretize=FALSE,
+                              ...
                  ) {
     # Fill in default values.
     if (inherits(population,"population")) {
@@ -60,6 +68,9 @@ migration_matrix <- function (population,
     if (!is.integer(from)) { stop("migration_matrix: 'from' must be integer-valued (not logical).") }
     if (!is.logical(accessible)) { stop("migration_matrix: 'accessible' must be logical (not a vector of indices).") }
     kern <- get_kernel(kern)
+    if (discretize) { 
+        kern <- discretize_kernel( kern, res=raster::res(population), radius=radius, sigma=sigma, ... )
+    }
     area <- prod(raster::res(population))
     cell.radius <- ceiling(radius/raster::res(population))
     directions <- matrix( 1, nrow=2*cell.radius[1]+1, ncol=2*cell.radius[2]+1 )
@@ -78,7 +89,7 @@ migration_matrix <- function (population,
     M <- Matrix::sparseMatrix( 
             i = ii,
             j = which(use.to)[jj], # map back to index in all given 'to' values
-            x = kern(raster::pointDistance(from.pos[ii,],to.pos[jj,],lonlat=FALSE,allpairs=FALSE)/sigma)*area/sigma^2,
+            x = area/sigma^2 * kern( raster::pointDistance(from.pos[ii,],to.pos[jj,],lonlat=FALSE,allpairs=FALSE) / sigma ),
             dims=c(length(from),length(to))
         )
     if (!is.null(normalize)) {
@@ -93,7 +104,7 @@ migration_matrix <- function (population,
 # helper function to find column indices of dgCMatrix objects
 p.to.j <- function (p) { rep( seq.int( length(p)-1 ), diff(p) ) }
 
-#' Subset a Migration Matrix to Match a Smaller Raster
+#' Subset a Migration Matrix to Match a Smaller Raster of the Same Resolution
 #'
 #' This converts a migration matrix computed for one raster
 #' into a migration matrix for another raster that must be a subset of the first.
@@ -122,6 +133,54 @@ subset_migration <- function (M, old, new,
     to.inds <- match( raster::cellFromXY(old,to.locs), to.old )
     return(M[from.inds,to.inds])
 }
+
+#' Aggregate a Migration Matrix to Match a Coarser Raster
+#'
+#' This converts a migration matrix computed for one raster
+#' into a migration matrix for another raster that is coarser than the first.
+#' This function does no re-normalization.
+#'
+#' @param M The migration matrix.
+#' @param old The original Raster* the migration matrix was computed for.
+#' @param new The Raster* for the new migration matrix.
+#' @param from.old The indices of the "from" cells corresponding to rows in the original migration matrix.
+#' @param to.old The indices of the "to" cells corresponding to columns in the original migration matrix.
+#' @param from.new The indices of the "from" cells corresponding to rows in the resulting migration matrix.
+#' @param to.new The indices of the "to" cells corresponding to columns in the resulting migration matrix.
+#' @export
+#' @return A migration matrix.  See \code{migrate}.
+#' The resulting matrix has [i,j]th entry equal to the average over all rows in the old matrix that correspond to `i`
+#' of the sum of columns in that row corresponding to j.  In other words, if the old matrix M is indexed by [u,v],
+#' then the new matrix's [i,j]th entry is:
+#'     (1/n(j)) sum_{v: j(v)=j} sum_{u : i(u)=i}  M[u,v] 
+#' where n(j) = #{ v : j(v)=j }.
+aggregate_migration <- function (M, old, new, 
+                              from.old=which(!is.na(raster::values(old))), 
+                              to.old=from.old, 
+                              from.new=which(!is.na(raster::values(new))), 
+                              to.new=from.new
+                         ) {
+    # which new cells do old cell centers fall in
+    ## for 'from'
+    from.old.locs <- raster::xyFromCell(old,from.old)
+    from.old.in.new <- match( raster::cellFromXY(new,from.old.locs), from.new )
+    ## and 'to'
+    to.old.locs <- raster::xyFromCell(old,to.old)
+    to.old.in.new <- match( raster::cellFromXY(new,to.old.locs), to.new )
+    if ( (length(from.old.in.new)*length(to.old.in.new)==0) ) {
+        stop( "Resulting matrix would be empty." )
+    }
+    if ( any(is.na(from.old.in.new)) || any(is.na(from.old.in.new)) ) {
+        stop( "New raster does not cover old raster.")
+    }
+    # output M
+    from.projmat <- Matrix::sparseMatrix( i=from.old.in.new, j=seq_along(from.old), x=rep(1.0,length(from.old)), dims=c(length(from.new),nrow(M)) )
+    from.projmat@x <- 1/Matrix::rowSums(from.projmat)[1L+from.projmat@i]  # make this an averaging matrix (over rows)
+    to.projmat <- Matrix::sparseMatrix( i=to.old.in.new, j=seq_along(to.old), x=rep(1.0,length(to.old)), dims=c(length(to.new),ncol(M)) )
+    new.M <- Matrix::tcrossprod( from.projmat %*% M, to.projmat )
+    return(new.M)
+}
+
 
 
 #' Take a Geometric Power of a Matrix

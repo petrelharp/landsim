@@ -118,7 +118,7 @@ Class **migration**:
 
 `normalize`
 
-: normalization factor applied to the smoother
+: normalization factor applied to the smoother: the rows of the resulting matrix will sum to this value; if this is NULL no normalization is done.
 
 `n.weights`
 

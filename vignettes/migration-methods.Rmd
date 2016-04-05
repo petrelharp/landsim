@@ -274,3 +274,84 @@ plot(N)
 gauss.N <- migration_matrix(N,radius=500,sigma=100,kern="gaussian")
 plot(gauss.N)
 ```
+
+
+Discretization
+==============
+
+The naive method for constructing the migration matrix
+from a migration kernel $k$ and scale $\sigma$
+has the migration rate from a cell centered at $x$ to a cell centered at $y$
+equal to $k(\frac{y-x}{\sigma})$.
+However, if $\sigma$ is of the same size or smaller than $|x-y|$, this is not a good approximation
+to the corresponding continuous model.
+The migration rate between squares $S_x$ and $S_y$
+is actually proportional to
+$$  \int_{S_x} \int_{S_y} k\left(\frac{u-v}{\sigma}\right) du dv .  $$
+
+Note that even if the initial kernel only depends on distance,
+the resulting discretized one may not.
+Let's check what this looks like,
+summing up migration rates from the cell at zero to other cells
+for a Gaussian kernel with a $\sigma$ equal to one-half the cell size.
+```{r show_discretized}
+naive.migration <- migration( kern="gaussian",
+                             sigma=0.5,
+                             radius=5,
+                             normalize=NULL )
+center.loc <- as.integer(cellFromXY( habitat, c(0,0) ))
+habitat.fine <- disaggregate(habitat, fact=10)
+fine.locs <- xyFromCell(habitat.fine,seq_len(prod(dim(habitat.fine))))
+fine.in.coarse <- cellFromXY(habitat,fine.locs)
+M.fine <- migration_matrix( habitat.fine, 
+                           kern=naive.migration$kern, 
+                           sigma=naive.migration$sigma, 
+                           radius=naive.migration$radius, 
+                           normalize=naive.migration$normalize,
+                           from=which(fine.in.coarse==center.loc), to=seq_len(prod(dim(habitat.fine))) )
+M.aggr <- aggregate_migration( M.fine, old=habitat.fine, new=habitat,
+                           from.old=which(fine.in.coarse==center.loc), to.old=seq_len(prod(dim(habitat.fine))),
+                           from.new=center.loc, to.new=seq_len(prod(dim(habitat))) )
+M.coarse <- migration_matrix( habitat,
+                            kern=naive.migration$kern, 
+                            sigma=naive.migration$sigma, 
+                            radius=naive.migration$radius, 
+                            normalize=naive.migration$normalize,
+                            from=center.loc, to=seq_len(prod(dim(habitat))) )
+plm <- function (x,...) { z <- habitat; values(z) <- x; plot(z,...) }
+# the difference in the matrices
+layout(t(1:2))
+plm(M.aggr[1,],main="aggregated",zlim=range(M.aggr@x,M.coarse@x))
+plm(M.coarse[1,],main="coarse",zlim=range(M.aggr@x,M.coarse@x))
+plm((M.coarse-M.aggr)[1,],main="error")
+plm((abs(M.coarse-M.aggr)/M.aggr)[1,],main="relative error")
+# now, as a function of distance
+distvec <- values( distanceFromPoints( habitat, xyFromCell(habitat,cell=center.loc) ) )
+matplot( distvec, cbind( M.aggr[1,], M.coarse[1,] ) )
+matplot( distvec, cbind( M.aggr[1,], M.coarse[1,] ), log='y' )
+```
+
+Our strategy for producing an approximately correct migration matrix
+without actually integrating over all pairs of cells
+will be to construct an approximating function of distance as with the procedure above on the migration stencil
+and to use this as before.
+This is implemented with the function `discretize kernel`:
+```{r disc_kernel}
+diskern <- discretize_kernel( get_kernel(naive.migration$kern), res=res(habitat), 
+                             radius=naive.migration$radius, sigma=naive.migration$sigma )
+M.dk <- migration_matrix( habitat, 
+                        kern=diskern,
+                        sigma=naive.migration$sigma, 
+                        radius=naive.migration$radius, 
+                        normalize=naive.migration$normalize,
+                        from=center.loc, to=seq_len(prod(dim(habitat))) )
+matplot( distvec, cbind( M.aggr[1,], M.coarse[1,], M.dk[1,] ), xlab='distance', ylab='migration probability' )
+xx <- seq(0,max(distvec),length.out=400)
+yy <- diskern(xx/naive.migration$sigma) * prod(attr(diskern,"res")/naive.migration$sigma)
+lines( xx, yy, col=3 )
+legend("topright",col=1:3,lty=1:3,legend=c("aggregated","coarse","discretized coarse"))
+matplot( distvec, cbind( M.aggr[1,], M.coarse[1,], M.dk[1,] ), log='y', xlab='distance', ylab='migration probability' )
+lines( xx, yy, col=3 )
+```
+
+
