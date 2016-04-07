@@ -2,7 +2,7 @@
 #'
 #' Simulates a random environment, with holes and varying carrying capacity.
 #'
-#' @param diam Diameter of the desired habitat.
+#' @param diam Diameter of the desired habitat (in real units, not number of cells).
 #' @param res Spatial resolution of the Raster.
 #' @param randfun Function used to sample values for the habitat (negative values will be set to NA).
 #' @param kern Smoothing kernel.
