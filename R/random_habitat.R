@@ -10,7 +10,7 @@
 #' @param radius Smoothing kernel maximum radius.
 #' @export
 #' @return A RasterLayer with nonnegative and missing values.
-random_habitat <- function ( diam=1e4, 
+random_habitat <- function ( diam=2e4, 
                              res=100, 
                              randfun=function(n)pmin(20,(2+rcauchy(n))),
                              kern="gaussian", 
@@ -18,7 +18,7 @@ random_habitat <- function ( diam=1e4,
                              radius=1500
                             ) {
 
-    habitat <- raster::raster(xmn=-diam, xmx=diam, ymn=-diam, ymx=diam, 
+    habitat <- raster::raster(xmn=-diam/2, xmx=diam/2, ymn=-diam/2, ymx=diam/2, 
           resolution=res,
           crs="+proj=utm +zone=11 +ellps=GRS80 +towgs84=0,0,0,0,0,0,0 +units=m +no_defs")
     raster::values(habitat) <- randfun(raster::ncell(habitat))

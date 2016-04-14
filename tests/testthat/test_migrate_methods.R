@@ -4,7 +4,7 @@ library(Matrix)
 context("testing normalization of migrate()")
 
 set.seed(23)
-habitat <- random_habitat(diam=1000, sigma=200,
+habitat <- random_habitat(diam=2000, sigma=200,
                   randfun=function(n) pmin(20, (rcauchy(n))) )
 
 ###

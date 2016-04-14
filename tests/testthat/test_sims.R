@@ -14,7 +14,7 @@ seedish <- floor(1e6*runif(1))
 # reproducible landscape
 set.seed(42)
 
-habitat <- random_habitat(diam=1000,res=200)
+habitat <- random_habitat(diam=2000,res=200)
 carrying.capacity <- values(habitat)[(!is.na(values(habitat)) & values(habitat)>0)]
 
 context("Set up population")
