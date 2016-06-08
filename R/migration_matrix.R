@@ -55,7 +55,7 @@ migration_matrix <- function (population,
                               normalize=migration$normalize,
                               from=which(accessible),
                               to=from,
-                              discretize=FALSE,
+                              discretize=migration$discretize,
                               ...
                  ) {
     # Fill in default values.
@@ -68,7 +68,7 @@ migration_matrix <- function (population,
     if (!is.integer(from)) { stop("migration_matrix: 'from' must be integer-valued (not logical).") }
     if (!is.logical(accessible)) { stop("migration_matrix: 'accessible' must be logical (not a vector of indices).") }
     kern <- get_kernel(kern)
-    if (discretize) { 
+    if (!is.null(discretize) && discretize) { 
         kern <- discretize_kernel( kern, res=raster::res(population), radius=radius, sigma=sigma, ... )
     }
     area <- prod(raster::res(population))

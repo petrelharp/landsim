@@ -7,7 +7,8 @@
 migration_matrix(population, accessible, migration = list(sigma = 1, normalize
   = 1), kern = migration$kern, sigma = migration$sigma,
   radius = migration$radius, normalize = migration$normalize,
-  from = which(accessible), to = from, discretize = FALSE, ...)
+  from = which(accessible), to = from, discretize = migration$discretize,
+  ...)
 }
 \arguments{
 \item{population}{Population object or Raster*.}
