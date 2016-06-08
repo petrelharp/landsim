@@ -19,3 +19,8 @@ Here are some vignettes showing what it can do:
 7.  [Migration methods](http://petrelharp.github.io/landsim/migration-methods.html) : Explains how to implement various types of migration: conservative or not, and different boundary types.
 8.  [Migration method run times](http://petrelharp.github.io/landsim/run-times.html) : Examines the details of two methods of migration, using precomputed sparse Matrix objects, and using `raster` methods.
 9.  [Sierpinski habitat](http://petrelharp.github.io/landsim/sierpinski.html) : Creates a random (Sierpinski gasket) habitat.
+
+
+A more generally useful function is [discretize_kernel()](R/discretize_kernel.R),
+which allows you to translate from continuous migration kernels
+to discrete migration rates between grid cells in a natural way that is consistent across different grid resolutions.
