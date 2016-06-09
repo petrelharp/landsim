@@ -15,7 +15,15 @@
 #' The result is designed to be used in migration_matrix, which scales input to the kernel by sigma
 #' and assumes that the kernel is a density function, so multiplies the value by the area of a cell; 
 #' so the resulting function scales as a density function, and takes input in units of sigma.
-discretize_kernel <- function (kern, res, radius, sigma=1, fact=10) {
+#'
+#' For good results, the 'fine' grid used in numerical integration should be smaller than sigma;
+#' since the fine grid has a scale of res/fact, you should set fact >= 3 * res / sigma, say.
+discretize_kernel <- function (kern, 
+                               res, 
+                               radius, 
+                               sigma=1, 
+                               fact=10
+                           ) {
     cell.radius <- max(ceiling(radius/res))
     stencil <- raster::raster( xmn=-(cell.radius+0.5)*res[1], 
                                xmx=(cell.radius+0.5)*res[1], 
@@ -23,7 +31,7 @@ discretize_kernel <- function (kern, res, radius, sigma=1, fact=10) {
                                ymx=(cell.radius+0.5)*res[2],
                                resolution=res,
                                # without CRS string coordinates are lonlat not meters
-                               crs=CRS("+proj=utm+datum=NAD83+units=m") )
+                               crs=CRS("+proj=utm +datum=NAD83 +units=m") )
     distvec <- values( raster::distanceFromPoints( stencil, c(0,0) ) )
     stencil.fine <- raster::disaggregate(stencil, fact=fact)
     distvec.fine <- raster::values( raster::distanceFromPoints( stencil.fine, c(0,0) ) )
@@ -35,7 +43,7 @@ discretize_kernel <- function (kern, res, radius, sigma=1, fact=10) {
                        accessible=rep(TRUE,length(stencil.fine)),
                        kern=kern, 
                        sigma=sigma,
-                       radius=cell.radius, 
+                       radius=radius, 
                        normalize=NULL,
                        from=which(fine.in.coarse==center.loc), 
                        to=seq_along(stencil.fine) )
@@ -48,7 +56,11 @@ discretize_kernel <- function (kern, res, radius, sigma=1, fact=10) {
                        to.new=seq_along(stencil) )
     #   must divide by the target area to get a density function
     # outfun <- approxfun( distvec/sigma, as.vector(M.aggr)/prod(res/sigma), rule=2 )
-    outfun <- splinefun( distvec/sigma, as.vector(M.aggr)/prod(res/sigma), method="hyman" )
+    out.ord <- order(distvec) # y must be increasing for method='hyman'
+    use.these <- c(TRUE, diff(distvec[out.ord])/diff(range(distvec)) > 1e-3 )
+    outfun <- splinefun( distvec[out.ord][use.these]/sigma, 
+                        as.vector(M.aggr)[out.ord][use.these]/prod(res/sigma), 
+                        method="monoH.FC" )
     attr(outfun,"res") <- res
     attr(outfun,"sigma") <- sigma
     return( outfun )

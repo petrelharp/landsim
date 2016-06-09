@@ -23,6 +23,9 @@ A function as output by `approxfun()`.
 The result is designed to be used in migration_matrix, which scales input to the kernel by sigma
 and assumes that the kernel is a density function, so multiplies the value by the area of a cell; 
 so the resulting function scales as a density function, and takes input in units of sigma.
+
+For good results, the 'fine' grid used in numerical integration should be smaller than sigma;
+since the fine grid has a scale of res/fact, you should set fact >= 3 * res / sigma, say.
 }
 \description{
 Given a function kern(x,y) that gives per-individual migration rates and a resolution, 

@@ -98,6 +98,7 @@ migrate_raster <- function (x,
 }
 
 # helper function used elsewhere as well
+# note is 2D Gaussian
 get_kernel <- function (kern) {
     if (is.character(kern)) {
         kern <- switch( kern,

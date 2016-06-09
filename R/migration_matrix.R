@@ -13,7 +13,7 @@
 #' @param to The indices of the cells corresponding to columns in the output matrix. [default: same as \code{from}]
 #' @param normalize If not NULL, migration weights to accessible locations are set to sum to this (see details).
 #' @param discretize Whether or not to "discretize" the kernel first using the \code{discretize_kernel} function.
-#' @param ... Further parameters passed to \code{discretize_kernel}.
+#' @param disc.fact The discretization factor, if used (see \code{discretize_kernel}).
 #' @export
 #' @return A sparse Matrix \code{M}, where for each pair of cells \code{i} in \code{from} and \code{i} in \code{to},
 #' the value \code{M[i,j]} is
@@ -56,7 +56,7 @@ migration_matrix <- function (population,
                               from=which(accessible),
                               to=from,
                               discretize=migration$discretize,
-                              ...
+                              disc.fact=10
                  ) {
     # Fill in default values.
     if (inherits(population,"population")) {
@@ -69,7 +69,8 @@ migration_matrix <- function (population,
     if (!is.logical(accessible)) { stop("migration_matrix: 'accessible' must be logical (not a vector of indices).") }
     kern <- get_kernel(kern)
     if (!is.null(discretize) && discretize) { 
-        kern <- discretize_kernel( kern, res=raster::res(population), radius=radius, sigma=sigma, ... )
+        if (!is.null(migration$disc.fact)) { disc.fact <- migration$disc.fact }
+        kern <- discretize_kernel( kern, res=raster::res(population), radius=radius, sigma=sigma, fact=disc.fact )
     }
     area <- prod(raster::res(population))
     cell.radius <- ceiling(radius/raster::res(population))
@@ -89,7 +90,8 @@ migration_matrix <- function (population,
     M <- Matrix::sparseMatrix( 
             i = ii,
             j = which(use.to)[jj], # map back to index in all given 'to' values
-            x = area/sigma^2 * kern( raster::pointDistance(from.pos[ii,],to.pos[jj,],lonlat=FALSE,allpairs=FALSE) / sigma ),
+            x = area/sigma^2 * kern( raster::pointDistance(from.pos[ii,],to.pos[jj,],
+                                                           lonlat=FALSE,allpairs=FALSE) / sigma ),
             dims=c(length(from),length(to))
         )
     if (!is.null(normalize)) {
@@ -167,7 +169,7 @@ aggregate_migration <- function (M, old, new,
     ## and 'to'
     to.old.locs <- raster::xyFromCell(old,to.old)
     to.old.in.new <- match( raster::cellFromXY(new,to.old.locs), to.new )
-    if ( (length(from.old.in.new)*length(to.old.in.new)==0) ) {
+    if ( (length(from.old.in.new)==0) || (length(to.old.in.new)==0) ) {
         stop( "Resulting matrix would be empty." )
     }
     if ( any(is.na(from.old.in.new)) || any(is.na(from.old.in.new)) ) {
