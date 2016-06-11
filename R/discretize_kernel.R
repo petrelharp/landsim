@@ -27,7 +27,7 @@ discretize_kernel <- function (kern,
                                radius, 
                                sigma=1, 
                                fact=10,
-                               sim=(kern=="gaussian"&&fact>10)
+                               sim=((kern(1)==exp(-1/2)/(2*pi))&&(fact>10))
                            ) {
     cell.radius <- max(ceiling(radius/res))
     stencil <- raster::raster( xmn=-(cell.radius+0.5)*res[1], 
