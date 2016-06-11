@@ -4,7 +4,8 @@
 \alias{discretize_kernel}
 \title{Create a "Discretized" Migration Function from a Continuous One}
 \usage{
-discretize_kernel(kern, res, radius, sigma = 1, fact = 10)
+discretize_kernel(kern, res, radius, sigma = 1, fact = 10, sim = (kern ==
+  "gaussian" && fact > 10))
 }
 \arguments{
 \item{kern}{The migration rate function.}
@@ -16,9 +17,13 @@ discretize_kernel(kern, res, radius, sigma = 1, fact = 10)
 \item{sigma}{Distance scaling for kernel.}
 
 \item{fact}{The number of divisions of each grid cell side when approximating the integral.}
+
+\item{sim}{Whether to obtain the result by Monte Carlo integration (currently only implemented for the Gaussian kernel).}
 }
 \value{
-A function as output by `approxfun()`.
+A function as output by `approxfun()`, determined by numerical integration.
+If the required number of grid cells in the approximation is too large,
+falls back on Monte Carlo integration.
 
 The result is designed to be used in migration_matrix, which scales input to the kernel by sigma
 and assumes that the kernel is a density function, so multiplies the value by the area of a cell; 
@@ -28,8 +33,9 @@ For good results, the 'fine' grid used in numerical integration should be smalle
 since the fine grid has a scale of res/fact, you should set fact >= 3 * res / sigma, say.
 }
 \description{
-Given a function kern(x,y) that gives per-individual migration rates and a resolution, 
+Given a function kern(r) that gives per-individual migration rates and a resolution, 
 returns the (approximate) function giving per-individual migration rates *per unit area*
-from squares of side length `resolution` centered at (x,y).
+from squares of side length `resolution` centered at distance r.  (This depends on the 
+direction the cell is in, but the result averages over directions.)
 }
 
