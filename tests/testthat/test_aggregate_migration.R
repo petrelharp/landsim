@@ -1,4 +1,5 @@
 context("testing aggregate migration function")
+library(raster)
 
 set.seed(42)
 habitat <- raster(xmn=0, xmx=5, ymn=0, ymx=5, 
@@ -27,11 +28,11 @@ M.aggr <- aggregate_migration( M.fine, old=habitat.fine, new=habitat )
 
 
 # aggregate_migration is supposed to sum over columns and average over rows
-fine.mat <- as.matrix( habitat.fine )
+fine.mat <- raster::as.matrix( habitat.fine )
 fine.row <- row(fine.mat)
 fine.col <- col(fine.mat)
 
-coarse.mat <- as.matrix(habitat)
+coarse.mat <- raster::as.matrix(habitat)
 coarse.row <- row(coarse.mat)
 coarse.col <- col(coarse.mat)
 

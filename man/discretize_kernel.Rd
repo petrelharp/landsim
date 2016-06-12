@@ -4,8 +4,8 @@
 \alias{discretize_kernel}
 \title{Create a "Discretized" Migration Function from a Continuous One}
 \usage{
-discretize_kernel(kern, res, radius, sigma = 1, fact = 10, sim = (kern ==
-  "gaussian" && fact > 10))
+discretize_kernel(kern, res, radius, sigma = 1, fact = 10, sim = ((kern(1)
+  == exp(-1/2)/(2 * pi)) && (fact > 10)))
 }
 \arguments{
 \item{kern}{The migration rate function.}

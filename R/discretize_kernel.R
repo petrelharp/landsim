@@ -78,9 +78,9 @@ discretize_kernel <- function (kern,
     out.ord <- order(distvec) # y must be increasing for method='hyman'
     # use.these <- c(TRUE, diff(distvec[out.ord])/diff(range(distvec)) > 1e-3 )
     use.these <- TRUE   # if not using 'hyman' don't need to remove redundants
-    outfun <- splinefun( distvec[out.ord][use.these]/sigma, 
-                        M.probs[out.ord][use.these]/prod(res/sigma), 
-                        method="monoH.FC" )
+    outfun <- function (x) { exp( splinefun( distvec[out.ord][use.these]/sigma, 
+                        log(1e-16+M.probs[out.ord][use.these]/prod(res/sigma)), 
+                        method="monoH.FC" )(x) ) }
     attr(outfun,"res") <- res
     attr(outfun,"sigma") <- sigma
     return( outfun )
