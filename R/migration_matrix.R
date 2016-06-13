@@ -73,7 +73,7 @@ migration_matrix <- function (population,
         kern <- discretize_kernel( kern, res=raster::res(population), radius=radius, sigma=sigma, fact=disc.fact )
     }
     area <- prod(raster::res(population))
-    cell.radius <- ceiling(radius/raster::res(population))
+    cell.radius <- ceiling(as.numeric(radius)/raster::res(population))
     directions <- matrix( 1, nrow=2*cell.radius[1]+1, ncol=2*cell.radius[2]+1 )
     directions[cell.radius[1]+1,cell.radius[2]+1] <- 0
     # columns are (from,to)
