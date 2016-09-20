@@ -82,8 +82,65 @@ legend("bottomright",lty=1,col=1:3,legend=pop$genotypes)
 # Lineages
 
 Now we have a population history and the demographic model that produced it.
-Under the Poisson reproduction assumption
-(which is actually what we simulate under),
-the probability that a lineage at $y$ came from $x$
-is proportional to the number of gametes produced at $x$ multiplied by the migration probability from $x$ to $y$.
-(Really, it is the average of these two quantities for seeds and for pollen.)
+Let's start a bit earlier.
+We can ask the `generation` function to return *everything*,
+not just total numbers, namely:
+
+1. `seeders` : number of individuals in each location that produce seeds
+2. `pollen` : *expected* pollen flux (this is `pollen.migration` applied to `N`; since this is in expected numbers we can treat pollen as diploid, averaging over meiosis later)
+3. `seed.production` : *expected* numbers of seeds of each genotype produced by mating between pollen and local genotypes (using the `mating` tensor)
+4. `seeds.dispersed` : `seed.production` with `seed.migration` applied to it (still *expected* numbers)
+5. `germination` : numbers of new individuals germinating in each location
+6. `death` : number of previously present individuals that have died
+
+The numbers of genotypes (`N`) in the next generation are `survivors + germination`,
+where `survivors = N - death`.
+
+Lineages each are labeled by an *allele*, not a genotype;
+to keep things simple, we will follow lineages of a single allele; for the discussion below this will be allele $A$.
+Suppose there genotype proportions among the seed parents are $p_{AA}$, $p_{Aa}$, and $p_{aa}$;
+they are $q_{AA}$, $q_{Aa}$, and $q_{aa}$ among the pollen parents,
+the probability that parents $u$ and $v$ produce offspring genotype $g$ is $t_{u,v,g}$.
+Lineages in $AA$ offspring choose pollen or seed parent with equal probability (1/2 each).
+The numbers of $Aa$ offspring coming from (seed,pollen) parents $(u,v)$ is proportional to $p_u q_v t(u,v,Aa)$;
+an $A$ lineage in an $Aa$ offspring will choose a pair of parents $(u,v)$ with probability proportional to this.
+Let $A(u)$ be the number of $A$ alleles in genotype $u$.
+Assuming that meiosis is fair, given parents $(u,v)$ the $A$ lineage will choose parent $u$ with probability $A(u)/(A(u)+A(v))$.
+
+Therefore,
+to sample lineage movement backwards through this we just need to:
+
+0.  Choose genotypes for the lineages to be in.
+1.  Stay in the same place with probability `survivors/(survivors+germination)`.
+2.  Otherwise, do a backwards migration step with `seed.migration` weighted by `seed.production`, then
+3.  choose whether to follow a seed or pollen parent, and their genotype, by a backwards step through the `mating` tensor as described above,
+    using `seeders` and `pollen` as weights.
+4.  If the seed parent is chosen, stay put.
+5.  If the pollen parent is chosen, do another backwards migration step with `pollen.migration` weighted by `N`.
+
+These steps are implemented in `lineage_generation`;
+here we apply them
+starting with a sample of lineages chosen uniformly from the possible $A$ gametes to make sure that things make sense.
+
+```{r one_lineage_step, fig.width=fig.dim}
+one.gen <- generation( pop, demog, return.everything=TRUE )
+
+# current generation
+now.N <- pop$N - one.gen$death + one.gen$germination
+
+# choose lineage locations: coordinates are (genotype, location index)
+mean.n.lineages <- 100
+n.lineages <- rpois_matrix( sweep(now.N,2,c(0,1,2),"*")*mean.n.lineages/sum(now.N) )
+lineages <- arrayInd( rep( seq_along(n.lineages), n.lineages ), .dim=dim(now.N) )
+colnames(lineages) <- c("location","genotype")
+
+parents <- lineage_generation( lineages, N=pop$N, gen=one.gen, num.alleles=c(0,1,2) )
+
+now.locs <- xyFromCell(pop$habitat,which(pop$habitable)[lineages[,1]])
+parent.locs <- xyFromCell(pop$habitat,which(pop$habitable)[parents[,1]])
+
+plot(pop$habitat)
+arrows( x0=now.locs[,'x'], x1=parent.locs[,'x'], 
+       y0=now.locs[,'y'], y1=parent.locs[,'y'], 
+       length=0.1 )
+```
