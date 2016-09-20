@@ -4,7 +4,6 @@
 dir.create("testcache",showWarnings=FALSE)
 
 require(raster)
-require(landsim)
 
 ##########
 context("Set up random habitat")
