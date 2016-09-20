@@ -31,8 +31,8 @@ lineage_generation <- function (lineages, N, gen, num.alleles, debug=FALSE) {
         }
 
         # choose seed or pollen parent
-        num.seed.parents <- gen$seeders[youth[,'location'],]
-        num.pollen.parents <- gen$pollen[youth[,'location'],]
+        num.seed.parents <- gen$seeders[youth[,'location'],,drop=FALSE]
+        num.pollen.parents <- gen$pollen[youth[,'location'],,drop=FALSE]
         # check this was possible
         if (debug) {
             stopifnot(all(rowSums(num.seed.parents)>0))
@@ -60,3 +60,4 @@ lineage_generation <- function (lineages, N, gen, num.alleles, debug=FALSE) {
 
     return(parents)
 }
+

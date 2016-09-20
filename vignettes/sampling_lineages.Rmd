@@ -6,7 +6,7 @@ date: "`r Sys.Date()`"
 
 
 ```{r doc_setup, include=FALSE}
-fig.dim <- 3
+fig.dim <- 5
 knitr::opts_chunk$set(fig.width=3*fig.dim,fig.height=fig.dim,fig.align='center')
 library(Matrix)
 library(raster)
@@ -123,13 +123,14 @@ here we apply them
 starting with a sample of lineages chosen uniformly from the possible $A$ gametes to make sure that things make sense.
 
 ```{r one_lineage_step, fig.width=fig.dim}
+
 one.gen <- generation( pop, demog, return.everything=TRUE )
 
 # current generation
 now.N <- pop$N - one.gen$death + one.gen$germination
 
 # choose lineage locations: coordinates are (genotype, location index)
-mean.n.lineages <- 100
+mean.n.lineages <- 1000
 n.lineages <- rpois_matrix( sweep(now.N,2,c(0,1,2),"*")*mean.n.lineages/sum(now.N) )
 lineages <- arrayInd( rep( seq_along(n.lineages), n.lineages ), .dim=dim(now.N) )
 colnames(lineages) <- c("location","genotype")
@@ -140,7 +141,39 @@ now.locs <- xyFromCell(pop$habitat,which(pop$habitable)[lineages[,1]])
 parent.locs <- xyFromCell(pop$habitat,which(pop$habitable)[parents[,1]])
 
 plot(pop$habitat)
-arrows( x0=now.locs[,'x'], x1=parent.locs[,'x'], 
-       y0=now.locs[,'y'], y1=parent.locs[,'y'], 
-       length=0.1 )
+suppressWarnings( arrows( x0=now.locs[,'x'], x1=parent.locs[,'x'], 
+           y0=now.locs[,'y'], y1=parent.locs[,'y'], 
+           length=0.1 ) )
+
 ```
+
+Now to do this across many generations we need to keep track of everything across those generations.
+Here are a few lineages for 100 generations:
+```{r many_lineage_steps, fig.width=fig.dim}
+
+many.gens <- simulate_pop( pop, demog, times=1:100, tinit=1, return.everything=TRUE )
+mean.n.lineages <- 20
+now.N <- many.gens$N[,,length(many.gens$times)]
+n.lineages <- rpois_matrix( sweep(now.N,2,c(0,1,2),"*")*mean.n.lineages/sum(now.N) )
+lineages <- arrayInd( rep( seq_along(n.lineages), n.lineages ), .dim=dim(now.N) )
+colnames(lineages) <- c("location","genotype")
+
+lin.hist <- simulate_lineages( lineages, many.gens, num.alleles=c(0,1,2) )
+
+lin.locs <- xyFromCell(pop$habitat,which(pop$habitable)[lin.hist[,1,]])
+dim(lin.locs) <- c( dim(lin.hist)[c(1,3)], 2 )
+
+plot(pop$habitat)
+for (k in 1:nrow(lin.locs)) {
+    now.locs <- lin.locs[k,-1,]
+    parent.locs <- lin.locs[k,-dim(lin.locs)[2],]
+    do.arrows <- ( rowSums( abs(now.locs-parent.locs) )>0 )
+    suppressWarnings( arrows( x0=now.locs[do.arrows,1], x1=parent.locs[do.arrows,1], 
+               y0=now.locs[do.arrows,2], y1=parent.locs[do.arrows,2], 
+               length=0.1, col=rainbow(nrow(lin.locs))[k] ) )
+}
+
+```
+
+Note that these lineages are all of type A, but are jumping back and forth between Aa and AA genotypes;
+we're not looking at that.

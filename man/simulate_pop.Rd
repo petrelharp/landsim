@@ -6,7 +6,8 @@
 \title{Simulate Many Generations}
 \usage{
 simulate_pop(population, demography, times, N = population$N, tinit = 0,
-  summary.times = 1:max(times), summaries = NULL, stop.fun = NULL, ...)
+  summary.times = 1:max(times), summaries = NULL, stop.fun = NULL,
+  return.everything = FALSE, ...)
 
 simulation(N, summaries, times, summary.times, t, ...)
 }
@@ -27,6 +28,8 @@ simulation(N, summaries, times, summary.times, t, ...)
 
 \item{stop.fun}{A function applied to N that, if it returns TRUE, will stop the simulation. (remainder of output array will be entirely zeros)}
 
+\item{return.everything}{Whether to record 'everything' as returned by \code{generation()}.}
+
 \item{...}{Additional parameters that will be passed to \code{generation()}.}
 }
 \value{
@@ -36,6 +39,8 @@ A named list, with elements
       times = As in the input.
       summary.times = As in the input.
       t = The final generation.
+and furthermore, if \code{return.everything} is TRUE, then
+      gens = a list whose elements are as output by \code{generation(...,return.everything=TRUE)}.
 }
 \description{
 This steps a population forwards by many generations,

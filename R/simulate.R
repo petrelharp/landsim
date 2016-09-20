@@ -13,6 +13,7 @@
 #' @param summary.times A sorted integer vector of times to record summaries of the population at.
 #' @param summaries A list of functions to apply to the matrix of genotype counts, population$N, at generations \code{summary.times}.
 #' @param stop.fun A function applied to N that, if it returns TRUE, will stop the simulation. (remainder of output array will be entirely zeros)
+#' @param return.everything Whether to record 'everything' as returned by \code{generation()}.
 #' @param ... Additional parameters that will be passed to \code{generation()}.
 #' @export
 #' @return A named list, with elements
@@ -21,6 +22,8 @@
 #'       times = As in the input.
 #'       summary.times = As in the input.
 #'       t = The final generation.
+#' and furthermore, if \code{return.everything} is TRUE, then
+#'       gens = a list whose elements are as output by \code{generation(...,return.everything=TRUE)}.
 simulate_pop <- function (
                         population,
                         demography,
@@ -30,6 +33,7 @@ simulate_pop <- function (
                         summary.times=1:max(times),
                         summaries=NULL,
                         stop.fun=NULL,
+                        return.everything=FALSE,
                         ...
                 ) {
     # Note we update N below, not population.
@@ -47,6 +51,7 @@ simulate_pop <- function (
     t <- tinit  # current time
     k <- 1   # index of the last time to record at 
     ks <- 1  # index of the next time to record summaries at 
+    gens <- if (return.everything) { vector( length(times), mode='list' ) } else { NULL }
     stopifnot(is.finite(max(times,summary.times)))
     while ( (k <= length(times)) || ( (length(summaries)>0) && (ks <= length(summary.times)) ) ) {
         if ( (k <= length(times)) && (t>=times[k]) ) {
@@ -67,11 +72,16 @@ simulate_pop <- function (
         # don't do the last, unnecessary step...
         if (t<max(times,summary.times)) {
             # generation() really only needs N, not the whole population; but pass it in anyhow
-            N <- generation(population,demography,N=N,t=t,...)
+            if (!return.everything) {
+                N[] <- generation(population,demography,N=N,t=t,...)
+            } else {
+                gens[[k]] <- generation(population,demography,N=N,t=t,...,return.everything=TRUE)
+                N[] <- N - gens[[k]]$death + gens[[k]]$germination
+            }
             t <- t+1
         }
     }
-    outlist <- simulation(N=out,summaries=sums,times=times,summary.times=summary.times,t=t)
+    outlist <- simulation(N=out,summaries=sums,times=times,summary.times=summary.times,t=t,gens=gens)
     return(outlist)
 }
 
