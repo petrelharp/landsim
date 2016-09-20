@@ -1,0 +1,89 @@
+---
+title: "Methods for sampling lineages"
+author: "Peter Ralph"
+date: "`r Sys.Date()`"
+---
+
+
+```{r doc_setup, include=FALSE}
+fig.dim <- 3
+knitr::opts_chunk$set(fig.width=3*fig.dim,fig.height=fig.dim,fig.align='center')
+library(Matrix)
+library(raster)
+library(landsim)
+set.seed(42)
+```
+
+# Set-up
+
+Here is the habitat we will work with.
+Note that units are in meters, and the resolution of the raster is 100m.
+```{r setup_layer, fig.cap="The (random) habitat.", fig.height=4, fig.width=4}
+pop <- make_population(
+            habitat = random_habitat(),
+            inaccessible.value = NA,
+            uninhabitable.value = NA,
+            genotypes = c("aa","aA","AA"),
+            N = 0
+        )
+pop$N[,"aa"] <- rpois(nrow(pop$N),values(pop$habitat)[pop$habitable]/4)
+pop$N[,"aA"] <- rpois(nrow(pop$N),values(pop$habitat)[pop$habitable]/2)
+pop$N[,"AA"] <- rpois(nrow(pop$N),values(pop$habitat)[pop$habitable]/4)
+plot(pop$habitat)
+```
+
+Here is the basic, default demography,
+modified to have population regulation through germination probabilities:
+```{r basic_demog}
+basic.migr <- migration(
+                    kern = "gaussian",
+                    sigma = 300,
+                    radius = 1000,
+                    normalize = 1
+             )
+basic.demog <- demography(
+        prob.seed = 0.05,
+        fecundity = 200,
+        prob.germination = 0.4,
+        prob.survival = 0.6,
+        pollen.migration = basic.migr,
+        seed.migration = basic.migr,
+        genotypes = c("aa","aA","AA")
+    )
+
+demog <- basic.demog
+demog$prob.germination <- vital(
+                    function (N,...) {
+                        out <- r0 / ( 1 + migrate(competition,x=rowSums(N))/K )
+                        cbind( aa=out, aA=out, AA=out )
+                    },
+                    r0 = 0.4,
+                    K = values(pop$habitat)[pop$habitable]/5,
+                    competition = migration(
+                                kern="gaussian",
+                                sigma=200,
+                                radius=400,
+                                normalize=1
+                        )
+                )
+```
+
+
+Here are the total numbers of the three genotypes:
+```{r plot_prob_germ}
+demog <- setup_demography( demog, pop )
+sim <- simulate_pop( pop, demog, times=seq(0,100,length.out=101),
+                summaries=list( totals=function(N){colSums(N)} )
+            )
+matplot(sim$summaries[["totals"]],type='l',lty=1, log='y', ylab="number of individuals")
+legend("bottomright",lty=1,col=1:3,legend=pop$genotypes)
+```
+
+# Lineages
+
+Now we have a population history and the demographic model that produced it.
+Under the Poisson reproduction assumption
+(which is actually what we simulate under),
+the probability that a lineage at $y$ came from $x$
+is proportional to the number of gametes produced at $x$ multiplied by the migration probability from $x$ to $y$.
+(Really, it is the average of these two quantities for seeds and for pollen.)
