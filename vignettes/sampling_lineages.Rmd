@@ -172,3 +172,85 @@ plot_lineages( lin.hist, pop )
 
 Note that these lineages are all of type A, but are jumping back and forth between Aa and AA genotypes;
 we're not looking at that.
+
+
+# Lineages in a traveling wave
+
+Just for fun, let's do the same thing backwards in a traveling wave.
+Let's suppose there's strong, additive selection:
+heterozygous *Aa* alleles are 10% more likely to germinate than *aa* alleles,
+and *AA* alleles are 20% more likely to germinate.
+The `germination_fun` gets called with the current state of the population as an argument (`N`),
+whose result is multiplied by the total seed flux, per genotype and per location,
+to get the mean number of newly recruited individuals.
+
+
+Here's the demographic set-up
+```{r demog_setup}
+germination_fun <- function (N, carrying.capacity, ...) {
+    out <- r0 / ( 1 + migrate(rowSums(N),competition)/carrying.capacity )
+    return( cbind( aa=out, aA=s*out, AA=s^2*out ) )
+}
+
+demog <- demography(
+        prob.seed = 0.9,
+        fecundity = 100,
+        prob.germination = vital( germination_fun, 
+                r0 = 0.01,  # one in 100 seeds will germinate at low densities
+                s = 1.5,    # multiplicative selective benefit of the A allele
+                competition = migration(
+                                     kern="gaussian",
+                                     sigma=100,
+                                     radius=300,
+                                     normalize=1
+                                 )
+                ),
+        prob.survival = 0.1,
+        pollen.migration = migration(
+                            kern = function (x) { exp(-sqrt(x)) },
+                            sigma = 100,
+                            radius = 1000,
+                            normalize = NULL
+                     ),
+        seed.migration = migration(
+                            kern = "gaussian",
+                            sigma = 20,
+                            radius = 400,
+                            normalize = 1
+                     ),
+        genotypes = c("aa","aA","AA"),
+        mating = mating_tensor( c("aa","aA","AA") )
+    )
+```
+
+We'll start the population with only a few of the advantageous alleles:
+```{r init_pop}
+total.habitat <- sum(values(pop$habitat),na.rm=TRUE)
+pop$N <- cbind( aa=rpois_raster(pop$habitat,only.values=TRUE),
+                     aA=rpois_raster(pop$habitat*100/total.habitat,only.values=TRUE),
+                     AA=0 )
+demog <- setup_demography( demog, pop )
+```
+```{r plot_pop}
+plot(pop)
+```
+
+Here are a few lineages for 100 generations:
+```{r many_lineage_steps_sweep, fig.width=fig.dim}
+
+many.gens <- simulate_pop( pop, demog, times=1:100, tinit=1, 
+                carrying.capacity=values(pop$habitat)[pop$habitable],
+                return.everything=TRUE )
+mean.n.lineages <- 20
+now.N <- many.gens$N[,,length(many.gens$times)]
+n.lineages <- rpois_matrix( sweep(now.N,2,c(0,1,2),"*")*mean.n.lineages/sum(now.N) )
+lineages <- arrayInd( rep( seq_along(n.lineages), n.lineages ), .dim=dim(now.N) )
+colnames(lineages) <- c("location","genotype")
+
+lin.hist <- simulate_lineages( lineages, many.gens, num.alleles=c(0,1,2) )
+
+plot_lineages( lin.hist, pop )
+
+```
+
+
