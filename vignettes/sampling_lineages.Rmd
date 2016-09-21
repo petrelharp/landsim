@@ -6,7 +6,7 @@ date: "`r Sys.Date()`"
 
 
 ```{r doc_setup, include=FALSE}
-fig.dim <- 5
+fig.dim <- 8
 knitr::opts_chunk$set(fig.width=3*fig.dim,fig.height=fig.dim,fig.align='center')
 library(Matrix)
 library(raster)
@@ -18,7 +18,7 @@ set.seed(42)
 
 Here is the habitat we will work with.
 Note that units are in meters, and the resolution of the raster is 100m.
-```{r setup_layer, fig.cap="The (random) habitat.", fig.height=4, fig.width=4}
+```{r setup_layer, fig.cap="The (random) habitat.", fig.width=fig.dim}
 pop <- make_population(
             habitat = random_habitat(),
             inaccessible.value = NA,
@@ -69,7 +69,8 @@ demog$prob.germination <- vital(
 ```
 
 
-Here are the total numbers of the three genotypes:
+We'll start things off by running the model to stationarity, as seen by 
+the total numbers of the three genotypes:
 ```{r plot_prob_germ}
 demog <- setup_demography( demog, pop )
 sim <- simulate_pop( pop, demog, times=seq(0,100,length.out=101),
@@ -77,6 +78,8 @@ sim <- simulate_pop( pop, demog, times=seq(0,100,length.out=101),
             )
 matplot(sim$summaries[["totals"]],type='l',lty=1, log='y', ylab="number of individuals")
 legend("bottomright",lty=1,col=1:3,legend=pop$genotypes)
+
+pop$N[] <- sim$N[,,101]
 ```
 
 # Lineages
@@ -122,7 +125,7 @@ These steps are implemented in `lineage_generation`;
 here we apply them
 starting with a sample of lineages chosen uniformly from the possible $A$ gametes to make sure that things make sense.
 
-```{r one_lineage_step, fig.width=fig.dim}
+```{r one_lineage_step}
 
 one.gen <- generation( pop, demog, return.everything=TRUE )
 
@@ -139,11 +142,14 @@ parents <- lineage_generation( lineages, N=pop$N, gen=one.gen, num.alleles=c(0,1
 
 now.locs <- xyFromCell(pop$habitat,which(pop$habitable)[lineages[,1]])
 parent.locs <- xyFromCell(pop$habitat,which(pop$habitable)[parents[,1]])
+```
 
+Here are single-generation steps for a bunch of lineages:
+```{r plot_steps, fig.width=fig.dim}
 plot(pop$habitat)
 suppressWarnings( arrows( x0=now.locs[,'x'], x1=parent.locs[,'x'], 
            y0=now.locs[,'y'], y1=parent.locs[,'y'], 
-           length=0.1 ) )
+           length=0.05 ) )
 
 ```
 
@@ -160,18 +166,7 @@ colnames(lineages) <- c("location","genotype")
 
 lin.hist <- simulate_lineages( lineages, many.gens, num.alleles=c(0,1,2) )
 
-lin.locs <- xyFromCell(pop$habitat,which(pop$habitable)[lin.hist[,1,]])
-dim(lin.locs) <- c( dim(lin.hist)[c(1,3)], 2 )
-
-plot(pop$habitat)
-for (k in 1:nrow(lin.locs)) {
-    now.locs <- lin.locs[k,-1,]
-    parent.locs <- lin.locs[k,-dim(lin.locs)[2],]
-    do.arrows <- ( rowSums( abs(now.locs-parent.locs) )>0 )
-    suppressWarnings( arrows( x0=now.locs[do.arrows,1], x1=parent.locs[do.arrows,1], 
-               y0=now.locs[do.arrows,2], y1=parent.locs[do.arrows,2], 
-               length=0.1, col=rainbow(nrow(lin.locs))[k] ) )
-}
+plot_lineages( lin.hist, pop )
 
 ```
 

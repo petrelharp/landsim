@@ -26,4 +26,27 @@ simulate_lineages <- function (lineages, gens, num.alleles, ...) {
     return(out)
 }
 
+#' Plot Lineages on a Map
+#'
+#' Plot the path traced out by lineages on the habitat of the corresponding population.
+#'
+#' @param lineages An array indexed by (lineage,location-or-genotype,time).
+#' @param pop A population object.
+#' @param cols A vector of colors.
+#' @param ... Other parameters to pass to \code{arrows()}.
+#' @export
+plot_lineages <- function (lineages,pop,cols=rainbow(dim(lineages)[1])) {
+    lin.locs <- xyFromCell(pop$habitat,which(pop$habitable)[lineages[,1,]])
+    dim(lin.locs) <- c( dim(lineages)[c(1,3)], 2 )
+
+    plot(pop$habitat)
+    for (k in 1:nrow(lin.locs)) {
+        now.locs <- lin.locs[k,-1,]
+        parent.locs <- lin.locs[k,-dim(lin.locs)[2],]
+        do.arrows <- ( rowSums( abs(now.locs-parent.locs) )>0 )
+        suppressWarnings( arrows( x0=now.locs[do.arrows,1], x1=parent.locs[do.arrows,1], 
+                   y0=now.locs[do.arrows,2], y1=parent.locs[do.arrows,2], 
+                   length=0.05, col=cols[k] ) )
+    }
+}
 
