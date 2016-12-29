@@ -26,7 +26,7 @@ mating_tensor <- function (maternal, paternal=maternal, offspring=maternal, sep=
                                   pat.zygotes[[j]],
                                 mating_fun )
                 mating[i,j,] <- tabulate( factor( outputs, levels=offspring ), nbins=length(offspring) ) / length(outputs)
-                # if (sum(mating[i,j,])!=1) { browser() }
+                stopifnot(sum(mating[i,j,])==1)
         }
     }
     return(mating)
