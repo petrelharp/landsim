@@ -71,8 +71,8 @@ backmeiosis <- function ( x,
     # premultiply by weights
     out <- matrix( nrow=length(x), ncol=2 )
     for (k in seq_along(x)) {
-        X <- seed[k,] *  sweep( mating[,,x[k]], 2, pollen[k,], "*" )
-        ij <- arrayInd( sample.int(length(X), size=1, prob=X), .dim=dim(X) )
+        X <- seed[k,] *  sweep( mating[,,x[k],drop=FALSE], 2, pollen[k,], "*" )
+        ij <- arrayInd( sample.int(length(X), size=1, prob=X), .dim=dim(mating)[1:2] )
         ps <- sample.int( 2, size=1, prob=weights[ij] )
         out[k,] <- c( ij[ps], ps )
     }

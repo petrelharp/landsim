@@ -9,13 +9,19 @@
 #' @param num.alleles A vector giving the number of alleles of the type followed in each genotype.
 #' @param ... Other parameters passed to \code{lineage_generation()}.
 #' @export
-#' @return An array of dimensions \code{c(dim(lineages),length(gens$times))}, in the SAME order as gens$times (so, [,,1] is the MOST DISTANT time.
+#' @return An array of dimensions \code{c(dim(lineages),length(gens$times))}, 
+#' in the SAME order as gens$times, so that if x is the output,
+#'   x[,,1] records lineage locations at the *most distant* time,
+#'   x[,1,1] gives the index of the spatial locations, and
+#'   x[,2,1] gives the index of the genotypes of the lineages.
+#' See plot_lineages for how to recover coordinates of the lineages.
 simulate_lineages <- function (lineages, gens, num.alleles, ...) {
 
     if (length(gens$gens)!=length(gens$times)) {
         stop("Don't have 'gens' information: need to simulate with return.everything=TRUE.")
     }
     N <- gens$N[,,dim(gens$N)[3]]
+    dim(N) <- dim(gens$N)[1:2]
     out <- array( dim=c(dim(lineages),length(gens$times)) )
     out[,,length(gens$times)] <- last.lins <- lineages
     for (k in rev(seq_along(gens$gens)[-1])) {
@@ -33,20 +39,25 @@ simulate_lineages <- function (lineages, gens, num.alleles, ...) {
 #' @param lineages An array indexed by (lineage,location-or-genotype,time).
 #' @param pop A population object.
 #' @param cols A vector of colors.
+#' @param plot Do the plot? Otherwise, just compute coordinates.
 #' @param ... Other parameters to pass to \code{arrows()}.
 #' @export
-plot_lineages <- function (lineages,pop,cols=rainbow(dim(lineages)[1])) {
+#' @return Invisibly returns an array of lineage locations, with dimensions indexed
+#' by (lineage, time, (x,y)) .
+plot_lineages <- function (lineages,pop,cols=rainbow(dim(lineages)[1]),plot=TRUE) {
     lin.locs <- xyFromCell(pop$habitat,which(pop$habitable)[lineages[,1,]])
     dim(lin.locs) <- c( dim(lineages)[c(1,3)], 2 )
-
-    plot(pop$habitat)
-    for (k in 1:nrow(lin.locs)) {
-        now.locs <- lin.locs[k,-1,]
-        parent.locs <- lin.locs[k,-dim(lin.locs)[2],]
-        do.arrows <- ( rowSums( abs(now.locs-parent.locs) )>0 )
-        suppressWarnings( arrows( x0=now.locs[do.arrows,1], x1=parent.locs[do.arrows,1], 
-                   y0=now.locs[do.arrows,2], y1=parent.locs[do.arrows,2], 
-                   length=0.05, col=cols[k] ) )
+    if (plot) {
+        plot(pop$habitat)
+        for (k in 1:nrow(lin.locs)) {
+            now.locs <- lin.locs[k,-1,]
+            parent.locs <- lin.locs[k,-dim(lin.locs)[2],]
+            do.arrows <- ( rowSums( abs(now.locs-parent.locs) )>0 )
+            suppressWarnings( arrows( x0=now.locs[do.arrows,1], x1=parent.locs[do.arrows,1], 
+                       y0=now.locs[do.arrows,2], y1=parent.locs[do.arrows,2], 
+                       length=0.05, col=cols[k] ) )
+        }
     }
+    return(invisible(lin.locs))
 }
 

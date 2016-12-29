@@ -4,7 +4,7 @@
 \alias{plot_lineages}
 \title{Plot Lineages on a Map}
 \usage{
-plot_lineages(lineages, pop, cols = rainbow(dim(lineages)[1]))
+plot_lineages(lineages, pop, cols = rainbow(dim(lineages)[1]), plot = TRUE)
 }
 \arguments{
 \item{lineages}{An array indexed by (lineage,location-or-genotype,time).}
@@ -13,7 +13,13 @@ plot_lineages(lineages, pop, cols = rainbow(dim(lineages)[1]))
 
 \item{cols}{A vector of colors.}
 
+\item{plot}{Do the plot? Otherwise, just compute coordinates.}
+
 \item{...}{Other parameters to pass to \code{arrows()}.}
+}
+\value{
+Invisibly returns an array of lineage locations, with dimensions indexed
+by (lineage, time, (x,y)) .
 }
 \description{
 Plot the path traced out by lineages on the habitat of the corresponding population.

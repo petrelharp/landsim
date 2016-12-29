@@ -16,7 +16,12 @@ simulate_lineages(lineages, gens, num.alleles, ...)
 \item{...}{Other parameters passed to \code{lineage_generation()}.}
 }
 \value{
-An array of dimensions \code{c(dim(lineages),length(gens$times))}, in the SAME order as gens$times (so, [,,1] is the MOST DISTANT time.
+An array of dimensions \code{c(dim(lineages),length(gens$times))}, 
+in the SAME order as gens$times, so that if x is the output,
+  x[,,1] records lineage locations at the *most distant* time,
+  x[,1,1] gives the index of the spatial locations, and
+  x[,2,1] gives the index of the genotypes of the lineages.
+See plot_lineages for how to recover coordinates of the lineages.
 }
 \description{
 Given a collection of lineages, all of the same genotype,
