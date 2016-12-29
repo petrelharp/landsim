@@ -8,6 +8,7 @@
 #' @param population A \code{population} object, the initial state of the population.
 #' @param demography A \code{demography} object, containing the below parameters.
 #' @param N Optionally, a matrix of the same form as \code{population$N} (overrides \code{population$N} if present).
+#' @param death.first If TRUE, germination probability is a function of densities *after* death has taken place.
 #' @param expected If TRUE, do no sampling, returning only expected values.
 #' @param return.everything If TRUE, returns the number of seeders, amount of pollen, density of seeds, number of germinating seeds, and number of dying individuals.
 #' @param debug Do checks for NAs and the like.
@@ -34,6 +35,7 @@ generation <- function (
                        seed.migration = demography$seed.migration,
                        genotypes = demography$genotypes,
                        mating = demography$mating,
+                       death.first = (is.null(demography$death.first)||demography$death.first),
                        expected = FALSE,
                        return.everything = FALSE,
                        debug=FALSE,
@@ -64,13 +66,18 @@ generation <- function (
     } else {
         survivors <- ( N * fun_or_number(prob.survival)(N,...) )
     }
-    # have death occur before recruitment to allow just-vacated spots to be filled
+    # By default, have death occur before recruitment to allow just-vacated spots to be filled
     # (wouldn't be necessary if we had a seed bank)
+    if (death.first) {
+        germ.N <- survivors
+    } else {
+        germ.N <- N
+    }
     # new individuals
     if (!expected) {
-        germination <- rpois_matrix( seeds.dispersed * fun_or_number(prob.germination)(N=survivors,...) )
+        germination <- rpois_matrix( seeds.dispersed * fun_or_number(prob.germination)(N=germ.N,...) )
     } else {
-        germination <- ( seeds.dispersed * fun_or_number(prob.germination)(N=survivors,...) )
+        germination <- ( seeds.dispersed * fun_or_number(prob.germination)(N=germ.N,...) )
     }
     if (debug && any(!is.finite(survivors+germination))) { stop("Missing values in N: something is wrong?") }
     if (return.everything) {

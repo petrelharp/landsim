@@ -11,6 +11,7 @@ generation(population, demography, N = population$N,
   pollen.migration = demography$pollen.migration,
   seed.migration = demography$seed.migration,
   genotypes = demography$genotypes, mating = demography$mating,
+  death.first = (is.null(demography$death.first) || demography$death.first),
   expected = FALSE, return.everything = FALSE, debug = FALSE, ...)
 }
 \arguments{
@@ -35,6 +36,8 @@ generation(population, demography, N = population$N,
 \item{genotypes}{A character vector of genotypes.}
 
 \item{mating}{An array giving probabilities for offspring genotypes given parental genotypes.}
+
+\item{death.first}{If TRUE, germination probability is a function of densities *after* death has taken place.}
 
 \item{expected}{If TRUE, do no sampling, returning only expected values.}
 
