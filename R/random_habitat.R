@@ -1,6 +1,6 @@
-#' Simulate a Random Environment
+#' Simulate a Random Habitat
 #'
-#' Simulates a random environment, with holes and varying carrying capacity.
+#' Simulates a random habitat, with holes and varying carrying capacity.
 #'
 #' @param diam Diameter of the desired habitat (in real units, not number of cells).
 #' @param res Spatial resolution of the Raster.
@@ -18,11 +18,33 @@ random_habitat <- function ( diam=2e4,
                              radius=1500
                             ) {
 
-    habitat <- raster::raster(xmn=-diam/2, xmx=diam/2, ymn=-diam/2, ymx=diam/2, 
+    habitat <- raster::raster(
+          xmn=-diam/2, xmx=diam/2, ymn=-diam/2, ymx=diam/2, 
           resolution=res,
           crs="+proj=utm +zone=11 +ellps=GRS80 +towgs84=0,0,0,0,0,0,0 +units=m +no_defs")
     raster::values(habitat) <- randfun(raster::ncell(habitat))
     habitat <- 20*migrate_raster( habitat, kern=kern, sigma=sigma, radius=radius )
     raster::values(habitat)[raster::values(habitat)<0] <- NA
+    return(habitat)
+}
+
+#' Create a Flat Habitat
+#'
+#' Simulates a random environment, with holes and varying carrying capacity.
+#'
+#' @param diam Diameter of the desired habitat (in real units, not number of cells).
+#' @param res Spatial resolution of the Raster.
+#' @param value The value(s) to populate the habitat with (will be recycled).
+#' @export
+#' @return A RasterLayer with nonnegative and missing values.
+flat_habitat <- function ( diam=2e4, 
+                           res=100, 
+                           value=1
+                         ) {
+    habitat <- raster::raster(
+          xmn=-diam/2, xmx=diam/2, ymn=-diam/2, ymx=diam/2, 
+          resolution=res,
+          crs="+proj=utm +zone=11 +ellps=GRS80 +towgs84=0,0,0,0,0,0,0 +units=m +no_defs")
+    raster::values(habitat) <- value
     return(habitat)
 }

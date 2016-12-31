@@ -2,7 +2,7 @@
 % Please edit documentation in R/random_habitat.R
 \name{random_habitat}
 \alias{random_habitat}
-\title{Simulate a Random Environment}
+\title{Simulate a Random Habitat}
 \usage{
 random_habitat(diam = 20000, res = 100, randfun = function(n) pmin(20, (2
   + rcauchy(n))), kern = "gaussian", sigma = 300, radius = 1500)
@@ -24,6 +24,6 @@ random_habitat(diam = 20000, res = 100, randfun = function(n) pmin(20, (2
 A RasterLayer with nonnegative and missing values.
 }
 \description{
-Simulates a random environment, with holes and varying carrying capacity.
+Simulates a random habitat, with holes and varying carrying capacity.
 }
 
