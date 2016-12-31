@@ -4,7 +4,8 @@
 \alias{flat_habitat}
 \title{Create a Flat Habitat}
 \usage{
-flat_habitat(diam = 20000, res = 100, value = 1)
+flat_habitat(diam = 20000, res = 100, value = 1, width = diam,
+  height = diam)
 }
 \arguments{
 \item{diam}{Diameter of the desired habitat (in real units, not number of cells).}
@@ -12,6 +13,10 @@ flat_habitat(diam = 20000, res = 100, value = 1)
 \item{res}{Spatial resolution of the Raster.}
 
 \item{value}{The value(s) to populate the habitat with (will be recycled).}
+
+\item{width}{Width of the region (default: diam).}
+
+\item{height}{Height of the region (default: diam).}
 }
 \value{
 A RasterLayer with nonnegative and missing values.

@@ -5,7 +5,8 @@
 \title{Simulate a Random Habitat}
 \usage{
 random_habitat(diam = 20000, res = 100, randfun = function(n) pmin(20, (2
-  + rcauchy(n))), kern = "gaussian", sigma = 300, radius = 1500)
+  + rcauchy(n))), kern = "gaussian", sigma = 300, radius = 1500,
+  width = diam, height = diam)
 }
 \arguments{
 \item{diam}{Diameter of the desired habitat (in real units, not number of cells).}
@@ -19,6 +20,10 @@ random_habitat(diam = 20000, res = 100, randfun = function(n) pmin(20, (2
 \item{sigma}{Smoothing kernel scale.}
 
 \item{radius}{Smoothing kernel maximum radius.}
+
+\item{width}{Width of the region (default: diam).}
+
+\item{height}{Height of the region (default: diam).}
 }
 \value{
 A RasterLayer with nonnegative and missing values.
