@@ -8,10 +8,11 @@
 #' @param N The population state at the start of the previous generation.
 #' @param gen A list as returned by \code{generation(...,return.everything=TRUE)}.
 #' @param num.alleles A vector giving the number of alleles of the type followed in each genotype.
+#' @param demog The demography object that contains migration matrices used to make the simulation.
 #' @param debug Whether to run sanity checks.
 #' @export
 #' @return A matrix of the same form as \code{lineages}.
-lineage_generation <- function (lineages, N, gen, num.alleles, debug=FALSE) {
+lineage_generation <- function (lineages, N, gen, num.alleles, demog, debug=FALSE) {
 
     # current generation
     now.N <- N - gen$death + gen$germination
@@ -26,8 +27,10 @@ lineage_generation <- function (lineages, N, gen, num.alleles, debug=FALSE) {
         # do backwards seed migration for youth
         for (k in unique(youth[,'genotype'])) {
             do.these <- ( youth[,'genotype']==k )
-            youth[do.these,'location'] <- backmigrate( youth[do.these,'location'], 
-                                                  demog$seed.migration, weights=gen$seed.production[,k] )
+            youth[do.these,'location'] <- backmigrate( 
+                                                  youth[do.these,'location'], 
+                                                  demog$seed.migration, 
+                                                  weights=gen$seed.production[,k] )
         }
 
         # choose seed or pollen parent
@@ -39,8 +42,11 @@ lineage_generation <- function (lineages, N, gen, num.alleles, debug=FALSE) {
             stopifnot(all(rowSums(num.pollen.parents)>0))
         }
 
-        parent.types <- backmeiosis( youth[,'genotype'], mating=demog$mating, weights=num.alleles, 
-                                    seed=num.seed.parents, pollen=num.pollen.parents )
+        parent.types <- backmeiosis( youth[,'genotype'], 
+                                    mating=demog$mating, 
+                                    weights=num.alleles, 
+                                    seed=num.seed.parents, 
+                                    pollen=num.pollen.parents )
         colnames(parent.types) <- c("genotype","which")
 
         # copy back over lineages that chose 'seed' parents

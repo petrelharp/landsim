@@ -139,7 +139,7 @@ n.lineages <- rpois_matrix( sweep(now.N,2,c(0,1,2),"*")*mean.n.lineages/sum(now.
 lineages <- arrayInd( rep( seq_along(n.lineages), n.lineages ), .dim=dim(now.N) )
 colnames(lineages) <- c("location","genotype")
 
-parents <- lineage_generation( lineages, N=pop$N, gen=one.gen, num.alleles=c(0,1,2) )
+parents <- lineage_generation( lineages, N=pop$N, gen=one.gen, num.alleles=c(0,1,2), demog=demog )
 
 now.locs <- xyFromCell(pop$habitat,which(pop$habitable)[lineages[,1]])
 parent.locs <- xyFromCell(pop$habitat,which(pop$habitable)[parents[,1]])
@@ -165,7 +165,7 @@ n.lineages <- rpois_matrix( sweep(now.N,2,c(0,1,2),"*")*mean.n.lineages/sum(now.
 lineages <- arrayInd( rep( seq_along(n.lineages), n.lineages ), .dim=dim(now.N) )
 colnames(lineages) <- c("location","genotype")
 
-lin.hist <- simulate_lineages( lineages, many.gens, num.alleles=c(0,1,2) )
+lin.hist <- simulate_lineages( lineages, many.gens, num.alleles=c(0,1,2), demog=demog )
 
 plot_lineages( lin.hist, pop )
 
@@ -246,7 +246,7 @@ nA <- sweep(now.N,2,c(0,1,2),"*")
 lineages <- arrayInd( sample( seq_along(now.N), size=mean.n.lineages, prob=nA, replace=TRUE ), .dim=dim(now.N) )
 colnames(lineages) <- c("location","genotype")
 
-lin.hist <- simulate_lineages( lineages, sim, num.alleles=c(0,1,2) )
+lin.hist <- simulate_lineages( lineages, sim, num.alleles=c(0,1,2), demog=demog )
 
 plot_lineages( lin.hist, pop )
 points( xyFromCell(pop$habitat, which(pop$habitable)[wave.start]), cex=2, pch=20 )

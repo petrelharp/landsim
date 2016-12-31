@@ -4,7 +4,7 @@
 \alias{simulate_lineages}
 \title{Simulate Lineages}
 \usage{
-simulate_lineages(lineages, gens, num.alleles, ...)
+simulate_lineages(lineages, gens, num.alleles, demog, ...)
 }
 \arguments{
 \item{lineages}{A two-column matrix with columns labeled 'location' and 'genotype'.}
@@ -12,6 +12,8 @@ simulate_lineages(lineages, gens, num.alleles, ...)
 \item{gens}{A list as returned by \code{simulate_pop(...,return=everything=TRUE)}.}
 
 \item{num.alleles}{A vector giving the number of alleles of the type followed in each genotype.}
+
+\item{demog}{The demography object that contains migration matrices used to make the simulation.}
 
 \item{...}{Other parameters passed to \code{lineage_generation()}.}
 }

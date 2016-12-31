@@ -4,7 +4,7 @@
 \alias{lineage_generation}
 \title{Simulate a Single Backwards Generation}
 \usage{
-lineage_generation(lineages, N, gen, num.alleles, debug = FALSE)
+lineage_generation(lineages, N, gen, num.alleles, demog, debug = FALSE)
 }
 \arguments{
 \item{lineages}{A two-column matrix with columns labeled 'location' and 'genotype'.}
@@ -14,6 +14,8 @@ lineage_generation(lineages, N, gen, num.alleles, debug = FALSE)
 \item{gen}{A list as returned by \code{generation(...,return.everything=TRUE)}.}
 
 \item{num.alleles}{A vector giving the number of alleles of the type followed in each genotype.}
+
+\item{demog}{The demography object that contains migration matrices used to make the simulation.}
 
 \item{debug}{Whether to run sanity checks.}
 }
