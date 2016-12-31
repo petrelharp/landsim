@@ -48,18 +48,28 @@ simulate_lineages <- function (lineages, gens, num.alleles, demog, ...) {
 #' @export
 #' @return Invisibly returns an array of lineage locations, with dimensions indexed
 #' by (lineage, time, (x,y)) .
-plot_lineages <- function (lineages,pop,cols=rainbow(dim(lineages)[1]),plot=TRUE) {
+plot_lineages <- function (
+                           lineages,
+                           pop,
+                           cols=rainbow(dim(lineages)[1]),
+                           plot=TRUE, ...) {
     lin.locs <- xyFromCell(pop$habitat,which(pop$habitable)[lineages[,1,]])
     dim(lin.locs) <- c( dim(lineages)[c(1,3)], 2 )
     if (plot) {
-        plot(pop$habitat)
-        for (k in 1:nrow(lin.locs)) {
-            now.locs <- lin.locs[k,-1,]
-            parent.locs <- lin.locs[k,-dim(lin.locs)[2],]
-            do.arrows <- ( rowSums( abs(now.locs-parent.locs) )>0 )
-            suppressWarnings( arrows( x0=now.locs[do.arrows,1], x1=parent.locs[do.arrows,1], 
-                       y0=now.locs[do.arrows,2], y1=parent.locs[do.arrows,2], 
-                       length=0.05, col=cols[k] ) )
+        if ((length(unique(as.vector(lin.locs[,,1])))==1)||(length(unique(as.vector(lin.locs[,,2])))==1)) {
+            # one-dimensional
+            lxt <- if (length(unique(as.vector(lin.locs[,,2])))==1) { lin.locs[,,1] } else { lin.locs[,,2] }
+            matplot( t(lxt), type='l', xlab='time', ylab='spatial location', ... )
+        } else {
+            plot(pop$habitat, ...)
+            for (k in 1:nrow(lin.locs)) {
+                now.locs <- lin.locs[k,-1,]
+                parent.locs <- lin.locs[k,-dim(lin.locs)[2],]
+                do.arrows <- ( rowSums( abs(now.locs-parent.locs) )>0 )
+                suppressWarnings( arrows( x0=now.locs[do.arrows,1], x1=parent.locs[do.arrows,1], 
+                           y0=now.locs[do.arrows,2], y1=parent.locs[do.arrows,2], 
+                           length=0.05, col=cols[k] ) )
+            }
         }
     }
     return(invisible(lin.locs))

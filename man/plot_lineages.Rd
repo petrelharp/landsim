@@ -4,7 +4,8 @@
 \alias{plot_lineages}
 \title{Plot Lineages on a Map}
 \usage{
-plot_lineages(lineages, pop, cols = rainbow(dim(lineages)[1]), plot = TRUE)
+plot_lineages(lineages, pop, cols = rainbow(dim(lineages)[1]), plot = TRUE,
+  ...)
 }
 \arguments{
 \item{lineages}{An array indexed by (lineage,location-or-genotype,time).}
