@@ -58,13 +58,30 @@ pop_to_raster <- function (population,x=population$N) {
 
 #' Plot a Population
 #'
-#' Plots a population object using pop_to_raster() and raster's method for plotting RasterBrick objects.
+#' Plots a population object either as a line plot (for 1D populations)
+#' or using pop_to_raster() and raster's method for plotting RasterBrick objects.
 #'
 #' @param pop The population object.
 #' @param zlim The range of color values.
+#' @param type Either "raster" (default for 2d), or "line" (default for 1d).
 #' @param ... Other parameters passed to plot().
 #' @export
-plot.population <- function (pop,zlim=range(pop$N,finite=TRUE),...) { plot(pop_to_raster(pop),zlim=zlim,...) }
+plot.population <- function (pop,
+                             zlim=range(pop$N,finite=TRUE),
+                             type, ...) { 
+    if (missing(type)) {
+        type <- if (min(dim(pop$habitat)[1:2])==1) { "line" } else { "raster" }
+    }
+    if (type=="raster") {
+        plot(pop_to_raster(pop),zlim=zlim,...) 
+    } else {
+        xy <- raster::xyFromCell(
+                         pop$habitat, 
+                         cell=which(pop$habitable) )
+        x <- if (type=="line_x") { xy[,'x'] } else if ( (type=="line_y") || (length(unique(xy[,"x"]))==1) ) { xy[,"y"] } else { xy[,"x"] }
+        matplot( x, pop$N, type='l', ylim=zlim, ... )
+    }
+}
 
 #' Extract Matrix of Genotype Counts
 #'

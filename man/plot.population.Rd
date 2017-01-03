@@ -4,12 +4,14 @@
 \alias{plot.population}
 \title{Plot a Population}
 \usage{
-plot.population(pop, zlim = range(pop$N, finite = TRUE), ...)
+plot.population(pop, zlim = range(pop$N, finite = TRUE), type, ...)
 }
 \arguments{
 \item{pop}{The population object.}
 
 \item{zlim}{The range of color values.}
+
+\item{type}{Either "raster" (default for 2d), or "line" (default for 1d).}
 
 \item{...}{Other parameters passed to plot().}
 }
