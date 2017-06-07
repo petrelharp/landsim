@@ -22,4 +22,3 @@ with probability equal to \code{weights[i] M[i,j]/sum(weights*M[,j])}.
 This takes a set of locations and a nonnegative weighting vector,
 and samples from the time-reversed migration probabilities, weighted by the weights.
 }
-

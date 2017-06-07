@@ -19,4 +19,3 @@ Given a population object and a set of neighborhoods as returned by \code{sample
 construct a list of functions, the k-th of which, applied to a matrix of genotype counts form a population object,
 will return the vector of total numbers of the k-th genotype occurring in each neighborhood.
 }
-

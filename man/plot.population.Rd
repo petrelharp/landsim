@@ -16,6 +16,6 @@ plot.population(pop, zlim = range(pop$N, finite = TRUE), type, ...)
 \item{...}{Other parameters passed to plot().}
 }
 \description{
-Plots a population object using pop_to_raster() and raster's method for plotting RasterBrick objects.
+Plots a population object either as a line plot (for 1D populations)
+or using pop_to_raster() and raster's method for plotting RasterBrick objects.
 }
-

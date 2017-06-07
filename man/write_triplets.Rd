@@ -24,4 +24,3 @@ Writes out a file (using \code{write.table}) containing columns
   i    j     M[i,j]
 for every nonzero entry of M.
 }
-

@@ -23,4 +23,3 @@ make_population(habitat, inaccessible.value, uninhabitable.value, genotypes,
 \description{
 Provides a method to read and store population configuration.
 }
-

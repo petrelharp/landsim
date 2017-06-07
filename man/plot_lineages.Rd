@@ -25,4 +25,3 @@ by (lineage, time, (x,y)) .
 \description{
 Plot the path traced out by lineages on the habitat of the corresponding population.
 }
-

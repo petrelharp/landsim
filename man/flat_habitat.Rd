@@ -24,4 +24,3 @@ A RasterLayer with nonnegative and missing values.
 \description{
 Simulates a random environment, with holes and varying carrying capacity.
 }
-

@@ -19,4 +19,3 @@ A population object, possibly with a new `crop.inds` value.
 \description{
 Crop a population object to a smaller region.
 }
-

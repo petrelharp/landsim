@@ -18,4 +18,3 @@ or if \code{only.values} is \code{TRUE} the vector of values.
 \description{
 Returns a Raster* which is Poisson-values with mean given by the input Raster*.
 }
-

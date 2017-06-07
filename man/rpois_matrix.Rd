@@ -15,4 +15,3 @@ An object of the same form as the input, with integer values.
 \description{
 Works as \code{rpois}, but returns an object of the same form as the input.
 }
-

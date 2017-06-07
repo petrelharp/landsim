@@ -14,4 +14,3 @@ pop_to_raster(population, x = population$N)
 \description{
 Puts a set of values into the map given by the habitat of the population.
 }
-

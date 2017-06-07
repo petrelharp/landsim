@@ -39,4 +39,3 @@ The parameters \code{prob.seed}, \code{fecundity}, \code{prob.germination},
 and \code{prob.survival} can be either Raster* objects, numbers, 
 or functions of the current population state (a Raster* object).
 }
-

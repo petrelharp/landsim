@@ -21,4 +21,3 @@ Demography objects are agnostic about the map they work on,
 but for application we need to link them to a particular one.
 This function does that, by setting up any elements that are \code{migration} or \code{vital} objects.
 }
-

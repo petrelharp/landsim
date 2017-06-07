@@ -19,4 +19,3 @@ A SpatialPolygons object of circles.
 \description{
 Make Circles Centered at a Collection of Coordinates
 }
-

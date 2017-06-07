@@ -12,4 +12,3 @@
 \description{
 Extract Names of Objects in Environment of a vital Function
 }
-

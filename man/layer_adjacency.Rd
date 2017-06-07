@@ -29,4 +29,3 @@ A sparse Matrix \code{M}, where \code{M[i,j]} is equal to 1 if cell \code{from[i
 This returns the (sparse) Matrix giving the adjacency matrix of cells in \code{layer}.
 }
 \keyword{layers}
-

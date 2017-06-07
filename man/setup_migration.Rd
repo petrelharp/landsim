@@ -20,4 +20,3 @@ A \code{migration} object, as before, but with but with a migration matrix (see 
 Migration objects are agnostic about the map they work on,
 but for application we need to add a migration matrix.
 }
-

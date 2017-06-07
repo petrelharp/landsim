@@ -162,6 +162,10 @@ aggregate_migration <- function (M, old, new,
                               from.new=which(!is.na(raster::values(new))), 
                               to.new=from.new
                          ) {
+    # an easy mistake
+    if (is.logical(from.old) || is.logical(to.old) || is.logical(from.new) || is.logical(to.new)) {
+        stop("From and to must be indices, not a boolean vector.")
+    }
     # which new cells do old cell centers fall in
     ## for 'from'
     from.old.locs <- raster::xyFromCell(old,from.old)

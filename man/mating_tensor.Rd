@@ -25,4 +25,3 @@ If \code{phased} is \code{FALSE} then the two paternal alleles are sorted before
 \description{
 This returns the three-dimensional array whose \code{[i,j,k]}th entry is the probability that maternal genotype \code{i} and paternal genotype \code{j} combine to make offspring genotype \code{k}
 }
-

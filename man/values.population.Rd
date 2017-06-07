@@ -16,4 +16,3 @@ The matrix of genotype counts.
 Parallels the \code{values()} function of the raster package,
 which allows usage of the same code for both types in some situations.
 }
-

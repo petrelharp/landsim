@@ -12,4 +12,3 @@ nhabitable(population)
 \description{
 Returns the number of habitable cells in a population.
 }
-

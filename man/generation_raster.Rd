@@ -43,4 +43,3 @@ This steps a population, stored as a Raster*, forwards by one generation,
 according to the parameters in a \code{demography} object,
 (which can also be passed in separately; see \code{demography}).
 }
-

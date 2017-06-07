@@ -38,4 +38,3 @@ returns the (approximate) function giving per-individual migration rates *per un
 from squares of side length `resolution` centered at distance r.  (This depends on the 
 direction the cell is in, but the result averages over directions.)
 }
-

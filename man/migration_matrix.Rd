@@ -70,4 +70,3 @@ Inaccessible cells included in \code{from} behave as usual.
 This returns the (sparse) Matrix giving the pseudo-adjacency matrix 
 from and to for specified cells in the given Raster, with weights.
 }
-

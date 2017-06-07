@@ -27,4 +27,3 @@ A named list containing:
 Chooses a set of randomly sampled points centered on non-NA cells of the input RasterLayer,
 and returns a randomly chosen maximal subset of nonoverlapping circles centered at these points.
 }
-

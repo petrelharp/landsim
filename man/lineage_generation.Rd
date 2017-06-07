@@ -27,4 +27,3 @@ Given a collection of lineages, all of the same genotype,
 sample from their location in the previous generation,
 given the entire set of reproductive numbers in that generation.
 }
-

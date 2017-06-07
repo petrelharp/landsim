@@ -31,4 +31,3 @@ This converts a migration matrix computed for one raster
 into a migration matrix for another raster that must be a subset of the first.
 This does not do any renormalization.
 }
-

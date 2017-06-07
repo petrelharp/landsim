@@ -19,4 +19,3 @@ Given a logical vector corresponding to the habitable locations in a population,
 return a two-column matrix of coordinates of the TRUE entries in that vector,
 suitable for plotting.
 }
-

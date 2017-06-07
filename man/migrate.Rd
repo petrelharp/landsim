@@ -17,4 +17,3 @@ A matrix of values  of the same form as \code{x}.  See \code{migrate} for detail
 \description{
 This applies a \code{migration} operation to a given population object.
 }
-

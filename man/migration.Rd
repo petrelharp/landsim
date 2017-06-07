@@ -42,4 +42,3 @@ this is achieved by setting \code{n.weights} to have weight at indices larger th
 This puts together the parameters necessary to specify a \code{migration} object,
 specifying the form of the dispersal and the total number of dispersers.
 }
-

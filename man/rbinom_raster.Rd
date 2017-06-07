@@ -22,4 +22,3 @@ At least one of \code{size} or \code{prob} must be Raster* objects.
 Returns a Raster* object whose values are random, Binomial(N,prob.seed),
 or just the corresponding values.
 }
-

@@ -22,4 +22,3 @@ For more details, see \code{generation()}, with the option \code{expected=TRUE}.
 \description{
 This computes the per capita growth rate for each genotype, separately, in a population of constant density.
 }
-

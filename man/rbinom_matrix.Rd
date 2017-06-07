@@ -18,4 +18,3 @@ and the same dimnames if these can be matched.
 \description{
 Works as `rbinom`, except that it preserves the dimensions, and dimnames of the input(s).
 }
-

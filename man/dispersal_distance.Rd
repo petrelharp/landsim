@@ -30,4 +30,3 @@ for the purposes of the migration matrix we should work with
 the matrix normalized so that rows do sum to 1,
 since we want migrants conditioned on not being lost.
 }
-

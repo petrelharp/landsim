@@ -36,4 +36,3 @@ This converts a migration matrix computed for one raster
 into a migration matrix for another raster that is coarser than the first.
 This function does no re-normalization.
 }
-

@@ -24,4 +24,3 @@ which for use we need to link to particular population
 to the environment of the function,
 so that the function can depend on objects only visible in the population.
 }
-

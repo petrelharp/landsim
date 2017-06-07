@@ -36,4 +36,3 @@ and matrices of numbers of possible seed and pollen parents (with seed[k,j] and 
 being the numbers of possible j-genotype parents of genotype[k]),
 and samples from parental genotypes.
 }
-

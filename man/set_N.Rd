@@ -23,4 +23,3 @@ in a population object
 indexed by cells in the underlying Raster* rather than rows the matrix itself,
 which records only values at habitable locations.
 }
-

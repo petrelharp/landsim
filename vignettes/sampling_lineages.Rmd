@@ -2,6 +2,12 @@
 title: "Methods for sampling lineages"
 author: "Peter Ralph"
 date: "`r Sys.Date()`"
+output: 
+    rmarkdown::html_vignette
+vignette: >
+  %\VignetteIndexEntry{Density Dependent Population Regulation}
+  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteEncoding{UTF-8}
 ---
 
 

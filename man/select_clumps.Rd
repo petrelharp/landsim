@@ -21,4 +21,3 @@ Classifies the non-NA values in a Raster* object into the unqiue minimal sets
 such that if two cells are within a given threshold distance of each other,
 they are in the same set.
 }
-

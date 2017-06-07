@@ -19,4 +19,3 @@ A simulation object.  In the new object, `summaries` are NULL.
 \description{
 Crop a simulation object to a smaller region.
 }
-

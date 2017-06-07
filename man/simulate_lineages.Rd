@@ -30,4 +30,3 @@ Given a collection of lineages, all of the same genotype,
 sample from their locations across previous generations,
 given the entire set of reproductive numbers in those generation.
 }
-

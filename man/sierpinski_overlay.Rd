@@ -23,4 +23,3 @@ A Raster* of the same form as the input.
 This constructs a "middle-ninths" Sierpinski gasket of depth n,
 starting from a given Raster*.
 }
-

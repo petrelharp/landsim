@@ -19,4 +19,3 @@ From a population object and an array of values
 whose dimensions correspond to habitable cells, genotypes, and times (in that order),
 create a list of RasterBricks, one for each genotype.
 }
-

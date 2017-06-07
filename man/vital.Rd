@@ -15,4 +15,3 @@ vital(fun, ...)
 Takes a function and an arbitrary collection of other parameters that are used in that function,
 and packages the other parameters into the environment of the function.
 }
-

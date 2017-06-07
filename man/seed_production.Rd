@@ -23,4 +23,3 @@ Find the mean seed production, by genotype,
 given the local numbers of seeding individuals and pollen density,
 by genotype.
 }
-

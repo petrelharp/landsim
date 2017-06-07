@@ -32,4 +32,3 @@ This puts together the parameters necessary to specify a \code{population} objec
 specifying the reference map (as a Raster), accessible and habitable locations,
 the genotypes, and the census at each habitable location.
 }
-

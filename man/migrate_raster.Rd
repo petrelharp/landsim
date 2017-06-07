@@ -44,4 +44,3 @@ whereas \code{migrate()}, with \code{normalize=1}, does preserve mass.
 \description{
 This applies a \code{migration} operation to a given Raster* object.
 }
-

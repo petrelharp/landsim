@@ -22,4 +22,3 @@ A matrix of the same form as M.
 For a matrix M, compute (1-p) ( I + p M + p^2 M^2 + ... ) = (1-p)(I-pM)^{-1} .
 If M is a transition matrix, the result is the distribution after taking a Geometric(p) number of steps.
 }
-

@@ -33,4 +33,3 @@ plot.simulation(sim, pop, max.frames = 300, zlim = range(sim$N, finite =
 \description{
 Sequentially plot the time steps in a simulation, optionally cropped.
 }
-
