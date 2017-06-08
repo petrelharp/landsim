@@ -14,6 +14,7 @@
 #' @param normalize If not NULL, migration weights to accessible locations are set to sum to this (see details).
 #' @param discretize Whether or not to "discretize" the kernel first using the \code{discretize_kernel} function.
 #' @param disc.fact The discretization factor, if used (see \code{discretize_kernel}).
+#' @param n.chunks Number of chunks to compute the matrix in (can help with memory usage).
 #' @export
 #' @return A sparse Matrix \code{M}, where for each pair of cells \code{i} in \code{from} and \code{i} in \code{to},
 #' the value \code{M[i,j]} is
@@ -56,7 +57,8 @@ migration_matrix <- function (population,
                               from=which(accessible),
                               to=from,
                               discretize=migration$discretize,
-                              disc.fact=10
+                              disc.fact=10,
+                              n.chunks=1
                  ) {
     # Fill in default values.
     if (inherits(population,"population")) {
@@ -76,24 +78,27 @@ migration_matrix <- function (population,
     cell.radius <- ceiling(as.numeric(radius)/raster::res(population))
     directions <- matrix( 1, nrow=2*cell.radius[1]+1, ncol=2*cell.radius[2]+1 )
     directions[cell.radius[1]+1,cell.radius[2]+1] <- 0
-    # columns are (from,to)
-    # does NOT include diagonal
-    use.to <- accessible[to]  # only want to go to accessible 'to' locations
-    to.acc <- to[use.to]
-    ij <- raster::adjacent(population,cells=from,target=to.acc,directions=directions,pairs=TRUE)
-    from.pos <- raster::xyFromCell(population,cell=from)
-    to.pos <- raster::xyFromCell(population,cell=to.acc)
-    # add on the diagonal
-    both.ij <- intersect(from,to.acc)
-    ii <- match(c(ij[,1],both.ij),from)
-    jj <- match(c(ij[,2],both.ij),to.acc)
-    M <- Matrix::sparseMatrix( 
-            i = ii,
-            j = which(use.to)[jj], # map back to index in all given 'to' values
-            x = area/sigma^2 * kern( raster::pointDistance(from.pos[ii,],to.pos[jj,],
-                                                           lonlat=FALSE,allpairs=FALSE) / sigma ),
-            dims=c(length(from),length(to))
-        )
+    M <- Matrix::sparseMatrix( i = numeric(0), j = numeric(0), x = numeric(0), dims=c(length(from),length(to)))
+    dk <- ceiling(length(from)/n.chunks)
+    for (k in 1:n.chunks) {
+        these.from <- from[seq(from=(k-1)*dk+1, to=min(k*dk,length(from)))]
+        # columns are (from,to)
+        # does NOT include diagonal
+        use.to <- accessible[to]  # only want to go to accessible 'to' locations
+        to.acc <- to[use.to]
+        ij <- raster::adjacent(population, cells=these.from, target=to.acc, 
+                               directions=directions, pairs=TRUE)
+        # add on the diagonal
+        both.ij <- intersect(these.from, to.acc)
+        # it is NOT a mistake that from.pos does not need indexing by ii yet to.pos does by jj!
+        from.pos <- raster::xyFromCell(population, cell=these.from)[match(c(ij[,1],both.ij), these.from),]
+        to.pos <- raster::xyFromCell(population, cell=to.acc)
+        # (i,j) in the *full* matrix
+        ii <- match(c(ij[,1],both.ij), from)
+        jj <- match(c(ij[,2],both.ij), to.acc)
+        # raster::pointDistance just does sqrt(dx^2+dy^2) 
+        M[cbind(ii, which(use.to)[jj])] <- area/sigma^2 * kern( sqrt(rowSums((from.pos-to.pos[jj,])^2))/sigma )
+    }
     if (!is.null(normalize)) {
         # M <- (normalize/Matrix::rowSums(M)) * M
         # # this is twice as quick:

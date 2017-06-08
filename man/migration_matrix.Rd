@@ -8,7 +8,7 @@ migration_matrix(population, accessible, migration = list(sigma = 1, normalize
   = 1), kern = migration$kern, sigma = migration$sigma,
   radius = migration$radius, normalize = migration$normalize,
   from = which(accessible), to = from, discretize = migration$discretize,
-  disc.fact = 10)
+  disc.fact = 10, n.chunks = 1)
 }
 \arguments{
 \item{population}{Population object or Raster*.}
@@ -32,6 +32,8 @@ migration_matrix(population, accessible, migration = list(sigma = 1, normalize
 \item{discretize}{Whether or not to "discretize" the kernel first using the \code{discretize_kernel} function.}
 
 \item{disc.fact}{The discretization factor, if used (see \code{discretize_kernel}).}
+
+\item{n.chunks}{Number of chunks to compute the matrix in (can help with memory usage).}
 }
 \value{
 A sparse Matrix \code{M}, where for each pair of cells \code{i} in \code{from} and \code{i} in \code{to},
