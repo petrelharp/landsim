@@ -81,13 +81,17 @@ migration_matrix <- function (population,
     M <- Matrix::sparseMatrix( i = numeric(0), j = numeric(0), x = numeric(0), dims=c(length(from),length(to)))
     dk <- ceiling(length(from)/n.chunks)
     for (k in 1:n.chunks) {
-        these.from <- from[seq(from=(k-1)*dk+1, to=min(k*dk,length(from)))]
+        these.from <- from[seq(from=min((k-1)*dk+1,length(from)), to=min(k*dk,length(from)))]
         # columns are (from,to)
         # does NOT include diagonal
         use.to <- accessible[to]  # only want to go to accessible 'to' locations
         to.acc <- to[use.to]
         ij <- raster::adjacent(population, cells=these.from, target=to.acc, 
                                directions=directions, pairs=TRUE)
+        if (is.null(dim(ij)) && length(ij)) {
+            # adjacent returns a list in the case of only one adjacent cell =( =(
+            dim(ij) <- c(1,2)
+        }
         # add on the diagonal
         both.ij <- intersect(these.from, to.acc)
         # it is NOT a mistake that from.pos does not need indexing by ii yet to.pos does by jj!
